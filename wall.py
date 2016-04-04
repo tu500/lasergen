@@ -33,7 +33,7 @@ class CutoutRect():
 
     def render(self, config):
 
-        displace = config.cutting_width / 2.
+        displace = config.cutting_width / 2
 
         l = []
 
@@ -366,8 +366,8 @@ class ToplessWall(Wall):
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.width,  np.array([ 0, 1]), flat=True))
-        self.edges.append(Edge(self.width,  np.array([ 0,-1]), EDGE_STYLE_FLAT, EDGE_STYLE_FLAT))
-        self.edges.append(Edge(self.height, np.array([-1, 0]), EDGE_STYLE_FLAT, EDGE_STYLE_TOOTHED))
+        self.edges.append(Edge(self.width,  np.array([ 0,-1]), EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.height, np.array([-1, 0]), EDGE_STYLE_FLAT,    EDGE_STYLE_TOOTHED))
         self.edges.append(Edge(self.height, np.array([ 1, 0]), EDGE_STYLE_TOOTHED, EDGE_STYLE_FLAT))
 
 class ExtendedWall(Wall):
