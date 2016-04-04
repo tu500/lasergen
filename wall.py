@@ -10,7 +10,8 @@ DIR_BACK  = np.array([ 0, 0,-1])
 
 EDGE_STYLE_TOOTHED, \
 EDGE_STYLE_EXTENDED, \
-EDGE_STYLE_FLAT = range(3)
+EDGE_STYLE_FLAT, \
+EDGE_STYLE_INTERNAL_FLAT = range(4)
 
 def orthon(v):
     return np.array([-v[1], v[0]]) / np.linalg.norm(v)
@@ -81,196 +82,135 @@ class Edge():
         tooth_count = self._get_tooth_count(config, self.length, odd_tooth_count)
         tooth_length = self.length / tooth_count
 
+        tooth_positions = [0] + list(np.cumsum([tooth_length for i in range(tooth_count)]))
+
+        return self._render_toothed_line(
+                start,
+                self.begin_style,
+                self.end_style,
+                tooth_positions,
+                direction,
+                self.outward_dir,
+                wall_thickness,
+                displace
+            )
+
+
+    @staticmethod
+    def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0):
+        """
+        tooth_positions: list of starting points of tooths, including full edge length
+                         i.e. [0, first_tooth_width, first_tooth_width + second_tooth_width, ..., full_edge_length]
+        """
+
+        if begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]:
+            extended_list = [True, False] * math.ceil(len(tooth_positions)/2)
+        else:
+            extended_list = [False, True] * math.ceil(len(tooth_positions)/2)
+
+        tooth_data = list(zip(
+                tooth_positions,
+                tooth_positions[1:],
+                extended_list
+            ))
+
+        assert(Edge._check_tooth_count(begin_style, end_style, len(tooth_data)))
+
+
+        if len(tooth_data) == 1:
+            #TODO only certain configurations allowed
+            raise Exception("Not Implemented")
+
+        middle_teeth = tooth_data[1:-1]
+
 
         lines = []
 
-        if self.begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]:
+        # render first tooth
+        start_pos, end_pos, extended = tooth_data[0]
 
-            # render first tooth
-            if self.begin_style == EDGE_STYLE_EXTENDED:
-                lines.append(Line(
-                    start - direction * (wall_thickness + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (tooth_length + displace) + self.outward_dir * (wall_thickness + displace)
-                    ))
-                lines.append(Line(
-                    start + direction * (tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (tooth_length + displace) + self.outward_dir * displace
-                    ))
-            elif self.begin_style == EDGE_STYLE_TOOTHED:
-                lines.append(Line(
-                    start - direction * displace + self.outward_dir * displace,
-                    start - direction * displace + self.outward_dir * (wall_thickness + displace)
-                    ))
-                lines.append(Line(
-                    start - direction * displace + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (tooth_length + displace) + self.outward_dir * (wall_thickness + displace)
-                    ))
-                lines.append(Line(
-                    start + direction * (tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (tooth_length + displace) + self.outward_dir * displace
-                    ))
-            else:
-                assert(False)
-
-            # render middle teeth
-            for i in range(1, tooth_count - 2, 2):
-                lines.append(Line(
-                    start + direction * (i*tooth_length + displace) + self.outward_dir * displace,
-                    start + direction * ((i+1)*tooth_length - displace) + self.outward_dir * displace,
-                    ))
-                lines.append(Line(
-                    start + direction * ((i+1)*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * ((i+1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((i+1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * ((i+2)*tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((i+2)*tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * ((i+2)*tooth_length + displace) + self.outward_dir * displace,
-                    ))
-
-            # render last teeth
-            if self.end_style == EDGE_STYLE_FLAT:
-                assert(not odd_tooth_count)
-
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length + displace) + self.outward_dir * displace,
-                    start + direction * (self.length + displace) + self.outward_dir * displace,
-                    ))
-
-                return lines
-
-            elif self.end_style == EDGE_STYLE_EXTENDED:
-                assert(odd_tooth_count)
-
-                lines.append(Line(
-                    start + direction * ((tooth_count-2)*tooth_length + displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * displace,
-                    ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (self.length + wall_thickness + displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-
-                return lines
-
-            elif self.end_style == EDGE_STYLE_TOOTHED:
-                assert(odd_tooth_count)
-
-                lines.append(Line(
-                    start + direction * ((tooth_count-2)*tooth_length + displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * displace,
-                    ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (self.length + displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * (self.length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (self.length + displace) + self.outward_dir * displace,
-                    ))
-
-                return lines
-
-            else:
-                assert(False)
-
-
-        elif self.begin_style == EDGE_STYLE_FLAT:
-
-            # render first tooth
+        if begin_style == EDGE_STYLE_EXTENDED:
             lines.append(Line(
-                start - direction * displace + self.outward_dir * displace,
-                start + direction * (tooth_length - displace) + self.outward_dir * displace
+                start + direction * (start_pos - wall_thickness - displace) + outward_dir * (wall_thickness + displace),
+                start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace)
+                ))
+            lines.append(Line(
+                start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace),
+                start + direction * (end_pos + displace) + outward_dir * displace
                 ))
 
-            # render middle teeth
-            for i in range(1, tooth_count - 2, 2):
-                lines.append(Line(
-                    start + direction * (i*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * (i*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * (i*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * ((i+1)*tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((i+1)*tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * ((i+1)*tooth_length + displace) + self.outward_dir * displace,
-                    ))
-                lines.append(Line(
-                    start + direction * ((i+1)*tooth_length + displace) + self.outward_dir * displace,
-                    start + direction * ((i+2)*tooth_length - displace) + self.outward_dir * displace,
-                    ))
+        elif begin_style == EDGE_STYLE_TOOTHED:
+            middle_teeth = tooth_data[0:-1]
 
-            # render last teeth
-            if self.end_style == EDGE_STYLE_FLAT:
-                assert(odd_tooth_count)
+        elif begin_style == EDGE_STYLE_FLAT:
+            lines.append(Line(
+                start + direction * (start_pos - displace) + outward_dir * displace,
+                start + direction * (end_pos - displace) + outward_dir * displace
+                ))
 
+        elif begin_style == EDGE_STYLE_INTERNAL_FLAT:
+            middle_teeth = tooth_data[0:-1]
+
+
+        # render last tooth
+        start_pos, end_pos, extended = tooth_data[-1]
+        last_lines = []
+
+        if end_style == EDGE_STYLE_FLAT:
+            last_lines.append(Line(
+                start + direction * (start_pos + displace) + outward_dir * displace,
+                start + direction * (end_pos + displace) + outward_dir * displace,
+                ))
+
+        elif end_style == EDGE_STYLE_EXTENDED:
+            last_lines.append(Line(
+                start + direction * (start_pos - displace) + outward_dir * displace,
+                start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace),
+                ))
+            last_lines.append(Line(
+                start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace),
+                start + direction * (end_pos + wall_thickness + displace) + outward_dir * (wall_thickness + displace),
+                ))
+
+        elif end_style == EDGE_STYLE_TOOTHED:
+            middle_teeth.append(tooth_data[-1])
+
+        elif end_style == EDGE_STYLE_INTERNAL_FLAT:
+            middle_teeth.append(tooth_data[-1])
+
+
+        # render middle teeth
+        for start_pos, end_pos, extended in middle_teeth:
+            if extended:
                 lines.append(Line(
-                    start + direction * ((tooth_count-2)*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-2)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
+                    start + direction * (start_pos - displace) + outward_dir * displace,
+                    start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace)
                     ))
                 lines.append(Line(
-                    start + direction * ((tooth_count-2)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * ((tooth_count-1)*tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
+                    start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace),
+                    start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace)
                     ))
                 lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * ((tooth_count-1)*tooth_length + displace) + self.outward_dir * displace,
+                    start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace),
+                    start + direction * (end_pos + displace) + outward_dir * displace
                     ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length + displace) + self.outward_dir * displace,
-                    start + direction * (self.length + displace) + self.outward_dir * displace,
-                    ))
-
-                return lines
-
-            elif self.end_style == EDGE_STYLE_EXTENDED:
-                assert(not odd_tooth_count)
-
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (self.length + wall_thickness + displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-
-                return lines
-
-            elif self.end_style == EDGE_STYLE_TOOTHED:
-                assert(not odd_tooth_count)
-
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * displace,
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * ((tooth_count-1)*tooth_length - displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (self.length + displace) + self.outward_dir * (wall_thickness + displace),
-                    ))
-                lines.append(Line(
-                    start + direction * (self.length + displace) + self.outward_dir * (wall_thickness + displace),
-                    start + direction * (self.length + displace) + self.outward_dir * displace,
-                    ))
-
-                return lines
-
             else:
-                assert(False)
+                lines.append(Line(
+                    start + direction * (start_pos + displace) + outward_dir * displace,
+                    start + direction * (end_pos - displace) + outward_dir * displace
+                    ))
 
+        return lines + last_lines
+
+
+    @staticmethod
+    def _check_tooth_count(begin_style, end_style, tooth_count):
+        if tooth_count % 2 == 0:
+            return  (begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and end_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT]) or \
+                    (end_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and begin_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT])
+        else:
+            return  (begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and end_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]) or \
+                    (begin_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT] and end_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT])
 
     @staticmethod
     def _get_tooth_count(config, length, odd_tooth_count):
