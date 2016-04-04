@@ -96,6 +96,7 @@ class Edge():
             )
 
 
+    #TODO should this really be a static method?
     @staticmethod
     def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0):
         """
@@ -238,6 +239,91 @@ class Edge():
             tooth_count = c - 1
 
         return tooth_count
+
+
+class CutoutEdge(Edge):
+
+    @staticmethod
+    def _render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace):
+        lines = []
+
+        lines.append(Line(
+            start + direction * (start_pos + displace) + outward_dir * displace,
+            start + direction * (end_pos - displace) + outward_dir * displace
+            ))
+        lines.append(Line(
+            start + direction * (end_pos - displace) + outward_dir * displace,
+            start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace)
+            ))
+        lines.append(Line(
+            start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace),
+            start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace)
+            ))
+        lines.append(Line(
+            start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace),
+            start + direction * (start_pos + displace) + outward_dir * displace
+            ))
+
+        return lines
+
+
+    @staticmethod
+    def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0):
+        """
+        tooth_positions: list of starting points of tooths, including full edge length
+                         i.e. [0, first_tooth_width, first_tooth_width + second_tooth_width, ..., full_edge_length]
+        """
+
+        if begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]:
+            extended_list = [True, False] * math.ceil(len(tooth_positions)/2)
+        else:
+            extended_list = [False, True] * math.ceil(len(tooth_positions)/2)
+
+        tooth_data = list(zip(
+                tooth_positions,
+                tooth_positions[1:],
+                extended_list
+            ))
+
+        assert(Edge._check_tooth_count(begin_style, end_style, len(tooth_data)))
+
+
+        if len(tooth_data) == 1:
+            #TODO only certain configurations allowed
+            raise Exception("Not Implemented")
+
+        middle_teeth = tooth_data[1:-1]
+
+
+        lines = []
+
+        # render first tooth
+        start_pos, end_pos, extended = tooth_data[0]
+
+        if begin_style == EDGE_STYLE_EXTENDED:
+            lines.extend(self._render_rectangle(start, start_pos - wall_thickness, end_pos, direction, outward_dir, wall_thickness, displace))
+
+        elif begin_style == EDGE_STYLE_TOOTHED:
+            middle_teeth = tooth_data[0:-1]
+
+
+        # render last tooth
+        start_pos, end_pos, extended = tooth_data[-1]
+        last_lines = []
+
+        if end_style == EDGE_STYLE_EXTENDED:
+            lines.extend(self._render_rectangle(start, start_pos, end_pos + wall_thickness, direction, outward_dir, wall_thickness, displace))
+
+        elif end_style == EDGE_STYLE_TOOTHED:
+            middle_teeth.append(tooth_data[-1])
+
+
+        # render middle teeth
+        for start_pos, end_pos, extended in middle_teeth:
+            if extended:
+                lines.extend(self._render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace))
+
+        return lines + last_lines
 
 
 class Wall():
