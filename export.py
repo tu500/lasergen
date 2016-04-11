@@ -1,4 +1,4 @@
-from wall import Line
+from wall import Line, Circle
 
 def export_svg(objects):
 
@@ -16,6 +16,12 @@ def export_svg(objects):
                     -o.start[1],
                     o.end[0],
                     -o.end[1]
+                )
+        elif isinstance(o, Circle):
+            s += '<circle cx="{}" cy="{}" r="{}" stroke="black" stroke-width="1px" fill="none"/>\n'.format(
+                    o.center[0],
+                    -o.center[1],
+                    o.radius
                 )
         else:
             raise Exception("PANIC")

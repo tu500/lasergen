@@ -16,6 +16,9 @@ EDGE_STYLE_INTERNAL_FLAT = range(4)
 def orthon(v):
     return np.array([-v[1], v[0]]) / np.linalg.norm(v)
 
+
+# 2d primitives
+
 class Line():
     def __init__(self, start, end):
         self.start = start
@@ -25,6 +28,19 @@ class Line():
         return Line(self.start + b, self.end + b)
     def __sub__(self, b):
         return Line(self.start - b, self.end - b)
+
+class Circle():
+    def __init__(self, center, radius):
+        self.center = center
+        self.radius = radius
+
+    def __add__(self, b):
+        return Circle(self.center + b, self.radius)
+    def __sub__(self, b):
+        return Circle(self.center - b, self.radius)
+
+
+# 2d objects
 
 class CutoutRect():
     def __init__(self, width, height):
@@ -43,6 +59,42 @@ class CutoutRect():
         l.append(Line(np.array([displace,              self.height - displace]), np.array([displace,              displace])))
 
         return l
+
+class HexBoltCutout():
+    def __init__(self, width):
+        self.width = width
+
+    def render(self, config):
+        displace = config.cutting_width / 2
+        radius = 2 * self.width / math.sqrt(3)
+
+        y_pos = self.width - displace
+        x_pos = radius/2 - (displace / math.sqrt(3))
+
+        hor_x_pos = radius - (2 * displace / math.sqrt(3))
+
+        corners = [
+                np.array([-x_pos,  y_pos]),
+                np.array([ x_pos,  y_pos]),
+                np.array([ hor_x_pos, 0]),
+                np.array([ x_pos, -y_pos]),
+                np.array([-x_pos, -y_pos]),
+                np.array([-hor_x_pos, 0]),
+
+                np.array([-x_pos,  y_pos]),
+            ]
+        return [Line(a,b) for a,b in zip(corners, corners[1:])]
+
+class CircleCutout():
+    def __init__(self, radius):
+        self.radius = radius
+
+    def render(self, config):
+        displace = config.cutting_width / 2
+
+        return [Circle(0, self.radius - displace)]
+
+# walls
 
 class Edge():
     def __init__(self, length, outward_dir, begin_style=EDGE_STYLE_FLAT, end_style=EDGE_STYLE_FLAT, flat=False):
@@ -361,6 +413,9 @@ class Wall():
             l.extend(i + pos for i in child.render(config))
 
         return l
+
+    def add_child(self, child, pos):
+        self.children.append((child, pos))
 
 class ToplessWall(Wall):
     def _construct_edges(self):
