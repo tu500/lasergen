@@ -464,3 +464,11 @@ class ExtendedWall(Wall):
         self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
         self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
         self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+
+class SideWall(Wall):
+    def _construct_edges(self):
+        self.edges = []
+        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_TOOTHED))
+        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_TOOTHED, EDGE_STYLE_FLAT))
