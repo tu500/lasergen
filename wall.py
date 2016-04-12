@@ -1,6 +1,8 @@
 import numpy as np
 import math
 
+from util import orthon, min_vec, max_vec
+
 DIR_UP    = np.array([ 0, 1, 0])
 DIR_DOWN  = np.array([ 0,-1, 0])
 DIR_LEFT  = np.array([-1, 0, 0])
@@ -13,11 +15,48 @@ EDGE_STYLE_EXTENDED, \
 EDGE_STYLE_FLAT, \
 EDGE_STYLE_INTERNAL_FLAT = range(4)
 
-def orthon(v):
-    return np.array([-v[1], v[0]]) / np.linalg.norm(v)
-
 
 # 2d primitives
+
+class Object2D():
+    def __init__(self, primitives=None):
+        if primitives is None:
+            self.primitives = []
+        else:
+            self.primitives = primitives
+
+    def bounding_box(self):
+        if not self.primitives:
+            raise Exception("PANIC!!!!")
+
+        p = self.primitives[0]
+        if isinstance(p, Line):
+            vmin = p.start
+            vmax = p.start
+        elif isinstance(p, Circle):
+            vmin = p.center
+            vmax = p.center
+
+        for p in self.primitives:
+            if isinstance(p, Line):
+                vmin = min_vec(vmin, p.start, p.end)
+                vmax = max_vec(vmax, p.start, p.end)
+            elif isinstance(p, Circle):
+                vmin = min_vec(vmin, p.center - np.array([p.radius, p.radius]))
+                vmax = max_vec(vmax, p.center + np.array([p.radius, p.radius]))
+            else:
+                raise Exception("PANIC")
+
+        return (vmin, vmax)
+
+    def __add__(self, b):
+        if isinstance(b, Object2D):
+            return Object2D(self.primitives + b.primitives)
+        return Object2D([i + b for i in self.primitives])
+    def __sub__(self, b):
+        return Object2D([i - b for i in self.primitives])
+    def extend(self, b):
+        self.primitives.extend(b.primitives)
 
 class Line():
     def __init__(self, start, end):
@@ -58,7 +97,7 @@ class CutoutRect():
         l.append(Line(np.array([self.width - displace, self.height - displace]), np.array([displace,              self.height - displace])))
         l.append(Line(np.array([displace,              self.height - displace]), np.array([displace,              displace])))
 
-        return l
+        return Object2D(l)
 
 class HexBoltCutout():
     def __init__(self, width):
@@ -83,7 +122,7 @@ class HexBoltCutout():
 
                 np.array([-x_pos,  y_pos]),
             ]
-        return [Line(a,b) for a,b in zip(corners, corners[1:])]
+        return Object2D([Line(a,b) for a,b in zip(corners, corners[1:])])
 
 class CircleCutout():
     def __init__(self, radius):
@@ -92,7 +131,7 @@ class CircleCutout():
     def render(self, config):
         displace = config.cutting_width / 2
 
-        return [Circle(0, self.radius - displace)]
+        return Object2D([Circle(0, self.radius - displace)])
 
 # walls
 
@@ -117,10 +156,10 @@ class Edge():
 
 
         if self.flat:
-            return [Line(
+            return Object2D([Line(
                 start - direction * displace + self.outward_dir * displace,
                 start + direction * (self.length + displace) + self.outward_dir * displace
-                )]
+                )])
 
 
         if (self.begin_style in [EDGE_STYLE_TOOTHED, EDGE_STYLE_EXTENDED] and self.end_style == EDGE_STYLE_FLAT) or \
@@ -253,7 +292,7 @@ class Edge():
                     start + direction * (end_pos - displace) + outward_dir * displace
                     ))
 
-        return lines + last_lines
+        return Object2D(lines + last_lines)
 
 
     @staticmethod
@@ -316,7 +355,7 @@ class CutoutEdge(Edge):
             start + direction * (start_pos + displace) + outward_dir * displace
             ))
 
-        return lines
+        return Object2D(lines)
 
 
     @staticmethod
@@ -375,7 +414,7 @@ class CutoutEdge(Edge):
             if extended:
                 lines.extend(self._render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace))
 
-        return lines + last_lines
+        return Object2D(lines + last_lines)
 
 
 class Wall():
@@ -402,15 +441,15 @@ class Wall():
         if (v[0:2] == DIR_RIGHT).all(): return self.edges[3]
 
     def render(self, config):
-        l = []
+        l = Object2D()
 
-        l.extend(i + np.array([0, self.height]) for i in self.edges[0].render(config))
-        l.extend(i + np.array([0, 0])           for i in self.edges[1].render(config))
-        l.extend(i + np.array([0, 0])           for i in self.edges[2].render(config))
-        l.extend(i + np.array([self.width, 0])  for i in self.edges[3].render(config))
+        l.extend(self.edges[0].render(config) + np.array([0, self.height]))
+        l.extend(self.edges[1].render(config) + np.array([0, 0]))
+        l.extend(self.edges[2].render(config) + np.array([0, 0]))
+        l.extend(self.edges[3].render(config) + np.array([self.width, 0]))
 
         for child, pos in self.children:
-            l.extend(i + pos for i in child.render(config))
+            l.extend(child.render(config) + pos)
 
         return l
 
@@ -428,7 +467,7 @@ class ToplessWall(Wall):
 class ExtendedWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  np.array([ 0,-1]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
         self.edges.append(Edge(self.width,  np.array([ 0, 1]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+        self.edges.append(Edge(self.width,  np.array([ 0,-1]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
         self.edges.append(Edge(self.height, np.array([-1, 0]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
         self.edges.append(Edge(self.height, np.array([ 1, 0]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
