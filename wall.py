@@ -1,14 +1,7 @@
 import numpy as np
 import math
 
-from util import orthon, min_vec, max_vec
-
-DIR_UP    = np.array([ 0, 1, 0])
-DIR_DOWN  = np.array([ 0,-1, 0])
-DIR_LEFT  = np.array([-1, 0, 0])
-DIR_RIGHT = np.array([ 1, 0, 0])
-DIR_FRONT = np.array([ 0, 0, 1])
-DIR_BACK  = np.array([ 0, 0,-1])
+from util import DIR, orthon, min_vec, max_vec
 
 EDGE_STYLE_TOOTHED, \
 EDGE_STYLE_EXTENDED, \
@@ -435,10 +428,10 @@ class Wall():
         raise Exception("Abstract method")
 
     def get_edge_by_direction(self, v):
-        if (v[0:2] == DIR_UP).all():    return self.edges[0]
-        if (v[0:2] == DIR_DOWN).all():  return self.edges[1]
-        if (v[0:2] == DIR_LEFT).all():  return self.edges[2]
-        if (v[0:2] == DIR_RIGHT).all(): return self.edges[3]
+        if (v[0:2] == DIR.UP).all():    return self.edges[0]
+        if (v[0:2] == DIR.DOWN).all():  return self.edges[1]
+        if (v[0:2] == DIR.LEFT).all():  return self.edges[2]
+        if (v[0:2] == DIR.RIGHT).all(): return self.edges[3]
 
     def render(self, config):
         l = Object2D()
@@ -459,15 +452,15 @@ class Wall():
 class ToplessWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  np.array([ 0, 1]), flat=True))
-        self.edges.append(Edge(self.width,  np.array([ 0,-1]), EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
-        self.edges.append(Edge(self.height, np.array([-1, 0]), EDGE_STYLE_FLAT,    EDGE_STYLE_TOOTHED))
-        self.edges.append(Edge(self.height, np.array([ 1, 0]), EDGE_STYLE_TOOTHED, EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.width,  DIR.UP[:2],    flat=True))
+        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_TOOTHED))
+        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_TOOTHED, EDGE_STYLE_FLAT))
 
 class ExtendedWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  np.array([ 0, 1]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
-        self.edges.append(Edge(self.width,  np.array([ 0,-1]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
-        self.edges.append(Edge(self.height, np.array([-1, 0]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
-        self.edges.append(Edge(self.height, np.array([ 1, 0]), EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
