@@ -1,6 +1,6 @@
 import numpy as np
 
-from wall import Line, Circle
+from wall import Line, Circle, Text
 from util import min_vec, max_vec
 
 def place_2d_objects(objects, config):
@@ -42,6 +42,14 @@ def export_svg(objects):
                         -p.center[1],
                         p.radius
                     )
+            elif isinstance(p, Text):
+                s += '<text x="{}" y="{}" style="font-size:{}px" fill="red">{}</text>\n'.format(
+                        p.position[0],
+                        -p.position[1],
+                        p.fontsize,
+                        p.text
+                    )
+
             else:
                 raise Exception("PANIC")
 

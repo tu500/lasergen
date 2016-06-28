@@ -71,6 +71,12 @@ class Circle():
     def __sub__(self, b):
         return Circle(self.center - b, self.radius)
 
+class Text():
+    def __init__(self, positionn, text, fontsize=5):
+        self.position = position
+        self.text = text
+        self.fontsize = fontsize
+
 
 # 2d objects
 
