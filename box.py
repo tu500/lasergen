@@ -86,9 +86,9 @@ class Box():
                 assert(sum_size is not None or ref_size[i] is not None)
 
                 if sum_size is None:
-                    self.abs_size[i] = sum_size
-                elif ref_size[i] is None:
                     self.abs_size[i] = ref_size[i] # should be a NOP
+                elif ref_size[i] is None:
+                    self.abs_size[i] = sum_size
                 else:
                     assert(ref_size[i] == sum_size)
                     self.abs_size[i] = sum_size
