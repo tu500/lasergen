@@ -2,121 +2,223 @@ from wall import ToplessWall, ExtendedWall, SideWall
 from util import DIR
 from units import Rel
 
+DIRECTION_X = 0
+DIRECTION_Y = 1
+DIRECTION_Z = 2
+
 class Box():
     def __init__(self, width, height, depth):
-        self.width = width
-        self.height = height
-        self.depth = depth
-
-        self.abs_width = None
-        self.abs_height = None
+        self.size = [width, height, depth]
+        self.abs_size = [None, None, None]
 
         self._construct_walls()
         self.subboxes = []
+
+    def subdivide(self, direction, *sizes):
+        assert(self.subboxes == [])
+
+        if direction == 0:
+            self.subboxes = [SubBox(size, 'ref', 'ref') for size in sizes]
+        elif direction == 1:
+            self.subboxes = [SubBox('ref', size, 'ref') for size in sizes]
+        elif direction == 2:
+            self.subboxes = [SubBox('ref', 'ref', size) for size in sizes]
 
     def render(self, config):
         return [w.render(config) for w in self.walls if w is not None]
 
     def configure(self, config):
 
-        if self.abs_width is not None:
-            # nothing to do
-            return
+        self.abs_size = [None, None, None]
 
-        for c in self.children:
+        #if self.abs_size != [None, None, None]:
+        #    # nothing to do
+        #    return
+
+        for c in self.subboxes:
             c.configure(config)
 
-        sum_abs_width, sum_rel_width, unit_length = self._get_sum()
+        # dimensions
+        for i in range(3):
 
-        if self._has_absolute_width_configured() and sum_rel_width != Rel(0):
-            assert(self.width >= sum_abs_width)
-            new_ul = sum_rel_width.unit_length_from_total(self.width - sum_abs_width)
+            sum_abs_size, sum_rel_size, unit_length, ref_size = self._get_sum()
 
-            if unit_length is not None:
-                assert(new_ul == unit_length)
+            # fixed absolute size configured?
+            if self._has_absolute_width_configured(i):
+                self.abs_size[i] = self.size[i]
 
-            unit_length = new_ul
+            # take absolute size from bound children
+            if ref_size[i] is not None:
+                assert(self.abs_size[i] is None or ref_size[i] == self.abs_size[i])
+                self.abs_size[i] = ref_size[i]
 
-        if unit_length is not None:
+            # calculate unit_length from own size
+            if self.abs_size[i] is not None and sum_rel_size[i] != Rel(0):
+                assert(self.abs_size[i] >= sum_abs_size[i])
+                new_ul = sum_rel_size[i].unit_length_from_total(self.size[i] - sum_abs_size[i])
 
-            for c in self.children:
-                if isinstance(c.width, Rel) and c.abs_width is None:
-                    c._set_width_from_unit_length(unit_length)
-                    #sum_width += t
+                if unit_length[i] is not None:
+                    assert(new_ul == unit_length[i])
 
-        sum_width = sum(c.abs_width for c in children if c.abs_width is not None)
+                unit_length[i] = new_ul
 
-        if self.width is None:
-            assert(sum_rel_width == Rel(0) or unit_length is not None)
-            self.abs_width = sum_width
 
-        elif isinstance(self.width, Rel):
-            if sum_rel_width == Rel(0) or unit_length is not None:
-                self.abs_width = sum_width
-            else:
-                # there are relative sized children, but the unit length is unknown
-                return
+            # if unit_length is available update unknown subbox sizes
+            if unit_length[i] is not None:
 
-        elif self._has_absolute_width_configured():
-            assert(sum_width == self.width)
-            self.abs_width = sum_width
+                for c in self.subboxes:
+                    if isinstance(c.size[i], Rel) and c.abs_size[i] is None:
+                        c._set_absolute_size(c.size[i].total_length_from_unit(unit_length[i]), i)
+                        #sum_size[i] += t
+
+            l = [c.abs_size[i] for c in self.subboxes
+                    if c.abs_size[i] is not None
+                    and c.size[i] != 'ref'
+                ]
+            sum_size = sum(l) if l else None
+
+
+            if self.size[i] is None:
+                # all children's sizes must be known
+                unknown_children = sum(1 for c in self.subboxes
+                        if c.abs_size[i] is None
+                        and c.size[i] != 'ref'
+                    )
+                assert(unknown_children == 0)
+
+                # own size must be known somehow
+                assert(sum_size is not None or ref_size[i] is not None)
+
+                if sum_size is None:
+                    self.abs_size[i] = sum_size
+                elif ref_size[i] is None:
+                    self.abs_size[i] = ref_size[i] # should be a NOP
+                else:
+                    assert(ref_size[i] == sum_size)
+                    self.abs_size[i] = sum_size
+
+            elif self.size[i] == 'ref':
+                unknown_children = sum(1 for c in self.subboxes
+                        if c.abs_size[i] is None
+                        and c.size[i] != 'ref'
+                    )
+                if unknown_children == 0 and sum_size is not None:
+                    self.abs_size[i] = sum_size
+                else:
+                    # there are relative sized subboxes, but the unit length is unknown
+                    # or there aren't any children
+                    pass
+
+            elif isinstance(self.size[i], Rel):
+                #if not self.subboxes:
+                #    # this is a leaf node, no information available
+                #    pass
+                #elif sum_rel_size[i] == Rel(0) or unit_length[i] is not None:
+                #    self.abs_size[i] = sum_size
+                #else:
+                #    # there are relative sized subboxes, but the unit length is unknown
+                #    pass
+                unknown_children = sum(1 for c in self.subboxes
+                        if c.abs_size[i] is None
+                        and c.size[i] != 'ref'
+                    )
+                if unknown_children == 0 and sum_size is not None:
+                    self.abs_size[i] = sum_size
+                else:
+                    # there are relative sized subboxes, but the unit length is unknown
+                    # or there aren't any children
+                    pass
+
+            elif self._has_absolute_width_configured(i):
+                if self.abs_size[i] is not None:
+                    assert(self.abs_size[i] == self.size[i])
+                if sum_size is not None:
+                    assert(sum_size == self.size[i])
+                self.abs_size[i] = self.size[i]
+
+
+            # update bound subbox sizes
+            if self.abs_size[i] is not None:
+
+                for c in self.subboxes:
+                    if c.size[i] == 'ref' and c.abs_size[i] is None:
+                        c._set_absolute_size(self.abs_size[i], i)
 
     def _get_sum(self):
 
         #sum_width = 0
-        sum_abs_width = 0
-        sum_rel_width = Rel(0)
-        unit_length = None
+        sum_abs_size = [0, 0, 0]
+        sum_rel_size = [Rel(0), Rel(0), Rel(0)]
+        unit_length = [None, None, None]
+        ref_size = [None, None, None]
 
-        for c in self.children:
+        for c in self.subboxes:
 
-            assert(not (c.width is None and c.abs_width is None))
+            for i in range(3):
 
-            if c.width is None:
-                assert(c.abs_width is not None)
-                #sum_width += c.abs_width
-                sum_abs_width += c.abs_width
+                assert(not (c.size[i] is None and c.abs_size[i] is None))
 
-            elif isinstance(c.width, Rel):
-                if c.abs_width is None:
-                    sum_rel_width += c.width
+                if c.size[i] is None:
+                    assert(c.abs_size[i] is not None)
+                    #sum_size[i] += c.abs_size[i]
+                    sum_abs_size[i] += c.abs_size[i]
+
+                elif c.size[i] == 'ref':
+                    if c.abs_size[i] is not None:
+                        assert(ref_size[i] is None or ref_size[i] == c.abs_size[i])
+                        ref_size[i] = c.abs_size[i]
+
+                elif isinstance(c.size[i], Rel):
+                    if c.abs_size[i] is None:
+                        sum_rel_size[i] += c.size[i]
+                    else:
+                        #sum_size[i] += c.abs_size[i]
+
+                        sum_rel_size[i] += c.size[i]
+                        new_ul = c.size[i].unit_length_from_total(c.abs_size[i])
+                        assert(unit_length[i] is None or new_ul == unit_length[i])
+                        unit_length[i] = new_ul
+
+                elif c._has_absolute_width_configured(i):
+                    assert(c.abs_size[i] is not None)
+                    #sum_size[i] += c.abs_size[i]
+                    sum_abs_size[i] += c.abs_size[i]
+
+        return sum_abs_size, sum_rel_size, unit_length, ref_size
+
+    def _set_absolute_size(self, value, i):
+
+        assert(isinstance(self.size[i], Rel) or self.size[i] == 'ref')
+        assert(self.abs_size[i] is None)
+
+        self.abs_size[i] = value
+
+
+        # update subboxes
+
+        if not self.subboxes:
+            return
+
+        sum_abs_size, sum_rel_size, unit_length, ref_size = self._get_sum()
+
+        assert(unit_length[i] is None)
+        assert(ref_size[i] is None)
+
+        if sum_rel_size[i] != Rel(0):
+            assert(self.abs_size[i] >= sum_abs_size[i])
+            unit_length[i] = sum_rel_size[i].unit_length_from_total(self.abs_size[i] - sum_abs_size[i])
+
+        for c in self.subboxes:
+            if c.abs_size[i] is None:
+                if isinstance(c.size[i], Rel):
+                    c._set_absolute_size(c.size[i].total_length_from_unit(unit_length[i]), i)
+                elif c.size[i] == 'ref':
+                    c._set_absolute_size(value, i)
                 else:
-                    #sum_width += c.abs_width
+                    assert(False)
 
-                    sum_rel_width += c.width
-                    new_ul = c.width.unit_length_from_total(c.abs_width)
-                    assert(unit_length is None or new_ul == unit_length)
-                    unit_length = new_ul
-
-            elif self._has_absolute_width_configured():
-                assert(c.abs_width is not None)
-                #sum_width += c.abs_width
-                sum_abs_width += c.abs_width
-
-        return sum_abs_width, sum_rel_width, unit_length
-
-    def _set_width_from_unit_length(self, ul):
-        assert(isinstance(self.width, Rel))
-
-        self.abs_width = self.width.total_length_from_unit(ul)
-
-
-        # update children
-
-        sum_abs_width, sum_rel_width, unit_length = self._get_sum()
-
-        assert(unit_length is None)
-        assert(sum_rel_width != Rel(0))
-
-        assert(self.abs_width >= sum_abs_width)
-        unit_length = sum_rel_width.unit_length_from_total(self.abs_width - sum_abs_width)
-
-        for c in self.children:
-            if isinstance(c.width, Rel) and c.width is None:
-                c._set_width_from_unit_length(unit_length)
-
-    def _has_absolute_width_configured(self):
-        return isinstance(self.width, int) or isinstance(self.width, float)
+    def _has_absolute_width_configured(self, i):
+        return isinstance(self.size[i], int) or isinstance(self.size[i], float)
 
     # def configure(self, config):
     #
@@ -135,12 +237,12 @@ class Box():
     #     # set child sizes, if possible
     #     if self.division_axis == 'x':
     #         if self.abs_height is not None:
-    #             for c in self.children:
+    #             for c in self.subboxes:
     #                 c.abs_height = self.abs_height
     #         if self.abs_width is not None:
     #             abs_sum = 0
     #             rel_sum = Rel(0)
-    #             for c in self.children:
+    #             for c in self.subboxes:
     #                 if isinstance(c.width, int):
     #                     abs_sum += c.width
     #                 elif isinstance(c.width, Rel):
@@ -155,17 +257,17 @@ class Box():
     #                     raise Exception("hard error")
     #             else:
     #                 unit_length = rel_sum.unit_length_from_total(abs_sum)
-    #                 for c in self.children:
+    #                 for c in self.subboxes:
     #                     if isinstance(c.width, Rel):
     #                         c.abs_width = c.width.total_length_from_unit(unit_length)
     #     elif self.division_axis == 'y':
     #         if self.abs_width is not None:
-    #             for c in self.children:
+    #             for c in self.subboxes:
     #                 c.abs_width = self.abs_width
     #         if self.abs_height is not None:
     #             abs_sum = 0
     #             rel_sum = Rel(0)
-    #             for c in self.children:
+    #             for c in self.subboxes:
     #                 if isinstance(c.height, int):
     #                     abs_sum += c.height
     #                 elif isinstance(c.height, Rel):
@@ -180,15 +282,15 @@ class Box():
     #                     raise Exception("hard error")
     #             else:
     #                 unit_length = rel_sum.unit_length_from_total(abs_sum)
-    #                 for c in self.children:
+    #                 for c in self.subboxes:
     #                     if isinstance(c.height, Rel):
     #                         c.abs_height = c.height.total_length_from_unit(unit_length)
     #
-    #     # call configure for children
-    #     for c in self.children:
+    #     # call configure for subboxes
+    #     for c in self.subboxes:
     #         c.configure(config)
     #
-    #     # check if self.size == sum(children.size)
+    #     # check if self.size == sum(subboxes.size)
     #     # or set if self hasnt an abs size yet
     #     if self.division_axis == 'x':
     #         if self.abs_height is None:
@@ -220,37 +322,34 @@ class Box():
 class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(SideWall(self.width, self.depth))
-        self.walls.append(SideWall(self.height, self.depth))
-        self.walls.append(SideWall(self.width, self.depth))
-        self.walls.append(SideWall(self.height, self.depth))
-        self.walls.append(ExtendedWall(self.width, self.height))
-        self.walls.append(ExtendedWall(self.width, self.height))
+        self.walls.append(SideWall(self.size[0], self.size[2]))
+        self.walls.append(SideWall(self.size[1], self.size[2]))
+        self.walls.append(SideWall(self.size[0], self.size[2]))
+        self.walls.append(SideWall(self.size[1], self.size[2]))
+        self.walls.append(ExtendedWall(self.size[0], self.size[1]))
+        self.walls.append(ExtendedWall(self.size[0], self.size[1]))
 
 class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(self.width, self.depth))
-        self.walls.append(ToplessWall(self.height, self.depth))
-        self.walls.append(ToplessWall(self.width, self.depth))
-        self.walls.append(ToplessWall(self.height, self.depth))
+        self.walls.append(ToplessWall(self.size[0], self.size[2]))
+        self.walls.append(ToplessWall(self.size[1], self.size[2]))
+        self.walls.append(ToplessWall(self.size[0], self.size[2]))
+        self.walls.append(ToplessWall(self.size[1], self.size[2]))
         self.walls.append(None)
-        self.walls.append(ExtendedWall(self.width, self.height))
+        self.walls.append(ExtendedWall(self.size[0], self.size[1]))
 
 
 class SubBox(Box):
     def __init__(self, width, height, depth):
-        self.width = width
-        self.height = height
-        self.depth = depth
-
-        self.abs_width = None
-        self.abs_height = None
+        self.size = [width, height, depth]
+        self.abs_size = [None, None, None]
 
         self.subboxes = []
 
     def render(self, config):
         # TODO uniquify wall references
+        pass
 
     def get_wall_by_direction(self, v):
         if (v == DIR.UP).all():    return self.walls[0]
