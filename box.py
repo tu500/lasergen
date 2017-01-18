@@ -31,10 +31,6 @@ class Box():
 
         self.abs_size = [None, None, None]
 
-        #if self.abs_size != [None, None, None]:
-        #    # nothing to do
-        #    return
-
         for c in self.subboxes:
             c.configure(config)
 
@@ -110,14 +106,6 @@ class Box():
                     pass
 
             elif isinstance(self.size[i], Rel):
-                #if not self.subboxes:
-                #    # this is a leaf node, no information available
-                #    pass
-                #elif sum_rel_size[i] == Rel(0) or unit_length[i] is not None:
-                #    self.abs_size[i] = sum_size
-                #else:
-                #    # there are relative sized subboxes, but the unit length is unknown
-                #    pass
                 unknown_children = sum(1 for c in self.subboxes
                         if c.abs_size[i] is None
                         and c.size[i] != 'ref'
@@ -220,93 +208,6 @@ class Box():
     def _has_absolute_width_configured(self, i):
         return isinstance(self.size[i], int) or isinstance(self.size[i], float)
 
-    # def configure(self, config):
-    #
-    #     if self.abs_width is not None and isinstance(self.width, int):
-    #         if self.abs_width != self.width:
-    #             raise Exception("hard error")
-    #     if self.abs_height is not None and isinstance(self.height, int):
-    #         if self.abs_height != self.height:
-    #             raise Exception("hard error")
-    #
-    #     if isinstance(self.width, int):
-    #         self.abs_width = self.width
-    #     if isinstance(self.height, int):
-    #         self.abs_height = self.height
-    #
-    #     # set child sizes, if possible
-    #     if self.division_axis == 'x':
-    #         if self.abs_height is not None:
-    #             for c in self.subboxes:
-    #                 c.abs_height = self.abs_height
-    #         if self.abs_width is not None:
-    #             abs_sum = 0
-    #             rel_sum = Rel(0)
-    #             for c in self.subboxes:
-    #                 if isinstance(c.width, int):
-    #                     abs_sum += c.width
-    #                 elif isinstance(c.width, Rel):
-    #                     rel_sum += c.width
-    #                 elif c.width is None:
-    #                     c.configure(config)
-    #                     if c.abs_width is None:
-    #                         raise Exception("hard error")
-    #                     abs_sum += c.abs_width
-    #             if rel_sum == Rel(0):
-    #                 if abs_sum != self.abs_width:
-    #                     raise Exception("hard error")
-    #             else:
-    #                 unit_length = rel_sum.unit_length_from_total(abs_sum)
-    #                 for c in self.subboxes:
-    #                     if isinstance(c.width, Rel):
-    #                         c.abs_width = c.width.total_length_from_unit(unit_length)
-    #     elif self.division_axis == 'y':
-    #         if self.abs_width is not None:
-    #             for c in self.subboxes:
-    #                 c.abs_width = self.abs_width
-    #         if self.abs_height is not None:
-    #             abs_sum = 0
-    #             rel_sum = Rel(0)
-    #             for c in self.subboxes:
-    #                 if isinstance(c.height, int):
-    #                     abs_sum += c.height
-    #                 elif isinstance(c.height, Rel):
-    #                     rel_sum += c.height
-    #                 elif c.height is None:
-    #                     c.configure(config)
-    #                     if c.abs_height is None:
-    #                         raise Exception("hard error")
-    #                     abs_sum += c.abs_height
-    #             if rel_sum == Rel(0):
-    #                 if abs_sum != self.abs_height:
-    #                     raise Exception("hard error")
-    #             else:
-    #                 unit_length = rel_sum.unit_length_from_total(abs_sum)
-    #                 for c in self.subboxes:
-    #                     if isinstance(c.height, Rel):
-    #                         c.abs_height = c.height.total_length_from_unit(unit_length)
-    #
-    #     # call configure for subboxes
-    #     for c in self.subboxes:
-    #         c.configure(config)
-    #
-    #     # check if self.size == sum(subboxes.size)
-    #     # or set if self hasnt an abs size yet
-    #     if self.division_axis == 'x':
-    #         if self.abs_height is None:
-    #             raise Exception()
-    #     elif self.division_axis == 'y':
-    #
-    #     if self.abs_width is None:
-    #         if not isinstance(self.width, Rel):
-    #             raise Exception("hard error")
-    #         else:
-    #             raise Exception("soft error") #?
-    #     if self.abs_height is None:
-    #         if not isinstance(self.height, Rel):
-    #             raise Exception("hard error")
-    #         else:
-    #             raise Exception("soft error") #?
 
     def get_wall_by_direction(self, v):
         if (v == DIR.UP).all():    return self.walls[0]
