@@ -29,6 +29,12 @@ class Rel():
         self.value /= b
         return self
 
+    def __eq__(self, other):
+        return isinstance(other, Rel) and self.value == other.value
+
+    def __repr__(self):
+        return 'Rel({})'.format(self.value)
+
 class Frac():
     def __init__(self, value, translate=0):
         self.value = value
@@ -62,3 +68,9 @@ class Frac():
         self.value /= b
         self.translate /= b
         return self
+
+    def __eq__(self, other):
+        return isinstance(other, Frac) and self.value == other.value and self.translate == other.translate
+
+    def __repr__(self):
+        return 'Rel({}, {})'.format(self.value, self.translate)
