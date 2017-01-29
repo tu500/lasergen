@@ -2,10 +2,6 @@ from wall import ToplessWall, ExtendedWall, SideWall
 from util import DIR
 from units import Rel
 
-DIRECTION_X = 0
-DIRECTION_Y = 1
-DIRECTION_Z = 2
-
 class Box():
     def __init__(self, width, height, depth):
         self.size = [width, height, depth]
@@ -17,11 +13,11 @@ class Box():
     def subdivide(self, direction, *sizes):
         assert(self.subboxes == [])
 
-        if direction == 0:
+        if (direction == DIR.RIGHT).all():
             self.subboxes = [SubBox(size, 'ref', 'ref') for size in sizes]
-        elif direction == 1:
+        elif (direction == DIR.UP).all():
             self.subboxes = [SubBox('ref', size, 'ref') for size in sizes]
-        elif direction == 2:
+        elif (direction == DIR.FRONT).all():
             self.subboxes = [SubBox('ref', 'ref', size) for size in sizes]
 
     def render(self, config):
