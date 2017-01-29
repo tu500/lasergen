@@ -1,3 +1,5 @@
+import numpy as np
+
 from wall import ToplessWall, ExtendedWall, SideWall
 from util import DIR
 from units import Rel
@@ -5,7 +7,7 @@ from units import Rel
 class Box():
     def __init__(self, width, height, depth):
         self.size = [width, height, depth]
-        self.abs_size = [None, None, None]
+        self.abs_size = np.array([None, None, None])
 
         self._construct_walls()
         self.subboxes = []
@@ -25,7 +27,7 @@ class Box():
 
     def configure(self, config):
 
-        self.abs_size = [None, None, None]
+        self.abs_size = np.array([None, None, None])
 
         for c in self.subboxes:
             c.configure(config)
@@ -266,7 +268,7 @@ class ClosedBox(Box):
 class SubBox(Box):
     def __init__(self, width, height, depth):
         self.size = [width, height, depth]
-        self.abs_size = [None, None, None]
+        self.abs_size = np.array([None, None, None])
 
         self.subboxes = []
 
