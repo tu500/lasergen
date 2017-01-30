@@ -12,6 +12,10 @@ EDGE_STYLE_INTERNAL_FLAT = range(4)
 # 2d primitives
 
 class Object2D():
+    """
+    Helper class to group several 2D primitives toghether into a 2D object.
+    """
+
     def __init__(self, primitives=None):
         if primitives is None:
             self.primitives = []
@@ -19,6 +23,11 @@ class Object2D():
             self.primitives = primitives
 
     def bounding_box(self):
+        """
+        Calculate an axis aligned bounding box containing all primitives.
+        Return value is (min_corner, max_corner).
+        """
+
         if not self.primitives:
             raise Exception("PANIC!!!!")
 
@@ -43,15 +52,39 @@ class Object2D():
         return (vmin, vmax)
 
     def __add__(self, b):
+        """
+        If argument is an Object2D, create a new Object2D concatenating both's
+        primitive list. Else perform element wise additionn.
+        """
         if isinstance(b, Object2D):
             return Object2D(self.primitives + b.primitives)
         return Object2D([i + b for i in self.primitives])
+
     def __sub__(self, b):
+        """
+        Perform elementwise subtraction.
+        """
         return Object2D([i - b for i in self.primitives])
+
     def extend(self, b):
+        """
+        Extend own primitive list with another Object2D's one.
+        """
         self.primitives.extend(b.primitives)
 
-class Line():
+
+class Primitive2D():
+    """
+    Abstract base class for 2D primitives.
+    """
+    def __add__(self, b):
+        """Element wise translation."""
+        raise NotImplementedError('Abstract method')
+    def __sub__(self, b):
+        """Element wise translation."""
+        raise NotImplementedError('Abstract method')
+
+class Line(Primitive2D):
     def __init__(self, start, end):
         self.start = start
         self.end = end
@@ -61,7 +94,7 @@ class Line():
     def __sub__(self, b):
         return Line(self.start - b, self.end - b)
 
-class Circle():
+class Circle(Primitive2D):
     def __init__(self, center, radius):
         self.center = center
         self.radius = radius
@@ -71,16 +104,30 @@ class Circle():
     def __sub__(self, b):
         return Circle(self.center - b, self.radius)
 
-class Text():
+class Text(Primitive2D):
     def __init__(self, positionn, text, fontsize=5):
         self.position = position
         self.text = text
         self.fontsize = fontsize
 
+    def __add__(self, b):
+        return Text(self.position + b, self.text, self.fontsize)
+    def __sub__(self, b):
+        return Text(self.position - b, self.text, self.fontsize)
+
 
 # 2d objects
 
-class CutoutRect():
+class PlanarObject():
+    """
+    Abstract base class for objects that render into an Object2D.
+    """
+
+    def render(self, config):
+        """Render into an Object2D."""
+        raise NotImplementedError('Abstract method')
+
+class CutoutRect(PlanarObject):
     def __init__(self, width, height):
         self.width = width
         self.height = height
@@ -98,7 +145,7 @@ class CutoutRect():
 
         return Object2D(l)
 
-class HexBoltCutout():
+class HexBoltCutout(PlanarObject):
     def __init__(self, width):
         self.width = width
 
@@ -123,7 +170,7 @@ class HexBoltCutout():
             ]
         return Object2D([Line(a,b) for a,b in zip(corners, corners[1:])])
 
-class CircleCutout():
+class CircleCutout(PlanarObject):
     def __init__(self, radius):
         self.radius = radius
 
@@ -134,7 +181,7 @@ class CircleCutout():
 
 # walls
 
-class Edge():
+class Edge(PlanarObject):
     def __init__(self, length, outward_dir, begin_style=EDGE_STYLE_FLAT, end_style=EDGE_STYLE_FLAT, flat=False):
         self.length = length
         self.outward_dir = outward_dir / np.linalg.norm(outward_dir)
@@ -296,6 +343,9 @@ class Edge():
 
     @staticmethod
     def _check_tooth_count(begin_style, end_style, tooth_count):
+        """
+        Check whether a specific tooth count matches given begin and end styles.
+        """
         if tooth_count % 2 == 0:
             return  (begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and end_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT]) or \
                     (end_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and begin_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT])
@@ -305,6 +355,11 @@ class Edge():
 
     @staticmethod
     def _get_tooth_count(config, length, odd_tooth_count):
+        """
+        Calculate a matching number of teeth for the edge, given its lenght,
+        configured tooth length bounds and whether there should be an even or
+        odd amount of theeth.
+        """
         # TODO add preferred tooth length
 
         min_tooth_count = math.ceil(length / config.tooth_max_width)
@@ -416,7 +471,7 @@ class CutoutEdge(Edge):
         return Object2D(lines + last_lines)
 
 
-class Wall():
+class Wall(PlanarObject):
     #width = None
     #height = None
     #children = None
@@ -431,7 +486,7 @@ class Wall():
         self._construct_edges()
 
     def _construct_edges(self):
-        raise Exception("Abstract method")
+        raise NotImplementedError('Abstract method')
 
     def get_edge_by_direction(self, v):
         if (v[0:2] == DIR.UP).all():    return self.edges[0]
