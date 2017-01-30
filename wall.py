@@ -3,10 +3,12 @@ import math
 
 from util import DIR, orthon, min_vec, max_vec
 
-EDGE_STYLE_TOOTHED, \
-EDGE_STYLE_EXTENDED, \
-EDGE_STYLE_FLAT, \
-EDGE_STYLE_INTERNAL_FLAT = range(4)
+
+class EDGE_STYLE():
+    TOOTHED, \
+    EXTENDED, \
+    FLAT, \
+    INTERNAL_FLAT = range(4)
 
 
 # 2d primitives
@@ -182,7 +184,7 @@ class CircleCutout(PlanarObject):
 # walls
 
 class Edge(PlanarObject):
-    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE_FLAT, end_style=EDGE_STYLE_FLAT, flat=False):
+    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, flat=False):
         self.length = length
         self.outward_dir = outward_dir / np.linalg.norm(outward_dir)
         self.begin_style = begin_style
@@ -208,8 +210,8 @@ class Edge(PlanarObject):
                 )])
 
 
-        if (self.begin_style in [EDGE_STYLE_TOOTHED, EDGE_STYLE_EXTENDED] and self.end_style == EDGE_STYLE_FLAT) or \
-            (self.begin_style == EDGE_STYLE_FLAT and self.end_style in [EDGE_STYLE_TOOTHED, EDGE_STYLE_EXTENDED]):
+        if (self.begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED] and self.end_style == EDGE_STYLE.FLAT) or \
+            (self.begin_style == EDGE_STYLE.FLAT and self.end_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED]):
 
             odd_tooth_count = False
 
@@ -241,7 +243,7 @@ class Edge(PlanarObject):
                          i.e. [0, first_tooth_width, first_tooth_width + second_tooth_width, ..., full_edge_length]
         """
 
-        if begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]:
+        if begin_style in [EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED]:
             extended_list = [True, False] * math.ceil(len(tooth_positions)/2)
         else:
             extended_list = [False, True] * math.ceil(len(tooth_positions)/2)
@@ -267,7 +269,7 @@ class Edge(PlanarObject):
         # render first tooth
         start_pos, end_pos, extended = tooth_data[0]
 
-        if begin_style == EDGE_STYLE_EXTENDED:
+        if begin_style == EDGE_STYLE.EXTENDED:
             lines.append(Line(
                 start + direction * (start_pos - wall_thickness - displace) + outward_dir * (wall_thickness + displace),
                 start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace)
@@ -277,16 +279,16 @@ class Edge(PlanarObject):
                 start + direction * (end_pos + displace) + outward_dir * displace
                 ))
 
-        elif begin_style == EDGE_STYLE_TOOTHED:
+        elif begin_style == EDGE_STYLE.TOOTHED:
             middle_teeth = tooth_data[0:-1]
 
-        elif begin_style == EDGE_STYLE_FLAT:
+        elif begin_style == EDGE_STYLE.FLAT:
             lines.append(Line(
                 start + direction * (start_pos - displace) + outward_dir * displace,
                 start + direction * (end_pos - displace) + outward_dir * displace
                 ))
 
-        elif begin_style == EDGE_STYLE_INTERNAL_FLAT:
+        elif begin_style == EDGE_STYLE.INTERNAL_FLAT:
             middle_teeth = tooth_data[0:-1]
 
 
@@ -294,13 +296,13 @@ class Edge(PlanarObject):
         start_pos, end_pos, extended = tooth_data[-1]
         last_lines = []
 
-        if end_style == EDGE_STYLE_FLAT:
+        if end_style == EDGE_STYLE.FLAT:
             last_lines.append(Line(
                 start + direction * (start_pos + displace) + outward_dir * displace,
                 start + direction * (end_pos + displace) + outward_dir * displace,
                 ))
 
-        elif end_style == EDGE_STYLE_EXTENDED:
+        elif end_style == EDGE_STYLE.EXTENDED:
             last_lines.append(Line(
                 start + direction * (start_pos - displace) + outward_dir * displace,
                 start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace),
@@ -310,10 +312,10 @@ class Edge(PlanarObject):
                 start + direction * (end_pos + wall_thickness + displace) + outward_dir * (wall_thickness + displace),
                 ))
 
-        elif end_style == EDGE_STYLE_TOOTHED:
+        elif end_style == EDGE_STYLE.TOOTHED:
             middle_teeth.append(tooth_data[-1])
 
-        elif end_style == EDGE_STYLE_INTERNAL_FLAT:
+        elif end_style == EDGE_STYLE.INTERNAL_FLAT:
             middle_teeth.append(tooth_data[-1])
 
 
@@ -347,11 +349,11 @@ class Edge(PlanarObject):
         Check whether a specific tooth count matches given begin and end styles.
         """
         if tooth_count % 2 == 0:
-            return  (begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and end_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT]) or \
-                    (end_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and begin_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT])
+            return  (begin_style in [EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT]) or \
+                    (end_style in [EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED] and begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT])
         else:
-            return  (begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED] and end_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]) or \
-                    (begin_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT] and end_style in [EDGE_STYLE_FLAT, EDGE_STYLE_INTERNAL_FLAT])
+            return  (begin_style in [EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED] and end_style in [EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED]) or \
+                    (begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT])
 
     @staticmethod
     def _get_tooth_count(config, length, odd_tooth_count):
@@ -419,7 +421,7 @@ class CutoutEdge(Edge):
                          i.e. [0, first_tooth_width, first_tooth_width + second_tooth_width, ..., full_edge_length]
         """
 
-        if begin_style in [EDGE_STYLE_EXTENDED, EDGE_STYLE_TOOTHED]:
+        if begin_style in [EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED]:
             extended_list = [True, False] * math.ceil(len(tooth_positions)/2)
         else:
             extended_list = [False, True] * math.ceil(len(tooth_positions)/2)
@@ -445,10 +447,10 @@ class CutoutEdge(Edge):
         # render first tooth
         start_pos, end_pos, extended = tooth_data[0]
 
-        if begin_style == EDGE_STYLE_EXTENDED:
+        if begin_style == EDGE_STYLE.EXTENDED:
             lines.extend(self._render_rectangle(start, start_pos - wall_thickness, end_pos, direction, outward_dir, wall_thickness, displace))
 
-        elif begin_style == EDGE_STYLE_TOOTHED:
+        elif begin_style == EDGE_STYLE.TOOTHED:
             middle_teeth = tooth_data[0:-1]
 
 
@@ -456,10 +458,10 @@ class CutoutEdge(Edge):
         start_pos, end_pos, extended = tooth_data[-1]
         last_lines = []
 
-        if end_style == EDGE_STYLE_EXTENDED:
+        if end_style == EDGE_STYLE.EXTENDED:
             lines.extend(self._render_rectangle(start, start_pos, end_pos + wall_thickness, direction, outward_dir, wall_thickness, displace))
 
-        elif end_style == EDGE_STYLE_TOOTHED:
+        elif end_style == EDGE_STYLE.TOOTHED:
             middle_teeth.append(tooth_data[-1])
 
 
@@ -514,22 +516,22 @@ class ToplessWall(Wall):
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.width,  DIR.UP[:2],    flat=True))
-        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
-        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_TOOTHED))
-        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_TOOTHED, EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
+        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
 
 class ExtendedWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
-        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
-        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
-        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_EXTENDED, EDGE_STYLE_EXTENDED))
+        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
 
 class SideWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
-        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_FLAT))
-        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE_FLAT,    EDGE_STYLE_TOOTHED))
-        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE_TOOTHED, EDGE_STYLE_FLAT))
+        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
+        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
