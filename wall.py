@@ -4,6 +4,30 @@ import math
 from util import DIR, orthon, min_vec, max_vec
 
 
+# Edge Styles:
+#
+#    ╲                                ╲
+#     ╲                                ╲
+#      ╲                                ╲
+#       ╔════════════╗                   ╲    ╔════════╗
+#       ║╲           ║                    ╲   ║        ║
+#       ║ ╲          ║                     ╲  ║        ║
+#       ║  ╲         ║                      ╲ ║        ║
+#       ║   ╲        ║                       ╲║        ║
+#       ║    ╲-------╚═══════════┄┄┄┄┄        ║--------╚═══════════┄┄┄┄┄
+#       ║    |╲                               ║╲
+#       ║    | ╲                              ║ ╲
+#       ║    |  ╲      EXTENDED               ║  ╲      TOOTHED
+#       ║    |   ╲                            ║   ╲
+#       ╚════╗    ╲                           ║    ╲
+#            ║     ╲                          ║     ╲
+#            ║      ╲                         ║      ╲
+#            ║       ╲                        ║       ╲
+#            ║        ╲                       ║        ╲
+#            ┆         ╲                      ┆         ╲
+#            ┆                                ┆
+#            ┆  EXTENDED                      ┆  FLAT
+
 class EDGE_STYLE():
     TOOTHED, \
     EXTENDED, \
