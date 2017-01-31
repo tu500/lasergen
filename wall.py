@@ -474,14 +474,12 @@ class CutoutEdge(Edge):
 
 
 class Wall(PlanarObject):
-    #width = None
-    #height = None
+    #size = None
     #children = None
     #edges = None
 
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
+        self.size = np.array([width, height])
 
         self.children = []
 
@@ -499,10 +497,10 @@ class Wall(PlanarObject):
     def render(self, config):
         l = Object2D()
 
-        l.extend(self.edges[0].render(config) + np.array([0, self.height]))
+        l.extend(self.edges[0].render(config) + np.array([0, self.size[1]]))
         l.extend(self.edges[1].render(config) + np.array([0, 0]))
         l.extend(self.edges[2].render(config) + np.array([0, 0]))
-        l.extend(self.edges[3].render(config) + np.array([self.width, 0]))
+        l.extend(self.edges[3].render(config) + np.array([self.size[0], 0]))
 
         for child, pos in self.children:
             l.extend(child.render(config) + pos)
@@ -515,23 +513,23 @@ class Wall(PlanarObject):
 class ToplessWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  DIR.UP[:2],    flat=True))
-        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
-        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    flat=True))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
 
 class ExtendedWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
-        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
-        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
-        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
 
 class SideWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.width,  DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.width,  DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.height, DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
-        self.edges.append(Edge(self.height, DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
