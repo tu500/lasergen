@@ -8,6 +8,23 @@ class DIR():
     FRONT = np.array([ 0, 0, 1])
     BACK  = np.array([ 0, 0,-1])
 
+def is_dir(d):
+    dirs = {k:v for k,v in DIR.__dict__.items() if not k.startswith('_')}
+    for i in dirs.values():
+        if (d == i).all():
+            return True
+    return False
+
+def dir_to_name(d):
+    dirs = {k:v for k,v in DIR.__dict__.items() if not k.startswith('_')}
+    for k,v in dirs:
+        if (v == d).all():
+            return k
+
+def project_along_axis(vec, axis):
+    assert(is_dir(axis))
+    return np.array([v for v,a in zip(vec, axis) if a == 0])
+
 def orthon(v):
     return np.array([-v[1], v[0]]) / np.linalg.norm(v)
 

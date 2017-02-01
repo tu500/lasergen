@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR, orthon, min_vec, max_vec
+from util import DIR, orthon, min_vec, max_vec, project_along_axis
 
 
 # Edge Styles:
@@ -97,6 +97,10 @@ class Object2D():
         Extend own primitive list with another Object2D's one.
         """
         self.primitives.extend(b.primitives)
+
+    def mirror(self, mirror_axes):
+        # TODO
+        return self
 
 
 class Primitive2D():
@@ -526,13 +530,54 @@ class Wall(PlanarObject):
         l.extend(self.edges[2].render(config) + np.array([0, 0]))
         l.extend(self.edges[3].render(config) + np.array([self.size[0], 0]))
 
-        for child, pos in self.children:
-            l.extend(child.render(config) + pos)
+        for child, pos, mirror_axes in self.children:
+            l.extend(child.render(config).mirror(mirror_axes) + pos)
 
         return l
 
-    def add_child(self, child, pos):
-        self.children.append((child, pos))
+    def add_child(self, child, pos, mirrored=np.array([False, False])):
+        self.children.append((child, pos, mirrored))
+
+    def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
+        if size is not None:
+            assert( (pos + size <= self.size).all() )
+        return WallReference(self, pos, size, mirror_children, projection_dir)
+
+    def dereference(self):
+        return self
+
+class WallReference():
+
+    def __init__(self, target, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
+        assert( (pos >= np.array([0,0])).all() )
+
+        if size is None:
+            size = target.size - pos
+            assert( (size >= np.array([0,0])).all() )
+
+        self.target = target
+        self.position = pos
+        self.size = size
+        self.mirror_children = mirror_children
+        self.projection_dir = projection_dir
+
+    def to_local_coords(self, v):
+        assert(self.projection_dir is not None)
+        return project_along_axis(v, self.projection_dir)
+
+    def add_child(self, child, pos, mirrored=np.array([False, False])):
+        if len(pos) == 3 and self.projection_dir is not None:
+            pos = self.to_local_coords(pos)
+        self.target.add_child(child, self.position + pos, self.mirror_children ^ mirrored)
+
+    def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
+        if size is not None:
+            assert( (pos + size <= self.size).all() )
+        return WallReference(self, self.position + pos, size, self.mirror_children ^ mirror_children, projection_dir)
+
+    def dereference(self):
+        return self.target.dereference()
+
 
 class ToplessWall(Wall):
     def _construct_edges(self):

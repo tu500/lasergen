@@ -9,7 +9,6 @@ class Box():
         self.size = [width, height, depth]
         self.abs_size = np.array([None, None, None])
 
-        self._construct_walls()
         self.subboxes = []
 
     def subdivide(self, direction, *sizes):
@@ -23,7 +22,24 @@ class Box():
             self.subboxes = [SubBox('ref', 'ref', size) for size in sizes]
 
     def render(self, config):
-        return [w.render(config) for w in self.walls if w is not None]
+        # uniquify wall references, keep order for deterministic output
+        seen = set()
+        walls = [x for x in self._gather_walls() if not (x in seen or seen.add(x))]
+        return [w.render(config) for w in walls]
+
+    def _gather_walls(self):
+        s = [w.dereference() for w in self.walls if w is not None]
+
+        for c in self.subboxes:
+            s.extend(c._gather_walls())
+
+        return s
+
+    def construct(self):
+        self._construct_walls()
+
+        for c in self.subboxes:
+            c.construct()
 
     def configure(self, config):
 
@@ -247,22 +263,22 @@ class Box():
 class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(SideWall(self.size[0], self.size[2]))
-        self.walls.append(SideWall(self.size[1], self.size[2]))
-        self.walls.append(SideWall(self.size[0], self.size[2]))
-        self.walls.append(SideWall(self.size[1], self.size[2]))
-        self.walls.append(ExtendedWall(self.size[0], self.size[1]))
-        self.walls.append(ExtendedWall(self.size[0], self.size[1]))
+        self.walls.append(SideWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.UP))
+        self.walls.append(SideWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.DOWN))
+        self.walls.append(SideWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.LEFT))
+        self.walls.append(SideWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.RIGHT))
+        self.walls.append(ExtendedWall(self.size[0], self.size[1]).get_reference(projection_dir=DIR.FRONT))
+        self.walls.append(ExtendedWall(self.size[0], self.size[1]).get_reference(projection_dir=DIR.BACK))
 
 class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(self.size[0], self.size[2]))
-        self.walls.append(ToplessWall(self.size[1], self.size[2]))
-        self.walls.append(ToplessWall(self.size[0], self.size[2]))
-        self.walls.append(ToplessWall(self.size[1], self.size[2]))
+        self.walls.append(ToplessWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.UP))
+        self.walls.append(ToplessWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.DOWN))
+        self.walls.append(ToplessWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.LEFT))
+        self.walls.append(ToplessWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.RIGHT))
         self.walls.append(None)
-        self.walls.append(ExtendedWall(self.size[0], self.size[1]))
+        self.walls.append(ExtendedWall(self.size[0], self.size[1]).get_reference(projection_dir=DIR.BACK))
 
 
 class SubBox(Box):
@@ -271,15 +287,3 @@ class SubBox(Box):
         self.abs_size = np.array([None, None, None])
 
         self.subboxes = []
-
-    def render(self, config):
-        # TODO uniquify wall references
-        pass
-
-    def get_wall_by_direction(self, v):
-        if (v == DIR.UP).all():    return self.walls[0]
-        if (v == DIR.DOWN).all():  return self.walls[1]
-        if (v == DIR.LEFT).all():  return self.walls[2]
-        if (v == DIR.RIGHT).all(): return self.walls[3]
-        if (v == DIR.FRONT).all(): return self.walls[4]
-        if (v == DIR.BACK).all():  return self.walls[5]
