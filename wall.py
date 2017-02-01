@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR, orthon, min_vec, max_vec, project_along_axis
+from util import DIR, orthon, min_vec, max_vec, project_along_axis, mirror_array_bool_to_factor
 
 
 # Edge Styles:
@@ -99,8 +99,12 @@ class Object2D():
         self.primitives.extend(b.primitives)
 
     def mirror(self, mirror_axes):
-        # TODO
-        return self
+        """
+        Return a new Object2D created by mirroring all primitives in the
+        'global' (meaning local to this Object2D, not its primitives) reference
+        system along the specified axes.
+        """
+        return Object2D([p.mirror(mirror_axes) for p in self.primitives])
 
 
 class Primitive2D():
@@ -113,6 +117,8 @@ class Primitive2D():
     def __sub__(self, b):
         """Translation."""
         raise NotImplementedError('Abstract method')
+    def mirror(self, mirror_axes):
+        raise NotImplementedError('Abstract method')
 
 class Line(Primitive2D):
     def __init__(self, start, end):
@@ -123,6 +129,9 @@ class Line(Primitive2D):
         return Line(self.start + b, self.end + b)
     def __sub__(self, b):
         return Line(self.start - b, self.end - b)
+    def mirror(self, mirror_axes):
+        fac = mirror_array_bool_to_factor(mirror_axes)
+        return Line(self.start * fac, self.end * fac)
 
 class Circle(Primitive2D):
     def __init__(self, center, radius):
@@ -133,6 +142,9 @@ class Circle(Primitive2D):
         return Circle(self.center + b, self.radius)
     def __sub__(self, b):
         return Circle(self.center - b, self.radius)
+    def mirror(self, mirror_axes):
+        fac = mirror_array_bool_to_factor(mirror_axes)
+        return Circle(self.center * fac, self.radius)
 
 class Text(Primitive2D):
     def __init__(self, positionn, text, fontsize=5):
@@ -144,6 +156,9 @@ class Text(Primitive2D):
         return Text(self.position + b, self.text, self.fontsize)
     def __sub__(self, b):
         return Text(self.position - b, self.text, self.fontsize)
+    def mirror(self, mirror_axes):
+        # TODO
+        return self
 
 
 # 2d objects
