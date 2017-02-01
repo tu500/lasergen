@@ -454,7 +454,7 @@ class Edge(PlanarObject):
     @staticmethod
     def _get_tooth_count(config, length, odd_tooth_count):
         """
-        Calculate a matching number of teeth for the edge, given its lenght,
+        Calculate a matching number of teeth for the edge, given its length,
         configured tooth length bounds and whether there should be an even or
         odd amount of theeth.
         """
