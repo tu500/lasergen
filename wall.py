@@ -108,10 +108,10 @@ class Primitive2D():
     Abstract base class for 2D primitives.
     """
     def __add__(self, b):
-        """Element wise translation."""
+        """Translation."""
         raise NotImplementedError('Abstract method')
     def __sub__(self, b):
-        """Element wise translation."""
+        """Translation."""
         raise NotImplementedError('Abstract method')
 
 class Line(Primitive2D):
