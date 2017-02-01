@@ -72,6 +72,10 @@ class Object2D():
             elif isinstance(p, Circle):
                 vmin = min_vec(vmin, p.center - np.array([p.radius, p.radius]))
                 vmax = max_vec(vmax, p.center + np.array([p.radius, p.radius]))
+            elif isinstance(p, ArcPath):
+                # TODO: this is only a (bad) heuristic
+                vmin = min_vec(vmin, p.start - 2*np.array([p.radius, p.radius]), p.end - 2*np.array([p.radius, p.radius]))
+                vmax = max_vec(vmax, p.start + 2*np.array([p.radius, p.radius]), p.end + 2*np.array([p.radius, p.radius]))
             else:
                 raise Exception("PANIC")
 
@@ -145,6 +149,29 @@ class Circle(Primitive2D):
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Circle(self.center * fac, self.radius)
+
+class ArcPath(Primitive2D):
+    def __init__(self, start, end, radius, large_arc=True, sweep=True):
+        self.start = start
+        self.end = end
+        self.radius = radius
+        self.large_arc = large_arc
+        self.sweep = sweep
+
+    def __add__(self, b):
+        return ArcPath(self.start + b, self.end + b, self.radius, self.large_arc, self.sweep)
+    def __sub__(self, b):
+        return ArcPath(self.start - b, self.end - b, self.radius, self.large_arc, self.sweep)
+    def mirror(self, mirror_axes):
+        # TODO
+        return self
+
+    @staticmethod
+    def from_center_angle(center, angle_start, angle_end, radius):
+        start = center + radius * np.array([math.cos(angle_start / 180 * math.pi), math.sin(angle_start / 180 * math.pi)])
+        end = center + radius * np.array([math.cos(angle_end / 180 * math.pi), math.sin(angle_end / 180 * math.pi)])
+        large_arc = angle_end - angle_start >= 180
+        return ArcPath(start, end, radius, large_arc=large_arc)
 
 class Text(Primitive2D):
     def __init__(self, positionn, text, fontsize=5):
@@ -223,6 +250,32 @@ class CircleCutout(PlanarObject):
         displace = config.cutting_width / 2
 
         return Object2D([Circle(0, self.radius - displace)])
+
+class MountingScrewCutout(PlanarObject):
+    def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir):
+        assert(radius_head >= radius_shaft)
+
+        self.radius_head = radius_head
+        self.radius_shaft = radius_shaft
+        self.shaft_length = shaft_length
+        self.shaft_dir = shaft_dir
+
+    def render(self, config):
+        displace = config.cutting_width / 2
+
+        on = orthon(self.shaft_dir)
+        rh = self.radius_head - displace
+        rs = (self.radius_shaft - displace)
+
+        shaft_straight_endpoint = (self.shaft_length - math.sqrt(rh*rh - rs*rs)) * self.shaft_dir
+
+        l = []
+        l.append(ArcPath(rs * (-on), rs * on, rs))
+        l.append(Line(rs * on, rs * on + shaft_straight_endpoint))
+        l.append(ArcPath(rs * on + shaft_straight_endpoint, rs * (-on) + shaft_straight_endpoint, rh))
+        l.append(Line(rs * (-on) + shaft_straight_endpoint, rs * (-on)))
+
+        return Object2D(l)
 
 # walls
 

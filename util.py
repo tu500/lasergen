@@ -29,6 +29,7 @@ def mirror_array_bool_to_factor(v):
     return np.array([(-1 if b else 1) for b in v])
 
 def orthon(v):
+    # rotate by 90 deg CCW
     return np.array([-v[1], v[0]]) / np.linalg.norm(v)
 
 def min_vec(*args):

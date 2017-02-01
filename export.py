@@ -1,6 +1,6 @@
 import numpy as np
 
-from wall import Line, Circle, Text
+from wall import Line, Circle, ArcPath, Text
 from util import min_vec, max_vec
 
 def place_2d_objects(objects, config):
@@ -41,6 +41,18 @@ def export_svg(objects):
                         p.center[0],
                         -p.center[1],
                         p.radius
+                    )
+            elif isinstance(p, ArcPath):
+                s += '<path d="M {start_x} {start_y} A {radius_x} {radius_y} {angle_x} {large_arc} {sweep} {to_x} {to_y}" stroke="black" stroke-width="1px" fill="none"/>\n'.format(
+                        start_x   = p.start[0],
+                        start_y   = -p.start[1],
+                        radius_x  = p.radius,
+                        radius_y  = p.radius,
+                        angle_x   = 0,
+                        large_arc = 1 if p.large_arc else 0,
+                        sweep     = 1 if p.sweep else 0,
+                        to_x      = p.end[0],
+                        to_y      = -p.end[1]
                     )
             elif isinstance(p, Text):
                 s += '<text x="{}" y="{}" style="font-size:{}px" fill="red">{}</text>\n'.format(
