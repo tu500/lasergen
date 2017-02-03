@@ -1,7 +1,7 @@
 import numpy as np
 
 from wall import ToplessWall, ExtendedWall, SideWall
-from util import DIR
+from util import DIR, project_along_axis
 from units import Rel
 
 class Box():
@@ -263,22 +263,22 @@ class Box():
 class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(SideWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.UP))
-        self.walls.append(SideWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.DOWN))
-        self.walls.append(SideWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.LEFT))
-        self.walls.append(SideWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.RIGHT))
-        self.walls.append(ExtendedWall(self.size[0], self.size[1]).get_reference(projection_dir=DIR.FRONT))
-        self.walls.append(ExtendedWall(self.size[0], self.size[1]).get_reference(projection_dir=DIR.BACK))
+        self.walls.append(SideWall(     *project_along_axis(self.size, DIR.UP)    ).get_reference(projection_dir=DIR.UP))
+        self.walls.append(SideWall(     *project_along_axis(self.size, DIR.DOWN)  ).get_reference(projection_dir=DIR.DOWN))
+        self.walls.append(SideWall(     *project_along_axis(self.size, DIR.LEFT)  ).get_reference(projection_dir=DIR.LEFT))
+        self.walls.append(SideWall(     *project_along_axis(self.size, DIR.RIGHT) ).get_reference(projection_dir=DIR.RIGHT))
+        self.walls.append(ExtendedWall( *project_along_axis(self.size, DIR.FRONT) ).get_reference(projection_dir=DIR.FRONT))
+        self.walls.append(ExtendedWall( *project_along_axis(self.size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
 
 class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.UP))
-        self.walls.append(ToplessWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.DOWN))
-        self.walls.append(ToplessWall(self.size[0], self.size[2]).get_reference(projection_dir=DIR.LEFT))
-        self.walls.append(ToplessWall(self.size[1], self.size[2]).get_reference(projection_dir=DIR.RIGHT))
+        self.walls.append(ToplessWall(  *project_along_axis(self.size, DIR.UP)    ).get_reference(projection_dir=DIR.UP))
+        self.walls.append(ToplessWall(  *project_along_axis(self.size, DIR.DOWN)  ).get_reference(projection_dir=DIR.DOWN))
+        self.walls.append(ToplessWall(  *project_along_axis(self.size, DIR.LEFT)  ).get_reference(projection_dir=DIR.LEFT))
+        self.walls.append(ToplessWall(  *project_along_axis(self.size, DIR.RIGHT) ).get_reference(projection_dir=DIR.RIGHT))
         self.walls.append(None)
-        self.walls.append(ExtendedWall(self.size[0], self.size[1]).get_reference(projection_dir=DIR.BACK))
+        self.walls.append(ExtendedWall( *project_along_axis(self.size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
 
 
 class SubBox(Box):
