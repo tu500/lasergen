@@ -377,7 +377,7 @@ class Box():
                 if self.get_wall_by_direction(-wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
                     self.get_wall_by_direction(-wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(-wall_dir).dereference().get_reference()
 
-class ToplessBox(Box):
+class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
         self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.UP)    ).get_reference(projection_dir=DIR.UP))
@@ -388,7 +388,7 @@ class ToplessBox(Box):
         self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
         self._set_egde_counterparts()
 
-class ClosedBox(Box):
+class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
         self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.UP)    ).get_reference(projection_dir=DIR.UP))
