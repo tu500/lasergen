@@ -283,6 +283,20 @@ class MountingScrewCutout(PlanarObject):
 
         return Object2D(l)
 
+class Fan40mmCutout(PlanarObject):
+
+    def render(self, config):
+        displace = config.cutting_width / 2
+
+        l = []
+        l.append(Circle(0, 19 - displace))
+        l.append(Circle(np.array([ 16.5,  16.5]), 2 - displace))
+        l.append(Circle(np.array([-16.5,  16.5]), 2 - displace))
+        l.append(Circle(np.array([ 16.5, -16.5]), 2 - displace))
+        l.append(Circle(np.array([-16.5, -16.5]), 2 - displace))
+
+        return Object2D(l)
+
 # walls
 
 class Edge(PlanarObject):
