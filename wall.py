@@ -859,13 +859,17 @@ class WallReference():
         self.edges = [None] * 4
 
         if self.position[0] == 0:
-            self.edges[Wall._get_edge_index_by_direction(DIR2.LEFT)]  = self.target.get_edge_by_direction(DIR2.LEFT ).get_reference(self.position[1], self.size[1], projection_dir=DIR2.LEFT)
+            if self.target.get_edge_by_direction(DIR2.LEFT) is not None:
+                self.edges[Wall._get_edge_index_by_direction(DIR2.LEFT)]  = self.target.get_edge_by_direction(DIR2.LEFT ).get_reference(self.position[1], self.size[1], projection_dir=DIR2.LEFT)
         if self.position[0] + self.size[0] == self.target.size[0]:
-            self.edges[Wall._get_edge_index_by_direction(DIR2.RIGHT)] = self.target.get_edge_by_direction(DIR2.RIGHT).get_reference(self.position[1], self.size[1], projection_dir=DIR2.RIGHT)
+            if self.target.get_edge_by_direction(DIR2.RIGHT) is not None:
+                self.edges[Wall._get_edge_index_by_direction(DIR2.RIGHT)] = self.target.get_edge_by_direction(DIR2.RIGHT).get_reference(self.position[1], self.size[1], projection_dir=DIR2.RIGHT)
         if self.position[1] == 0:
-            self.edges[Wall._get_edge_index_by_direction(DIR2.DOWN)]  = self.target.get_edge_by_direction(DIR2.DOWN ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.DOWN)
+            if self.target.get_edge_by_direction(DIR2.DOWN) is not None:
+                self.edges[Wall._get_edge_index_by_direction(DIR2.DOWN)]  = self.target.get_edge_by_direction(DIR2.DOWN ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.DOWN)
         if self.position[1] + self.size[1] == self.target.size[1]:
-            self.edges[Wall._get_edge_index_by_direction(DIR2.UP)]    = self.target.get_edge_by_direction(DIR2.UP   ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.UP)
+            if self.target.get_edge_by_direction(DIR2.UP) is not None:
+                self.edges[Wall._get_edge_index_by_direction(DIR2.UP)]    = self.target.get_edge_by_direction(DIR2.UP   ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.UP)
 
     def get_edge_by_direction(self, v):
         if len(v) == 3 and self.projection_dir is not None:

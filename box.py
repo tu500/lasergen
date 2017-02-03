@@ -316,6 +316,8 @@ class Box():
                             e = CutoutEdge(l, target_wall.to_local_coords(d))
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
+                            # TODO add edge reference to c's walls
+
                             e.counterpart = r.get_edge_by_direction(to_local_coords(target_dir)).get_reference()
                             r.get_edge_by_direction(to_local_coords(target_dir)).counterpart = e.get_reference()
 
