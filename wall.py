@@ -681,6 +681,8 @@ class WallReference():
             self.edges[Wall._get_edge_index_by_direction(DIR2.UP)]    = self.target.get_edge_by_direction(DIR2.UP   ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.UP)
 
     def get_edge_by_direction(self, v):
+        if len(v) == 3 and self.projection_dir is not None:
+            v = self.to_local_coords(v)
         return self.edges[Wall._get_edge_index_by_direction(v)]
 
     def to_local_coords(self, v):

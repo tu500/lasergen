@@ -274,12 +274,13 @@ class Box():
                 pos_index = self._get_wall_index_by_direction(d)
                 neg_index = self._get_wall_index_by_direction(-d)
 
+                # needed because some of the surrounding walls may not be references / have projection_dirs
                 to_local_coords = lambda v: project_along_axis(v, d)
 
                 # set negative wall
                 r = cur_wall_refs[i]
                 if r is not None:
-                    c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                    c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=-d)
                 else:
                     c.walls[neg_index] = None
 
@@ -288,7 +289,7 @@ class Box():
 
                     r = self.get_wall_by_direction(d)
                     if r is not None:
-                        c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                        c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
                     else:
                         c.walls[pos_index] = None
 
@@ -311,7 +312,7 @@ class Box():
                             e = CutoutEdge(l, target_wall.to_local_coords(d))
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
-                    c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                    c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
 
             cur_pos = n_pos
             cur_wall_refs = n_walls
@@ -331,14 +332,14 @@ class Box():
             # set negative wall
             r = cur_wall_refs[i]
             if r is not None:
-                c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=-d)
             else:
                 c.walls[neg_index] = None
 
             # set positive wall
             r = self.get_wall_by_direction(d)
             if r is not None:
-                c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
             else:
                 c.walls[pos_index] = None
 
