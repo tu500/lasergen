@@ -630,10 +630,11 @@ class Wall(PlanarObject):
     def render(self, config):
         l = Object2D()
 
-        l.extend(self.edges[0].render(config) + np.array([0, self.size[1]]))
-        l.extend(self.edges[1].render(config) + np.array([0, 0]))
-        l.extend(self.edges[2].render(config) + np.array([0, 0]))
-        l.extend(self.edges[3].render(config) + np.array([self.size[0], 0]))
+        # TODO implement render for edge references?
+        l.extend(self.edges[0].dereference().render(config) + np.array([0, self.size[1]]))
+        l.extend(self.edges[1].dereference().render(config) + np.array([0, 0]))
+        l.extend(self.edges[2].dereference().render(config) + np.array([0, 0]))
+        l.extend(self.edges[3].dereference().render(config) + np.array([self.size[0], 0]))
 
         for child, pos, mirror_axes in self.children:
             l.extend(child.render(config).mirror(mirror_axes) + pos)
@@ -706,32 +707,32 @@ class WallReference():
 class ToplessWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    flat=True))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    flat=True).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
 class ExtendedWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.RIGHT))
 
 class SideWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
 
 class SubWall(Wall):
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT, EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.FLAT, EDGE_STYLE.FLAT))
+        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
