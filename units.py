@@ -1,3 +1,5 @@
+import numpy as np
+
 class Rel():
     def __init__(self, value):
         self.value = value
@@ -44,22 +46,36 @@ class Frac():
         return self.value * v + self.translate
 
     def __add__(self, b):
-        return Frac(self.value + b.value, self.translate + b.translate)
+        if isinstance(b, Frac):
+            return Frac(self.value + b.value, self.translate + b.translate)
+        else:
+            return Frac(self.value, self.translate + b)
     def __sub__(self, b):
-        return Frac(self.value - b.value, self.translate - b.translate)
+        if isinstance(b, Frac):
+            return Frac(self.value - b.value, self.translate - b.translate)
+        else:
+            return Frac(self.value, self.translate - b)
     def __mul__(self, b):
         return Frac(self.value * b, self.translate * b)
     def __div__(self, b):
         return Frac(self.value / b, self.translate / b)
 
     def __iadd__(self, b):
-        self.value += b.value
-        self.translate += b.translate
-        return self
+        if isinstance(b, Frac):
+            self.value += b.value
+            self.translate += b.translate
+            return self
+        else:
+            self.translate += b
+            return self
     def __isub__(self, b):
-        self.value -= b.value
-        self.translate -= b.translate
-        return self
+        if isinstance(b, Frac):
+            self.value -= b.value
+            self.translate -= b.translate
+            return self
+        else:
+            self.translate += b
+            return self
     def __imul__(self, b):
         self.value *= b
         self.translate *= b
@@ -74,3 +90,17 @@ class Frac():
 
     def __repr__(self):
         return 'Rel({}, {})'.format(self.value, self.translate)
+
+    @staticmethod
+    def array_total_length(v, total):
+        """
+        Convert an array possibly containing Frac values to absolute values.
+        """
+
+        l = [i for i in v]
+
+        for i, e in enumerate(l):
+            if isinstance(e, Frac):
+                l[i] = e.total_length(total[i])
+
+        return np.array(l)
