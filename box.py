@@ -306,11 +306,16 @@ class Box():
                     j, k = [AXES[a] for a in range(3) if a != i]
 
                     for target_dir, other_dir in [(j,k), (-j,k), (k,j), (-k,j)]:
+
                         target_wall = self.get_wall_by_direction(target_dir)
                         if target_wall is not None:
+
                             l = ref_wall.to_local_coords(other_dir).dot(ref_wall.size) # size of reference wall in direction other_dir
                             e = CutoutEdge(l, target_wall.to_local_coords(d))
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
+
+                            e.counterpart = r.get_edge_by_direction(to_local_coords(target_dir)).get_reference()
+                            r.get_edge_by_direction(to_local_coords(target_dir)).counterpart = e.get_reference()
 
                     c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
 
@@ -359,6 +364,19 @@ class Box():
     def _construct_walls(self):
         raise Exception("Abstract method")
 
+    def _set_egde_counterparts(self):
+
+        for i, wall_dir in zip(range(3), AXES):
+
+            # perpendicular axes
+            j, k = [AXES[a] for a in range(3) if a != i]
+
+            for edge_dir in [j,-j,k,-k]:
+                if self.get_wall_by_direction(wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
+                    self.get_wall_by_direction(wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(wall_dir).dereference().get_reference()
+                if self.get_wall_by_direction(-wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
+                    self.get_wall_by_direction(-wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(-wall_dir).dereference().get_reference()
+
 class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
@@ -368,6 +386,7 @@ class ToplessBox(Box):
         self.walls.append(SideWall(     *project_along_axis(self.size, DIR.RIGHT) ).get_reference(projection_dir=DIR.RIGHT))
         self.walls.append(ExtendedWall( *project_along_axis(self.size, DIR.FRONT) ).get_reference(projection_dir=DIR.FRONT))
         self.walls.append(ExtendedWall( *project_along_axis(self.size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
+        self._set_egde_counterparts()
 
 class ClosedBox(Box):
     def _construct_walls(self):
@@ -378,6 +397,7 @@ class ClosedBox(Box):
         self.walls.append(ToplessWall(  *project_along_axis(self.size, DIR.RIGHT) ).get_reference(projection_dir=DIR.RIGHT))
         self.walls.append(None)
         self.walls.append(ExtendedWall( *project_along_axis(self.size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
+        self._set_egde_counterparts()
 
 
 class SubBox(Box):

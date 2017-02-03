@@ -287,6 +287,8 @@ class Edge(PlanarObject):
         self.end_style = end_style
         self.flat = flat
 
+        self.counterpart = None
+
     def render(self, config):
 
         start = np.array([0,0])
@@ -588,6 +590,13 @@ class EdgeReference():
         self.position = pos
         self.length = length
         self.projection_dir = projection_dir
+
+        # not sure if this is needed in an EdgeReference
+        if target.counterpart is not None:
+            # not sure about projection_dir
+            self.counterpart = target.counterpart.get_reference(pos, length, projection_dir)
+        else:
+            self.counterpart = None
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
