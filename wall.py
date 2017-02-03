@@ -420,8 +420,15 @@ class Edge(PlanarObject):
                     displace
                 )
 
-    def add_element(self, pos, length, style):
+    def add_element(self, pos, length, style, auto_add_counterpart=True):
         self.sub_elements.append((pos, length, style))
+
+        if auto_add_counterpart and self.counterpart is not None:
+            if style == EDGE_ELEMENT_STYLE.FLAT:
+                self.counterpart.add_element(pos, length, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, False)
+            elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
+                self.counterpart.add_element(pos, length, EDGE_ELEMENT_STYLE.FLAT, False)
+
 
 
     #TODO should this really be a static method?
@@ -689,8 +696,8 @@ class EdgeReference():
         else:
             self.counterpart = None
 
-    def add_element(self, pos, length, style):
-        self.target.add_element(self.position + pos, length, style)
+    def add_element(self, pos, length, style, auto_add_counterpart=True):
+        self.target.add_element(self.position + pos, length, style, auto_add_counterpart)
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
