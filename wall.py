@@ -323,6 +323,41 @@ class Fan40mmCutout(PlanarObject):
 
         return Object2D(l)
 
+class AirVentsCutout(PlanarObject):
+    # TODO make more configurable
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def render(self, config):
+
+        displace = config.cutting_width / 2
+
+        short_count = int(math.ceil((self.width + 5) / (5+5)))
+        short_length = (self.width + 5) / short_count
+
+        long_count = int(math.ceil((self.height + 5) / (30+5)))
+        long_length = (self.height + 5) / long_count
+
+        short_positions = [(i*short_length, (i+1)*short_length-5) for i in range(short_count)]
+        long_positions = [(i*long_length, (i+1)*long_length-5) for i in range(long_count)]
+
+        l = []
+
+        for x1, x2 in short_positions:
+            for y1, y2 in long_positions:
+
+                l.append(Line(np.array([x1 + displace, y1 + displace]), np.array([x2 - displace, y1 + displace])))
+                l.append(Line(np.array([x2 - displace, y1 + displace]), np.array([x2 - displace, y2 - displace])))
+                l.append(Line(np.array([x2 - displace, y2 - displace]), np.array([x1 + displace, y2 - displace])))
+                l.append(Line(np.array([x1 + displace, y2 - displace]), np.array([x1 + displace, y1 + displace])))
+
+        return Object2D(l)
+
+    @staticmethod
+    def _render_rectangle(pos, size):
+        pass
+
 # walls
 
 class Edge(PlanarObject):
