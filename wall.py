@@ -401,7 +401,7 @@ class Edge(PlanarObject):
             if self.sub_elements:
                 raise Exception("Not implemented")
 
-            parts = [0, self.length, 'flat']
+            parts = [(0, self.length, 'flat')]
 
         else:
             parts = []
