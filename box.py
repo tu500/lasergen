@@ -22,6 +22,8 @@ class Box():
         elif (direction == DIR.FRONT).all():
             self.subboxes = [SubBox('ref', 'ref', size) for size in sizes]
 
+        return self.subboxes
+
     def render(self, config):
         # uniquify wall references, keep order for deterministic output
         seen = set()
