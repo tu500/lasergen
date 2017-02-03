@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR, orthon, min_vec, max_vec, project_along_axis, mirror_array_bool_to_factor
+from util import DIR, DIR2, orthon, min_vec, max_vec, project_along_axis, mirror_array_bool_to_factor
 
 
 # Edge Styles:
@@ -483,6 +483,14 @@ class Edge(PlanarObject):
 
         return tooth_count
 
+    def get_reference(self, pos=0, length=None, projection_dir=None):
+        if length is not None:
+            assert(pos + length <= self.length)
+        return EdgeReference(self, pos, length, projection_dir)
+
+    def dereference(self):
+        return self
+
 
 class CutoutEdge(Edge):
 
@@ -567,6 +575,32 @@ class CutoutEdge(Edge):
 
         return lines
 
+class EdgeReference():
+
+    def __init__(self, target, pos=0, length=None, projection_dir=None):
+        assert(pos >= 0)
+
+        if length is None:
+            length = target.length - pos
+            assert(length >= 0)
+
+        self.target = target
+        self.position = pos
+        self.length = length
+        self.projection_dir = projection_dir
+
+    def to_local_coords(self, v):
+        assert(self.projection_dir is not None)
+        return project_along_axis(v, self.projection_dir)
+
+    def get_reference(self, pos=0, length=None, projection_dir=None):
+        if length is not None:
+            assert(pos + length <= self.length)
+        return EdgeReference(self, self.position + pos, length, projection_dir)
+
+    def dereference(self):
+        return self.target.dereference()
+
 
 class Wall(PlanarObject):
     #size = None
@@ -584,10 +618,14 @@ class Wall(PlanarObject):
         raise NotImplementedError('Abstract method')
 
     def get_edge_by_direction(self, v):
-        if (v[0:2] == DIR.UP).all():    return self.edges[0]
-        if (v[0:2] == DIR.DOWN).all():  return self.edges[1]
-        if (v[0:2] == DIR.LEFT).all():  return self.edges[2]
-        if (v[0:2] == DIR.RIGHT).all(): return self.edges[3]
+        return self.edges[self._get_edge_index_by_direction(v)]
+
+    @staticmethod
+    def _get_edge_index_by_direction(v):
+        if (v == DIR2.UP).all():    return 0
+        if (v == DIR2.DOWN).all():  return 1
+        if (v == DIR2.LEFT).all():  return 2
+        if (v == DIR2.RIGHT).all(): return 3
 
     def render(self, config):
         l = Object2D()
@@ -627,6 +665,23 @@ class WallReference():
         self.size = size
         self.mirror_children = mirror_children
         self.projection_dir = projection_dir
+
+        self._init_edges_from_target()
+
+    def _init_edges_from_target(self):
+        self.edges = [None] * 4
+
+        if self.position[0] == 0:
+            self.edges[Wall._get_edge_index_by_direction(DIR2.LEFT)]  = self.target.get_edge_by_direction(DIR2.LEFT ).get_reference(self.position[1], self.size[1], projection_dir=DIR2.LEFT)
+        if self.position[0] + self.size[0] == self.target.size[0]:
+            self.edges[Wall._get_edge_index_by_direction(DIR2.RIGHT)] = self.target.get_edge_by_direction(DIR2.RIGHT).get_reference(self.position[1], self.size[1], projection_dir=DIR2.RIGHT)
+        if self.position[1] == 0:
+            self.edges[Wall._get_edge_index_by_direction(DIR2.DOWN)]  = self.target.get_edge_by_direction(DIR2.DOWN ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.DOWN)
+        if self.position[1] + self.size[1] == self.target.size[1]:
+            self.edges[Wall._get_edge_index_by_direction(DIR2.UP)]    = self.target.get_edge_by_direction(DIR2.UP   ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.UP)
+
+    def get_edge_by_direction(self, v):
+        return self.edges[Wall._get_edge_index_by_direction(v)]
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)

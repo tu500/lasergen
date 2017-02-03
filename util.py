@@ -8,6 +8,12 @@ class DIR():
     FRONT = np.array([ 0, 0, 1])
     BACK  = np.array([ 0, 0,-1])
 
+class DIR2():
+    UP    = np.array([ 0, 1])
+    DOWN  = np.array([ 0,-1])
+    LEFT  = np.array([-1, 0])
+    RIGHT = np.array([ 1, 0])
+
 AXES = [DIR.RIGHT, DIR.UP, DIR.FRONT]
 
 def is_dir(d):
