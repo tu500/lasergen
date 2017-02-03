@@ -2,6 +2,7 @@ import numpy as np
 import math
 
 from util import DIR, DIR2, orthon, min_vec, max_vec, project_along_axis, mirror_array_bool_to_factor
+from units import Frac
 
 
 # Edge Styles:
@@ -651,6 +652,7 @@ class Wall(PlanarObject):
         return l
 
     def add_child(self, child, pos, mirrored=np.array([False, False])):
+        pos = Frac.array_total_length(pos, self.size)
         self.children.append((child, pos, mirrored))
 
     def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
@@ -702,6 +704,7 @@ class WallReference():
     def add_child(self, child, pos, mirrored=np.array([False, False])):
         if len(pos) == 3 and self.projection_dir is not None:
             pos = self.to_local_coords(pos)
+        pos = Frac.array_total_length(pos, self.size)
         self.target.add_child(child, self.position + pos, self.mirror_children ^ mirrored)
 
     def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
