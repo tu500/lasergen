@@ -1,5 +1,6 @@
 import numpy as np
 
+from wall import CutoutEdge
 from wall import ToplessWall, ExtendedWall, SideWall, SubWall
 from util import DIR, AXES, project_along_axis
 from units import Rel
@@ -293,11 +294,22 @@ class Box():
 
                 else:
 
-                    w, h = self.get_wall_by_direction(-d).size
+                    ref_wall = self.get_wall_by_direction(-d)
+                    w, h = ref_wall.size
                     r = SubWall(w, h)
 
                     n_walls[i] = r
                     n_pos[i] += c.abs_size[i] + config.subwall_thickness
+
+                    # add cutout edges
+                    j, k = [AXES[a] for a in range(3) if a != i]
+
+                    for target_dir, other_dir in [(j,k), (-j,k), (k,j), (-k,j)]:
+                        target_wall = self.get_wall_by_direction(target_dir)
+                        if target_wall is not None:
+                            l = ref_wall.to_local_coords(other_dir).dot(ref_wall.size) # size of reference wall in direction other_dir
+                            e = CutoutEdge(l, target_wall.to_local_coords(d))
+                            target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
                     c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
 
