@@ -538,13 +538,13 @@ class CutoutEdge(Edge):
         middle_teeth = tooth_data[1:-1]
 
 
-        lines = []
+        lines = Object2D()
 
         # render first tooth
         start_pos, end_pos, extended = tooth_data[0]
 
         if begin_style == EDGE_STYLE.EXTENDED:
-            lines.extend(self._render_rectangle(start, start_pos - wall_thickness, end_pos, direction, outward_dir, wall_thickness, displace))
+            lines.extend(CutoutEdge._render_rectangle(start, start_pos - wall_thickness, end_pos, direction, outward_dir, wall_thickness, displace))
 
         elif begin_style == EDGE_STYLE.TOOTHED:
             middle_teeth = tooth_data[0:-1]
@@ -552,10 +552,9 @@ class CutoutEdge(Edge):
 
         # render last tooth
         start_pos, end_pos, extended = tooth_data[-1]
-        last_lines = []
 
         if end_style == EDGE_STYLE.EXTENDED:
-            lines.extend(self._render_rectangle(start, start_pos, end_pos + wall_thickness, direction, outward_dir, wall_thickness, displace))
+            lines.extend(CutoutEdge._render_rectangle(start, start_pos, end_pos + wall_thickness, direction, outward_dir, wall_thickness, displace))
 
         elif end_style == EDGE_STYLE.TOOTHED:
             middle_teeth.append(tooth_data[-1])
@@ -564,9 +563,9 @@ class CutoutEdge(Edge):
         # render middle teeth
         for start_pos, end_pos, extended in middle_teeth:
             if extended:
-                lines.extend(self._render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace))
+                lines.extend(CutoutEdge._render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace))
 
-        return Object2D(lines + last_lines)
+        return lines
 
 
 class Wall(PlanarObject):

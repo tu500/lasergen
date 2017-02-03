@@ -4,6 +4,7 @@ import codecs
 import numpy as np
 
 from wall import HexBoltCutout, CircleCutout, MountingScrewCutout, Wall, ToplessWall, ExtendedWall
+from wall import CutoutEdge, EDGE_STYLE
 from config import Config
 from export import place_2d_objects, export_svg
 from util import DIR
@@ -25,8 +26,9 @@ def main():
     tb.construct(c)
 
     e = ExtendedWall(100., 120.)
+    e.add_child(CutoutEdge(120, np.array([1,0]), EDGE_STYLE.FLAT, EDGE_STYLE.FLAT), np.array([40, 0]))
 
-    objects = place_2d_objects(cb.render(c) + tb.render(c), c)
+    objects = place_2d_objects(cb.render(c) + tb.render(c) + [e.render(c)], c)
 
     with codecs.open('foo.svg', 'wb', 'utf-8') as f:
         f.write(export_svg(objects))
