@@ -1,7 +1,7 @@
 import numpy as np
 
-from wall import ToplessWall, ExtendedWall, SideWall
-from util import DIR, project_along_axis
+from wall import ToplessWall, ExtendedWall, SideWall, SubWall
+from util import DIR, AXES, project_along_axis
 from units import Rel
 
 class Box():
@@ -35,11 +35,12 @@ class Box():
 
         return s
 
-    def construct(self):
+    def construct(self, config):
         self._construct_walls()
+        self._construct_subwalls(config)
 
         for c in self.subboxes:
-            c.construct()
+            c.construct(config)
 
     def configure(self, config):
 
@@ -248,14 +249,99 @@ class Box():
 
         return sum_size, unknown_children_count
 
+    def _construct_subwalls(self, config):
+
+        if not self.subboxes:
+            return
+
+        cur_pos = np.array([0.,0.,0.])
+        cur_wall_refs = [
+                self.get_wall_by_direction(DIR.LEFT),
+                self.get_wall_by_direction(DIR.DOWN),
+                self.get_wall_by_direction(DIR.BACK),
+            ]
+
+        for c in self.subboxes[:-1]:
+
+            c.walls = [None] * 6
+
+            n_pos = cur_pos.copy()
+            n_walls = cur_wall_refs.copy()
+
+            for i, d in zip(range(3), AXES):
+
+                pos_index = self._get_wall_index_by_direction(d)
+                neg_index = self._get_wall_index_by_direction(-d)
+
+                to_local_coords = lambda v: project_along_axis(v, d)
+
+                # set negative wall
+                r = cur_wall_refs[i]
+                if r is not None:
+                    c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                else:
+                    c.walls[neg_index] = None
+
+                # set positive wall
+                if c.size[i] == 'ref':
+
+                    r = self.get_wall_by_direction(d)
+                    if r is not None:
+                        c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+                    else:
+                        c.walls[pos_index] = None
+
+                else:
+
+                    w, h = self.get_wall_by_direction(-d).size
+                    r = SubWall(w, h)
+
+                    n_walls[i] = r
+                    n_pos[i] += c.abs_size[i] + config.subwall_thickness
+
+                    c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+
+            cur_pos = n_pos
+            cur_wall_refs = n_walls
+
+        # last subbox
+        c = self.subboxes[-1]
+
+        c.walls = [None] * 6
+
+        for i, d in zip(range(3), AXES):
+
+            pos_index = self._get_wall_index_by_direction(d)
+            neg_index = self._get_wall_index_by_direction(-d)
+
+            to_local_coords = lambda v: project_along_axis(v, d)
+
+            # set negative wall
+            r = cur_wall_refs[i]
+            if r is not None:
+                c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+            else:
+                c.walls[neg_index] = None
+
+            # set positive wall
+            r = self.get_wall_by_direction(d)
+            if r is not None:
+                c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size))
+            else:
+                c.walls[pos_index] = None
+
 
     def get_wall_by_direction(self, v):
-        if (v == DIR.UP).all():    return self.walls[0]
-        if (v == DIR.DOWN).all():  return self.walls[1]
-        if (v == DIR.LEFT).all():  return self.walls[2]
-        if (v == DIR.RIGHT).all(): return self.walls[3]
-        if (v == DIR.FRONT).all(): return self.walls[4]
-        if (v == DIR.BACK).all():  return self.walls[5]
+        return self.walls[self._get_wall_index_by_direction(v)]
+
+    @staticmethod
+    def _get_wall_index_by_direction(v):
+        if (v == DIR.UP).all():    return 0
+        if (v == DIR.DOWN).all():  return 1
+        if (v == DIR.LEFT).all():  return 2
+        if (v == DIR.RIGHT).all(): return 3
+        if (v == DIR.FRONT).all(): return 4
+        if (v == DIR.BACK).all():  return 5
 
     def _construct_walls(self):
         raise Exception("Abstract method")
@@ -287,3 +373,9 @@ class SubBox(Box):
         self.abs_size = np.array([None, None, None])
 
         self.subboxes = []
+
+    def construct(self, config):
+        self._construct_subwalls(config)
+
+        for c in self.subboxes:
+            c.construct(config)

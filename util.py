@@ -8,6 +8,8 @@ class DIR():
     FRONT = np.array([ 0, 0, 1])
     BACK  = np.array([ 0, 0,-1])
 
+AXES = [DIR.RIGHT, DIR.UP, DIR.FRONT]
+
 def is_dir(d):
     dirs = {k:v for k,v in DIR.__dict__.items() if not k.startswith('_')}
     for i in dirs.values():
