@@ -223,6 +223,32 @@ class CutoutRect(PlanarObject):
 
         return Object2D(l)
 
+class CutoutRoundedRect(PlanarObject):
+    def __init__(self, width, height, radius):
+        assert(width >= 2*radius)
+        assert(height >= 2*radius)
+
+        self.width = width
+        self.height = height
+        self.radius = radius
+
+    def render(self, config):
+
+        displace = config.cutting_width / 2
+
+        l = []
+
+        l.append(Line(np.array([displace + self.radius, displace]), np.array([self.width - self.radius - displace, displace])))
+        l.append(ArcPath(np.array([self.width - self.radius - displace, displace]), np.array([self.width - - displace, self.radius + displace]), self.radius, False, False))
+        l.append(Line(np.array([self.width - displace, self.radius + displace]), np.array([self.width - displace, self.height - self.radius - displace])))
+        l.append(ArcPath(np.array([self.width - displace, self.height - self.radius - displace]), np.array([self.width - self.radius - displace, self.height - displace]), self.radius, False, False))
+        l.append(Line(np.array([self.width - self.radius - displace, self.height - displace]), np.array([self.radius + displace, self.height - displace])))
+        l.append(ArcPath(np.array([self.radius + displace, self.height - displace]), np.array([displace, self.height - self.radius - displace]), self.radius, False, False))
+        l.append(Line(np.array([displace, self.height - self.radius - displace]), np.array([displace, self.radius + displace])))
+        l.append(ArcPath(np.array([displace, self.radius + displace]), np.array([displace + self.radius, displace]), self.radius, False, False))
+
+        return Object2D(l)
+
 class HexBoltCutout(PlanarObject):
     def __init__(self, width):
         self.width = width
