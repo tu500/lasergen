@@ -1,6 +1,6 @@
 import numpy as np
 
-from wall import Line, Circle, ArcPath, Text
+from primitive import Line, Circle, ArcPath, Text
 from util import min_vec, max_vec
 
 def place_2d_objects(objects, config):

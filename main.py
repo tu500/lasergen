@@ -3,8 +3,9 @@
 import codecs
 import numpy as np
 
-from wall import HexBoltCutout, CircleCutout, MountingScrewCutout, Wall, ToplessWall, ExtendedWall
-from wall import CutoutEdge, EDGE_STYLE
+from planar import HexBoltCutout, CircleCutout, MountingScrewCutout
+from wall import ToplessWall, ExtendedWall
+from edge import CutoutEdge, EDGE_STYLE
 from config import Config
 from export import place_2d_objects, export_svg
 from util import DIR

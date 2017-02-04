@@ -1,9 +1,9 @@
 import numpy as np
 
-from wall import CutoutEdge
-from wall import ToplessWall, ExtendedWall, SideWall, SubWall
 from util import DIR, AXES, project_along_axis
 from units import Rel
+from edge import CutoutEdge
+from wall import ToplessWall, ExtendedWall, SideWall, SubWall
 
 class Box():
     def __init__(self, width, height, depth):
