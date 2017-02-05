@@ -7,7 +7,7 @@ from planar import HexBoltCutout, CircleCutout, MountingScrewCutout
 from wall import ToplessWall, ExtendedWall
 from edge import CutoutEdge, EDGE_STYLE
 from config import Config
-from export import place_2d_objects, export_svg
+from export import place_2d_objects, export_svg_with_paths
 from util import DIR
 from units import Rel
 from box import ClosedBox, ToplessBox
@@ -32,7 +32,7 @@ def main():
     objects = place_2d_objects(cb.render(c) + tb.render(c) + [e.render(c)], c)
 
     with codecs.open('foo.svg', 'wb', 'utf-8') as f:
-        f.write(export_svg(objects))
+        f.write(export_svg_with_paths(objects))
 
 if __name__ == "__main__":
     main()
