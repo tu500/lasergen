@@ -51,3 +51,6 @@ def max_vec(*args):
         max(v[0] for v in args),
         max(v[1] for v in args)
         ])
+
+def almost_equal(a, b, epsilon=1E-10):
+    return np.linalg.norm(a-b) < epsilon

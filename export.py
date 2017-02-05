@@ -1,7 +1,7 @@
 import numpy as np
 
 from primitive import Line, Circle, ArcPath, Text
-from util import min_vec, max_vec
+from util import min_vec, max_vec, almost_equal
 
 def place_2d_objects(objects, config):
     bounding_boxes = [o.bounding_box() for o in objects]
@@ -122,7 +122,7 @@ class PathAccumulator():
         if not (isinstance(obj, Line) or isinstance(obj, ArcPath)):
             raise Exception("PANIC")
 
-        if not (obj.start == self.current_point).all():
+        if not almost_equal(obj.start, self.current_point):
             return False
 
 
@@ -130,7 +130,7 @@ class PathAccumulator():
 
         if isinstance(obj, Line):
 
-            if (obj.end == self.start_point).all():
+            if almost_equal(obj.end, self.start_point):
                 # close the path
                 self.output += 'Z" stroke="black" stroke-width="1px" fill="none"/>\n'
                 self.finalized = True
