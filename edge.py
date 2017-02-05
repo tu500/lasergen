@@ -462,7 +462,7 @@ class EdgeReference():
     def get_reference(self, pos=0, length=None, projection_dir=None):
         if length is not None:
             assert(pos + length <= self.length)
-        return EdgeReference(self, self.position + pos, length, projection_dir)
+        return EdgeReference(self, pos, length, projection_dir)
 
     def dereference(self):
         return self.target.dereference()

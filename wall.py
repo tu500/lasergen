@@ -109,7 +109,7 @@ class WallReference():
     def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
         if size is not None:
             assert( (pos + size <= self.size).all() )
-        return WallReference(self, self.position + pos, size, self.mirror_children ^ mirror_children, projection_dir)
+        return WallReference(self, pos, size, self.mirror_children ^ mirror_children, projection_dir)
 
     def dereference(self):
         return self.target.dereference()
