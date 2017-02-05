@@ -37,10 +37,10 @@ class Wall(PlanarObject):
         l = Object2D()
 
         # TODO implement render for edge references?
-        l.extend(self.edges[0].dereference().render(config) + np.array([0, self.size[1]]))
-        l.extend(self.edges[1].dereference().render(config) + np.array([0, 0]))
-        l.extend(self.edges[2].dereference().render(config) + np.array([0, 0]))
-        l.extend(self.edges[3].dereference().render(config) + np.array([self.size[0], 0]))
+        l.extend(self.edges[0].dereference().render(config)           + np.array([0, self.size[1]]))
+        l.extend(self.edges[3].dereference().render(config).reverse() + np.array([self.size[0], 0]))
+        l.extend(self.edges[1].dereference().render(config).reverse() + np.array([0, 0]))
+        l.extend(self.edges[2].dereference().render(config)           + np.array([0, 0]))
 
         for child, pos, mirror_axes in self.children:
             l.extend(child.render(config).mirror(mirror_axes) + pos)

@@ -78,6 +78,14 @@ class Object2D():
         """
         return Object2D([p.mirror(mirror_axes) for p in self.primitives])
 
+    def reverse(self):
+        """
+        Return a new Object2D where each primitive has been reversed, i.e. has
+        start and end points swapped. This is used for exporting longer svg
+        path objects.
+        """
+        return Object2D([p.reverse() for p in reversed(self.primitives)])
+
 
 class Primitive2D():
     """
@@ -90,6 +98,8 @@ class Primitive2D():
         """Translation."""
         raise NotImplementedError('Abstract method')
     def mirror(self, mirror_axes):
+        raise NotImplementedError('Abstract method')
+    def reverse(self):
         raise NotImplementedError('Abstract method')
 
 
@@ -105,6 +115,8 @@ class Line(Primitive2D):
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Line(self.start * fac, self.end * fac)
+    def reverse(self):
+        return Line(self.end, self.start)
 
 class Circle(Primitive2D):
     def __init__(self, center, radius):
@@ -118,6 +130,9 @@ class Circle(Primitive2D):
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Circle(self.center * fac, self.radius)
+    def reverse(self):
+        # not applicable
+        return self
 
 class ArcPath(Primitive2D):
     def __init__(self, start, end, radius, large_arc=True, sweep=True):
@@ -132,7 +147,10 @@ class ArcPath(Primitive2D):
     def __sub__(self, b):
         return ArcPath(self.start - b, self.end - b, self.radius, self.large_arc, self.sweep)
     def mirror(self, mirror_axes):
-        # TODO
+        # TODO this is not trivial
+        return self
+    def reverse(self):
+        # TODO this is not trivial
         return self
 
     @staticmethod
@@ -154,4 +172,7 @@ class Text(Primitive2D):
         return Text(self.position - b, self.text, self.fontsize)
     def mirror(self, mirror_axes):
         # TODO
+        return self
+    def reverse(self):
+        # not applicable
         return self
