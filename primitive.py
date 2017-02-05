@@ -87,10 +87,21 @@ class Object2D():
         return Object2D([p.reverse() for p in reversed(self.primitives)])
 
 
-class Primitive2D():
+class PlanarObject():
+    """
+    Abstract base class for objects that render into an Object2D.
+    """
+
+    def render(self, config):
+        """Render into an Object2D."""
+        raise NotImplementedError('Abstract method')
+
+
+class Primitive2D(PlanarObject):
     """
     Abstract base class for 2D primitives.
     """
+
     def __add__(self, b):
         """Translation."""
         raise NotImplementedError('Abstract method')
@@ -101,6 +112,10 @@ class Primitive2D():
         raise NotImplementedError('Abstract method')
     def reverse(self):
         raise NotImplementedError('Abstract method')
+
+    def render(self, config):
+        """Render into an Object2D."""
+        return Object2D([self])
 
 
 class Line(Primitive2D):

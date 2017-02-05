@@ -3,8 +3,7 @@ import math
 
 from util import DIR, DIR2, project_along_axis
 from units import Frac
-from primitive import Object2D
-from planar import PlanarObject
+from primitive import Object2D, PlanarObject
 from edge import EDGE_STYLE, Edge
 
 

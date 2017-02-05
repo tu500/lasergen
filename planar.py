@@ -2,19 +2,8 @@ import numpy as np
 import math
 
 from util import orthon
-from primitive import Object2D, Line, Circle, ArcPath
+from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
-
-# 2d objects
-
-class PlanarObject():
-    """
-    Abstract base class for objects that render into an Object2D.
-    """
-
-    def render(self, config):
-        """Render into an Object2D."""
-        raise NotImplementedError('Abstract method')
 
 class CutoutRect(PlanarObject):
     def __init__(self, width, height):

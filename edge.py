@@ -2,9 +2,7 @@ import numpy as np
 import math
 
 from util import orthon, project_along_axis
-
-from primitive import Object2D, Line
-from planar import PlanarObject
+from primitive import Object2D, PlanarObject, Line
 
 
 # Edge Styles:
