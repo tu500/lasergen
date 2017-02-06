@@ -38,19 +38,23 @@ class Box():
 
         return s
 
-    def construct(self, config):
+    def configure(self, config):
+        self._configure_rec(config)
+        self._construct_rec(config)
+
+    def _construct_rec(self, config):
         self._construct_walls()
         self._construct_subwalls(config)
 
         for c in self.subboxes:
-            c.construct(config)
+            c._construct_rec(config)
 
-    def configure(self, config):
+    def _configure_rec(self, config):
 
         self.abs_size = np.array([None, None, None])
 
         for c in self.subboxes:
-            c.configure(config)
+            c._configure_rec(config)
 
         # dimensions
         for i in range(3):
@@ -411,8 +415,8 @@ class SubBox(Box):
 
         self.subboxes = []
 
-    def construct(self, config):
+    def _construct_rec(self, config):
         self._construct_subwalls(config)
 
         for c in self.subboxes:
-            c.construct(config)
+            c._construct_rec(config)
