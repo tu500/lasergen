@@ -18,8 +18,15 @@ class Object2D():
             self.primitives = primitives
 
         if layer is not None:
-            for p in self.primitives:
-                p.layer = layer
+            self.set_layer(layer)
+
+    def set_layer(self, layer):
+        """
+        Overwrite all children's layers to the given value.
+        """
+
+        for p in self.primitives:
+            p.layer = layer
 
     def bounding_box(self):
         """

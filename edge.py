@@ -163,6 +163,16 @@ class Edge(PlanarObject):
             tooth_count = self._get_tooth_count(config, length, odd_tooth_count)
             tooth_length = length / tooth_count
 
+            tooth_length_satisfied = config.tooth_min_width <= tooth_length <= config.tooth_max_width
+            layer = 'cut' if tooth_length_satisfied else 'warn'
+
+            if not tooth_length_satisfied:
+                print('WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
+                        max = config.tooth_max_width,
+                        min = config.tooth_min_width,
+                        len = tooth_length,
+                    ))
+
             tooth_positions = [0] + list(np.cumsum([tooth_length for i in range(tooth_count)]))
 
             return self._render_toothed_line(
@@ -173,7 +183,8 @@ class Edge(PlanarObject):
                     direction,
                     self.outward_dir,
                     wall_thickness,
-                    displace
+                    displace,
+                    layer
                 )
 
     def add_element(self, pos, length, style, auto_add_counterpart=True):
@@ -189,7 +200,7 @@ class Edge(PlanarObject):
 
     #TODO should this really be a static method?
     @staticmethod
-    def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0):
+    def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0, layer='cut'):
         """
         tooth_positions: list of starting points of tooths, including full edge length
                          i.e. [0, first_tooth_width, first_tooth_width + second_tooth_width, ..., full_edge_length]
@@ -292,7 +303,7 @@ class Edge(PlanarObject):
                     start + direction * (end_pos - displace) + outward_dir * displace
                     ))
 
-        return Object2D(lines + last_lines)
+        return Object2D(lines + last_lines, layer)
 
 
     @staticmethod
@@ -319,13 +330,37 @@ class Edge(PlanarObject):
         min_tooth_count = math.ceil(length / config.tooth_max_width)
         max_tooth_count = math.floor(length / config.tooth_min_width)
 
+        # check for satisfiability of tooth length restrictions
+
         if min_tooth_count > max_tooth_count:
-            raise Exception("PANIC!")
+
+            if config.abort_on_tooth_length_error:
+                raise ValueError('Tooth length out of range.')
+
+            else:
+                # use min_tooth_count because max_tooth_count could be zero
+
+                # check if parity is wrong
+                if (min_tooth_count % 2 == 0 and odd_tooth_count) or \
+                    (min_tooth_count % 2 == 1 and not odd_tooth_count):
+                    # add one, because min_tooth_count could be equal to one
+                    return min_tooth_count + 1
+
+                else:
+                    return min_tooth_count
 
         if min_tooth_count == max_tooth_count:
             if (min_tooth_count % 2 == 0 and odd_tooth_count) or \
                 (min_tooth_count % 2 == 1 and not odd_tooth_count):
-                raise Exception("PANIC!!")
+
+                if config.abort_on_tooth_length_error:
+                    raise ValueError('Tooth length out of range.')
+
+                else:
+                    # add one, because min_tooth_count could be equal to one
+                    return min_tooth_count + 1
+
+        # tooth length restrictions are satisfiable, now optimize
 
         # now take the middle
         avg = (min_tooth_count + max_tooth_count) / 2
@@ -375,7 +410,7 @@ class CutoutEdge(Edge):
 
 
     @staticmethod
-    def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0):
+    def _render_toothed_line(start, begin_style, end_style, tooth_positions, direction, outward_dir, wall_thickness, displace=0, layer='cut'):
         """
         tooth_positions: list of starting points of tooths, including full edge length
                          i.e. [0, first_tooth_width, first_tooth_width + second_tooth_width, ..., full_edge_length]
@@ -428,6 +463,8 @@ class CutoutEdge(Edge):
         for start_pos, end_pos, extended in middle_teeth:
             if extended:
                 lines.extend(CutoutEdge._render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace))
+
+        lines.set_layer(layer)
 
         return lines
 

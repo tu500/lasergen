@@ -6,6 +6,8 @@ class Config():
             'info': 'green',
         }
 
+    abort_on_tooth_length_error = False
+
     def __init__(self, tooth_min_width, tooth_max_width, wall_thickness, object_distance, cutting_width=0):
         self.tooth_min_width = tooth_min_width
         self.tooth_max_width = tooth_max_width
