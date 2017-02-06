@@ -312,7 +312,7 @@ class Edge(PlanarObject):
         """
         Calculate a matching number of teeth for the edge, given its length,
         configured tooth length bounds and whether there should be an even or
-        odd amount of theeth.
+        odd amount of teeth.
         """
         # TODO add preferred tooth length
 
