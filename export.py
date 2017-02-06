@@ -9,7 +9,7 @@ def place_2d_objects(objects, config):
     y_positions = [0] + list(np.cumsum(heights))
     return [o - bb[0] + np.array([0,y]) for o, bb, y in zip(objects, bounding_boxes, y_positions)]
 
-def export_svg(objects):
+def export_svg(objects, config):
 
     if not objects:
         raise Exception("PANIC!!!!!")
@@ -29,21 +29,25 @@ def export_svg(objects):
     for o in objects:
         for p in o.primitives:
 
+            color = config.layers[p.layer]
+
             if isinstance(p, Line):
-                s += '<line x1="{}" y1="{}" x2="{}" y2="{}" stroke="black" stroke-width="1px"/>\n'.format(
-                        p.start[0],
-                        -p.start[1],
-                        p.end[0],
-                        -p.end[1]
+                s += '<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" stroke-width="1px"/>\n'.format(
+                        x1    = p.start[0],
+                        y1    = -p.start[1],
+                        x2    = p.end[0],
+                        y2    = -p.end[1],
+                        color = color,
                     )
             elif isinstance(p, Circle):
-                s += '<circle cx="{}" cy="{}" r="{}" stroke="black" stroke-width="1px" fill="none"/>\n'.format(
-                        p.center[0],
-                        -p.center[1],
-                        p.radius
+                s += '<circle cx="{cx}" cy="{cy}" r="{r}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                        cx    = p.center[0],
+                        cy    = -p.center[1],
+                        r     = p.radius,
+                        color = color,
                     )
             elif isinstance(p, ArcPath):
-                s += '<path d="M {start_x} {start_y} A {radius_x} {radius_y} {angle_x} {large_arc} {sweep} {to_x} {to_y}" stroke="black" stroke-width="1px" fill="none"/>\n'.format(
+                s += '<path d="M {start_x} {start_y} A {radius_x} {radius_y} {angle_x} {large_arc} {sweep} {to_x} {to_y}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
                         start_x   = p.start[0],
                         start_y   = -p.start[1],
                         radius_x  = p.radius,
@@ -52,14 +56,16 @@ def export_svg(objects):
                         large_arc = 1 if p.large_arc else 0,
                         sweep     = 1 if p.sweep else 0,
                         to_x      = p.end[0],
-                        to_y      = -p.end[1]
+                        to_y      = -p.end[1],
+                        color     = color,
                     )
             elif isinstance(p, Text):
-                s += '<text x="{}" y="{}" style="font-size:{}px" fill="red">{}</text>\n'.format(
-                        p.position[0],
-                        -p.position[1],
-                        p.fontsize,
-                        p.text
+                s += '<text x="{x}" y="{y}" style="font-size:{fontsize}px" fill="{color}">{text}</text>\n'.format(
+                        x        = p.position[0],
+                        y        = -p.position[1],
+                        fontsize = p.fontsize,
+                        text     = p.text,
+                        color    = color,
                     )
 
             else:
@@ -71,32 +77,37 @@ def export_svg(objects):
 
 
 class PathAccumulator():
-    def __init__(self, first_object):
+    def __init__(self, first_object, config):
 
         self.objects = []
         self.finalized = False
 
+        self.config = config
+
         self.output = None
         self.start_point = None
         self.current_point = None
+        self.layer = first_object.layer
 
         if isinstance(first_object, Circle):
             self.finalized = True
             self.objects.append(first_object)
-            self.output = '<circle cx="{}" cy="{}" r="{}" stroke="black" stroke-width="1px" fill="none"/>\n'.format(
-                    first_object.center[0],
-                    -first_object.center[1],
-                    first_object.radius
+            self.output = '<circle cx="{cx}" cy="{cy}" r="{r}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                    cx    = first_object.center[0],
+                    cy    = -first_object.center[1],
+                    r     = first_object.radius,
+                    color = config.layers[self.layer],
                 )
 
         elif isinstance(first_object, Text):
             self.finalized = True
             self.objects.append(first_object)
-            self.output = '<text x="{}" y="{}" style="font-size:{}px" fill="red">{}</text>\n'.format(
-                    first_object.position[0],
-                    -first_object.position[1],
-                    first_object.fontsize,
-                    first_object.text
+            self.output = '<text x="{x}" y="{y}" style="font-size:{fontsize}px" fill="{color}">{text}</text>\n'.format(
+                    x        = first_object.position[0],
+                    y        = -first_object.position[1],
+                    fontsize = first_object.fontsize,
+                    text     = first_object.text,
+                    color    = config.layers[self.layer],
                 )
 
         elif isinstance(first_object, Line) or isinstance(first_object, ArcPath):
@@ -122,6 +133,9 @@ class PathAccumulator():
         if not (isinstance(obj, Line) or isinstance(obj, ArcPath)):
             raise Exception("PANIC")
 
+        if self.layer != obj.layer:
+            return False
+
         if not almost_equal(obj.start, self.current_point):
             return False
 
@@ -132,7 +146,9 @@ class PathAccumulator():
 
             if almost_equal(obj.end, self.start_point):
                 # close the path
-                self.output += 'Z" stroke="black" stroke-width="1px" fill="none"/>\n'
+                self.output += 'Z" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                        color = self.config.layers[self.layer]
+                    )
                 self.finalized = True
 
             else:
@@ -159,13 +175,15 @@ class PathAccumulator():
     def finalize(self):
 
         if not self.finalized:
-            self.output += '" stroke="black" stroke-width="1px" fill="none"/>\n'
+            self.output += '" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                    color = self.config.layers[self.layer]
+                )
             self.finalized = True
 
         return self.output
 
 
-def export_svg_with_paths(objects):
+def export_svg_with_paths(objects, config):
 
     if not objects:
         raise Exception("PANIC!!!!!")
@@ -189,14 +207,14 @@ def export_svg_with_paths(objects):
         for p in o.primitives:
 
             if acc is None:
-                acc = PathAccumulator(p)
+                acc = PathAccumulator(p, config)
 
             else:
                 r = acc.add_object(p)
 
                 if not r:
                     s += acc.finalize()
-                    acc = PathAccumulator(p)
+                    acc = PathAccumulator(p, config)
 
         s += acc.finalize()
 

@@ -32,7 +32,7 @@ def main():
     objects = place_2d_objects(cb.render(c) + tb.render(c) + [e.render(c)], c)
 
     with codecs.open('foo.svg', 'wb', 'utf-8') as f:
-        f.write(export_svg_with_paths(objects))
+        f.write(export_svg_with_paths(objects, c))
 
 if __name__ == "__main__":
     main()

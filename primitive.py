@@ -10,11 +10,16 @@ class Object2D():
     Helper class to group several 2D primitives toghether into a 2D object.
     """
 
-    def __init__(self, primitives=None):
+    def __init__(self, primitives=None, layer=None):
+
         if primitives is None:
             self.primitives = []
         else:
             self.primitives = primitives
+
+        if layer is not None:
+            for p in self.primitives:
+                p.layer = layer
 
     def bounding_box(self):
         """
@@ -92,6 +97,9 @@ class PlanarObject():
     Abstract base class for objects that render into an Object2D.
     """
 
+    def __init__(self, layer='cut'):
+        self.layer = layer
+
     def render(self, config):
         """Render into an Object2D."""
         raise NotImplementedError('Abstract method')
@@ -119,38 +127,44 @@ class Primitive2D(PlanarObject):
 
 
 class Line(Primitive2D):
-    def __init__(self, start, end):
+    def __init__(self, start, end, layer='cut'):
+        super(Line, self).__init__(layer)
+
         self.start = start
         self.end = end
 
     def __add__(self, b):
-        return Line(self.start + b, self.end + b)
+        return Line(self.start + b, self.end + b, layer=self.layer)
     def __sub__(self, b):
-        return Line(self.start - b, self.end - b)
+        return Line(self.start - b, self.end - b, layer=self.layer)
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
-        return Line(self.start * fac, self.end * fac)
+        return Line(self.start * fac, self.end * fac, layer=self.layer)
     def reverse(self):
-        return Line(self.end, self.start)
+        return Line(self.end, self.start, layer=self.layer)
 
 class Circle(Primitive2D):
-    def __init__(self, center, radius):
+    def __init__(self, center, radius, layer='cut'):
+        super(Circle, self).__init__(layer)
+
         self.center = center
         self.radius = radius
 
     def __add__(self, b):
-        return Circle(self.center + b, self.radius)
+        return Circle(self.center + b, self.radius, layer=self.layer)
     def __sub__(self, b):
-        return Circle(self.center - b, self.radius)
+        return Circle(self.center - b, self.radius, layer=self.layer)
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
-        return Circle(self.center * fac, self.radius)
+        return Circle(self.center * fac, self.radius, layer=self.layer)
     def reverse(self):
         # not applicable
         return self
 
 class ArcPath(Primitive2D):
-    def __init__(self, start, end, radius, large_arc=True, sweep=True):
+    def __init__(self, start, end, radius, large_arc=True, sweep=True, layer='cut'):
+        super(ArcPath, self).__init__(layer)
+
         self.start = start
         self.end = end
         self.radius = radius
@@ -158,9 +172,9 @@ class ArcPath(Primitive2D):
         self.sweep = sweep
 
     def __add__(self, b):
-        return ArcPath(self.start + b, self.end + b, self.radius, self.large_arc, self.sweep)
+        return ArcPath(self.start + b, self.end + b, self.radius, self.large_arc, self.sweep, layer=self.layer)
     def __sub__(self, b):
-        return ArcPath(self.start - b, self.end - b, self.radius, self.large_arc, self.sweep)
+        return ArcPath(self.start - b, self.end - b, self.radius, self.large_arc, self.sweep, layer=self.layer)
     def mirror(self, mirror_axes):
         # TODO this is not trivial
         return self
@@ -169,22 +183,24 @@ class ArcPath(Primitive2D):
         return self
 
     @staticmethod
-    def from_center_angle(center, angle_start, angle_end, radius):
+    def from_center_angle(center, angle_start, angle_end, radius, layer='cut'):
         start = center + radius * np.array([math.cos(angle_start / 180 * math.pi), math.sin(angle_start / 180 * math.pi)])
         end = center + radius * np.array([math.cos(angle_end / 180 * math.pi), math.sin(angle_end / 180 * math.pi)])
         large_arc = angle_end - angle_start >= 180
-        return ArcPath(start, end, radius, large_arc=large_arc)
+        return ArcPath(start, end, radius, large_arc=large_arc, layer=layer)
 
 class Text(Primitive2D):
-    def __init__(self, positionn, text, fontsize=5):
+    def __init__(self, positionn, text, fontsize=5, layer='info'):
+        super(ArcPath, self).__init__(layer)
+
         self.position = position
         self.text = text
         self.fontsize = fontsize
 
     def __add__(self, b):
-        return Text(self.position + b, self.text, self.fontsize)
+        return Text(self.position + b, self.text, self.fontsize, layer=self.layer)
     def __sub__(self, b):
-        return Text(self.position - b, self.text, self.fontsize)
+        return Text(self.position - b, self.text, self.fontsize, layer=self.layer)
     def mirror(self, mirror_axes):
         # TODO
         return self

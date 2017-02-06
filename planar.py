@@ -6,7 +6,9 @@ from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
 
 class CutoutRect(PlanarObject):
-    def __init__(self, width, height):
+    def __init__(self, width, height, layer='cut'):
+        super(CutoutRect, self).__init__(layer)
+
         self.width = width
         self.height = height
 
@@ -21,10 +23,12 @@ class CutoutRect(PlanarObject):
         l.append(Line(np.array([self.width - displace, self.height - displace]), np.array([displace,              self.height - displace])))
         l.append(Line(np.array([displace,              self.height - displace]), np.array([displace,              displace])))
 
-        return Object2D(l)
+        return Object2D(l, self.layer)
 
 class CutoutRoundedRect(PlanarObject):
-    def __init__(self, width, height, radius):
+    def __init__(self, width, height, radius, layer='cut'):
+        super(CutoutRoundedRect, self).__init__(layer)
+
         assert(width >= 2*radius)
         assert(height >= 2*radius)
 
@@ -47,10 +51,12 @@ class CutoutRoundedRect(PlanarObject):
         l.append(Line(np.array([displace, self.height - self.radius - displace]), np.array([displace, self.radius + displace])))
         l.append(ArcPath(np.array([displace, self.radius + displace]), np.array([displace + self.radius, displace]), self.radius, False, False))
 
-        return Object2D(l)
+        return Object2D(l, self.layer)
 
 class HexBoltCutout(PlanarObject):
-    def __init__(self, width):
+    def __init__(self, width, layer='cut'):
+        super(HexBoltCutout, self).__init__(layer)
+
         self.width = width
 
     def render(self, config):
@@ -72,19 +78,23 @@ class HexBoltCutout(PlanarObject):
 
                 np.array([-x_pos,  y_pos]),
             ]
-        return Object2D([Line(a,b) for a,b in zip(corners, corners[1:])])
+        return Object2D([Line(a,b) for a,b in zip(corners, corners[1:])], self.layer)
 
 class CircleCutout(PlanarObject):
-    def __init__(self, radius):
+    def __init__(self, radius, layer='cut'):
+        super(CircleCutout, self).__init__(layer)
+
         self.radius = radius
 
     def render(self, config):
         displace = config.cutting_width / 2
 
-        return Object2D([Circle(0, self.radius - displace)])
+        return Object2D([Circle(0, self.radius - displace)], self.layer)
 
 class MountingScrewCutout(PlanarObject):
-    def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir):
+    def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir, layer='cut'):
+        super(MountingScrewCutout, self).__init__(layer)
+
         assert(radius_head >= radius_shaft)
 
         self.radius_head = radius_head
@@ -107,7 +117,7 @@ class MountingScrewCutout(PlanarObject):
         l.append(ArcPath(rs * on + shaft_straight_endpoint, rs * (-on) + shaft_straight_endpoint, rh))
         l.append(Line(rs * (-on) + shaft_straight_endpoint, rs * (-on)))
 
-        return Object2D(l)
+        return Object2D(l, self.layer)
 
 class Fan40mmCutout(PlanarObject):
 
@@ -121,11 +131,13 @@ class Fan40mmCutout(PlanarObject):
         l.append(Circle(np.array([ 16.5, -16.5]), 2 - displace))
         l.append(Circle(np.array([-16.5, -16.5]), 2 - displace))
 
-        return Object2D(l)
+        return Object2D(l, self.layer)
 
 class AirVentsCutout(PlanarObject):
     # TODO make more configurable
-    def __init__(self, width, height):
+    def __init__(self, width, height, layer='cut'):
+        super(AirVentsCutout, self).__init__(layer)
+
         self.width = width
         self.height = height
 
@@ -152,7 +164,7 @@ class AirVentsCutout(PlanarObject):
                 l.append(Line(np.array([x2 - displace, y2 - displace]), np.array([x1 + displace, y2 - displace])))
                 l.append(Line(np.array([x1 + displace, y2 - displace]), np.array([x1 + displace, y1 + displace])))
 
-        return Object2D(l)
+        return Object2D(l, self.layer)
 
     @staticmethod
     def _render_rectangle(pos, size):
