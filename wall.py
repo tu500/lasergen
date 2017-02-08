@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR, DIR2, project_along_axis
+from util import DIR, DIR2, project_along_axis, dir_to_name
 from units import Frac
 from primitive import Object2D, PlanarObject
 from edge import EDGE_STYLE, Edge
@@ -12,12 +12,17 @@ class Wall(PlanarObject):
     #children = None
     #edges = None
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, name=None):
         self.size = np.array([width, height])
 
         self.children = []
 
         self._construct_edges()
+
+        if name is None:
+            self.name = type(self).__name__
+        else:
+            self.name = name
 
     def _construct_edges(self):
         raise NotImplementedError('Abstract method')
@@ -58,9 +63,16 @@ class Wall(PlanarObject):
     def dereference(self):
         return self
 
+    def __str__(self):
+        return '[Wall "{name}" ({sizex}, {sizey})]'.format(
+                name  = self.name,
+                sizex = self.size[0],
+                sizey = self.size[1]
+            )
+
 class WallReference():
 
-    def __init__(self, target, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
+    def __init__(self, target, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None, name=None):
         assert( (pos >= np.array([0,0])).all() )
 
         if size is None:
@@ -72,6 +84,7 @@ class WallReference():
         self.size = size
         self.mirror_children = mirror_children
         self.projection_dir = projection_dir
+        self.name = name
 
         self._init_edges_from_target()
 
@@ -113,6 +126,17 @@ class WallReference():
 
     def dereference(self):
         return self.target.dereference()
+
+    def __str__(self):
+        return '[WallRef "{name}" {dir}({posx}, {posy}) / ({sizex}, {sizey})] -> {target}'.format(
+                posx   = self.position[0],
+                posy   = self.position[1],
+                sizex  = self.size[0],
+                sizey  = self.size[1],
+                dir    = dir_to_name(self.projection_dir) + ' ' if self.projection_dir is not None else '',
+                name   = self.name,
+                target = self.target
+            )
 
 
 class ToplessWall(Wall):

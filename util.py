@@ -15,6 +15,7 @@ class DIR2():
     RIGHT = np.array([ 1, 0])
 
 AXES = [DIR.RIGHT, DIR.UP, DIR.FRONT]
+DIRS = [DIR.RIGHT, DIR.LEFT, DIR.UP, DIR.DOWN, DIR.FRONT, DIR.BACK]
 
 def is_dir(d):
     dirs = {k:v for k,v in DIR.__dict__.items() if not k.startswith('_')}
@@ -28,6 +29,18 @@ def dir_to_name(d):
     for k,v in dirs.items():
         if (v == d).all():
             return k
+
+def dir_to_axis_name(d):
+    if not isinstance(d, str):
+        d = dir_to_name(d)
+    return {
+            'UP'    : 'Y',
+            'DOWN'  : 'Y',
+            'LEFT'  : 'X',
+            'RIGHT' : 'X',
+            'FRONT' : 'Z',
+            'BACK'  : 'Z',
+        }[d]
 
 def project_along_axis(vec, axis):
     assert(is_dir(axis))

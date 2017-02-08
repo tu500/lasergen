@@ -1,26 +1,33 @@
 import numpy as np
 
-from util import DIR, AXES, project_along_axis
+from util import DIR, DIRS, AXES, project_along_axis, dir_to_axis_name, dir_to_name
 from units import Rel
 from edge import CutoutEdge
 from wall import ToplessWall, ExtendedWall, SideWall, SubWall
 
 class Box():
-    def __init__(self, width, height, depth):
+    def __init__(self, width, height, depth, name=None):
         self.size = [width, height, depth]
         self.abs_size = np.array([None, None, None])
 
         self.subboxes = []
 
+        if name is None:
+            self.name = type(self).__name__
+        else:
+            self.name = name
+
     def subdivide(self, direction, *sizes):
         assert(self.subboxes == [])
 
+        subbox_name = self.name + '.DIR' + dir_to_axis_name(direction) + '{}'
+
         if (direction == DIR.RIGHT).all():
-            self.subboxes = [SubBox(size, 'ref', 'ref') for size in sizes]
+            self.subboxes = [SubBox(size, 'ref', 'ref', name=subbox_name.format(i)) for i, size in enumerate(sizes)]
         elif (direction == DIR.UP).all():
-            self.subboxes = [SubBox('ref', size, 'ref') for size in sizes]
+            self.subboxes = [SubBox('ref', size, 'ref', name=subbox_name.format(i)) for i, size in enumerate(sizes)]
         elif (direction == DIR.FRONT).all():
-            self.subboxes = [SubBox('ref', 'ref', size) for size in sizes]
+            self.subboxes = [SubBox('ref', 'ref', size, name=subbox_name.format(i)) for i, size in enumerate(sizes)]
 
         return self.subboxes
 
@@ -301,7 +308,8 @@ class Box():
 
                     ref_wall = self.get_wall_by_direction(-d)
                     w, h = ref_wall.size
-                    r = SubWall(w, h)
+                    name = '{}.SUB{}{}'.format(self.name, dir_to_axis_name(d), box_index)
+                    r = SubWall(w, h, name=name)
 
                     n_walls[i] = r
                     n_pos[i] += c.abs_size[i] + config.subwall_thickness
@@ -325,6 +333,8 @@ class Box():
 
                     c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
 
+            c._set_wallref_names()
+
             cur_pos = n_pos
             cur_wall_refs = n_walls
 
@@ -344,7 +354,39 @@ class Box():
     def _construct_walls(self):
         raise Exception("Abstract method")
 
+    def _set_wallref_default_data(self):
+        self._set_wallref_projection_dirs()
+        self._set_wall_names()
+        self._set_wallref_names()
+        self._set_egde_counterparts()
+
+    def _set_wallref_projection_dirs(self):
+
+        for d in DIRS:
+            wref = self.get_wall_by_direction(d)
+
+            if wref is not None:
+                wref.projection_dir = d
+
+    def _set_wall_names(self):
+
+        for d in DIRS:
+            wref = self.get_wall_by_direction(d)
+
+            if wref is not None:
+                w = wref.dereference()
+                w.name = self.name + '.' + dir_to_name(d)
+
+    def _set_wallref_names(self):
+
+        for d in DIRS:
+            wref = self.get_wall_by_direction(d)
+
+            if wref is not None:
+                wref.name = self.name + '.' + dir_to_name(d)
+
     def _set_egde_counterparts(self):
+        # needs setup projection dirs
 
         for i, wall_dir in zip(range(3), AXES):
 
@@ -357,35 +399,51 @@ class Box():
                 if self.get_wall_by_direction(-wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
                     self.get_wall_by_direction(-wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(-wall_dir).dereference().get_reference()
 
+    def __str__(self):
+        return '[Box "{name}" ({sx}, {sy}, {sz}) / ({asx}, {asy}, {asz})]'.format(
+                name = self.name,
+                sx = self.size[0],
+                sy = self.size[1],
+                sz = self.size[2],
+                asx = self.abs_size[0],
+                asy = self.abs_size[1],
+                asz = self.abs_size[2],
+            )
+
 class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.UP)    ).get_reference(projection_dir=DIR.UP))
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference(projection_dir=DIR.DOWN))
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference(projection_dir=DIR.LEFT))
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference(projection_dir=DIR.RIGHT))
-        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.FRONT) ).get_reference(projection_dir=DIR.FRONT))
-        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
-        self._set_egde_counterparts()
+        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
+        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
+        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self._set_wallref_default_data()
 
 class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.UP)    ).get_reference(projection_dir=DIR.UP))
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference(projection_dir=DIR.DOWN))
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference(projection_dir=DIR.LEFT))
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference(projection_dir=DIR.RIGHT))
+        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
         self.walls.append(None)
-        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference(projection_dir=DIR.BACK))
-        self._set_egde_counterparts()
+        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self._set_wallref_default_data()
 
 
 class SubBox(Box):
-    def __init__(self, width, height, depth):
+    def __init__(self, width, height, depth, name=None):
         self.size = [width, height, depth]
         self.abs_size = np.array([None, None, None])
 
         self.subboxes = []
+
+        if name is None:
+            self.name = type(self).__name__
+        else:
+            self.name = name
 
     def _construct_rec(self, config):
         self._construct_subwalls(config)
