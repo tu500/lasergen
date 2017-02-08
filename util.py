@@ -25,7 +25,7 @@ def is_dir(d):
 
 def dir_to_name(d):
     dirs = {k:v for k,v in DIR.__dict__.items() if not k.startswith('_')}
-    for k,v in dirs:
+    for k,v in dirs.items():
         if (v == d).all():
             return k
 
