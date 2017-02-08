@@ -262,13 +262,9 @@ class Box():
             return
 
         cur_pos = np.array([0.,0.,0.])
-        cur_wall_refs = [
-                self.get_wall_by_direction(DIR.LEFT),
-                self.get_wall_by_direction(DIR.DOWN),
-                self.get_wall_by_direction(DIR.BACK),
-            ]
+        cur_wall_refs = [self.get_wall_by_direction(-d) for d in AXES]
 
-        for c in self.subboxes[:-1]:
+        for box_index, c in enumerate(self.subboxes):
 
             c.walls = [None] * 6
 
@@ -290,8 +286,8 @@ class Box():
                 else:
                     c.walls[neg_index] = None
 
-                # set positive wall
-                if c.size[i] == 'ref':
+                # set positive wall, reference parent's wall for subbox with 'ref' size or the last subbox
+                if c.size[i] == 'ref' or box_index == len(self.subboxes) - 1:
 
                     r = self.get_wall_by_direction(d)
                     if r is not None:
@@ -300,6 +296,8 @@ class Box():
                         c.walls[pos_index] = None
 
                 else:
+
+                    # need to create a new subwall
 
                     ref_wall = self.get_wall_by_direction(-d)
                     w, h = ref_wall.size
@@ -329,32 +327,6 @@ class Box():
 
             cur_pos = n_pos
             cur_wall_refs = n_walls
-
-        # last subbox
-        c = self.subboxes[-1]
-
-        c.walls = [None] * 6
-
-        for i, d in zip(range(3), AXES):
-
-            pos_index = self._get_wall_index_by_direction(d)
-            neg_index = self._get_wall_index_by_direction(-d)
-
-            to_local_coords = lambda v: project_along_axis(v, d)
-
-            # set negative wall
-            r = cur_wall_refs[i]
-            if r is not None:
-                c.walls[neg_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=-d)
-            else:
-                c.walls[neg_index] = None
-
-            # set positive wall
-            r = self.get_wall_by_direction(d)
-            if r is not None:
-                c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
-            else:
-                c.walls[pos_index] = None
 
 
     def get_wall_by_direction(self, v):
