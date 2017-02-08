@@ -197,8 +197,8 @@ class ArcPath(Primitive2D):
         return ArcPath(start, end, radius, large_arc=large_arc, layer=layer)
 
 class Text(Primitive2D):
-    def __init__(self, positionn, text, fontsize=5, layer='info'):
-        super(ArcPath, self).__init__(layer)
+    def __init__(self, position, text, fontsize=5, layer='info'):
+        super(Text, self).__init__(layer)
 
         self.position = position
         self.text = text
