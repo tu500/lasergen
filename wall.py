@@ -3,7 +3,7 @@ import math
 
 from util import DIR, DIR2, project_along_axis, dir_to_name
 from units import Frac
-from primitive import Object2D, PlanarObject
+from primitive import Object2D, PlanarObject, Text
 from edge import EDGE_STYLE, Edge
 
 
@@ -48,6 +48,9 @@ class Wall(PlanarObject):
 
         for child, pos, mirror_axes in self.children:
             l.extend(child.render(config).mirror(mirror_axes) + pos)
+
+        if config.print_wall_names:
+            l.append(Text(np.array([5,5]), self.name))
 
         return l
 

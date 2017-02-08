@@ -57,7 +57,8 @@ class Object2D():
                 vmin = min_vec(vmin, p.start - 2*np.array([p.radius, p.radius]), p.end - 2*np.array([p.radius, p.radius]))
                 vmax = max_vec(vmax, p.start + 2*np.array([p.radius, p.radius]), p.end + 2*np.array([p.radius, p.radius]))
             else:
-                raise Exception("PANIC")
+                # TODO
+                pass
 
         return (vmin, vmax)
 
@@ -75,6 +76,12 @@ class Object2D():
         Perform elementwise subtraction.
         """
         return Object2D([i - b for i in self.primitives])
+
+    def append(self, b):
+        """
+        Append a primitive to own primitive list.
+        """
+        self.primitives.append(b)
 
     def extend(self, b):
         """
