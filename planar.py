@@ -119,17 +119,40 @@ class MountingScrewCutout(PlanarObject):
 
         return Object2D(l, self.layer)
 
-class Fan40mmCutout(PlanarObject):
+class FanCutout(PlanarObject):
+
+    # TODO only 40mm size verified
+    dimensions = {
+            # (main diameter, mounting hole diameter, mounting hole displace)
+            40:  ( 38, 4, 3.5),
+            60:  ( 58, 4, 4.0),
+            70:  ( 68, 4, 4.0),
+            80:  ( 76, 4, 4.5),
+            92:  ( 89, 4, 5.0),
+            120: (117, 4, 7.0),
+        }
+
+    def __init__(self, size, layer='cut'):
+        super(FanCutout, self).__init__(layer)
+
+        assert(size in self.dimensions)
+        self.size = size
 
     def render(self, config):
         displace = config.cutting_width / 2
 
+        main_dia, mounting_hole_dia, mounting_hole_displace = self.dimensions[self.size]
+
+        main_radius = main_dia / 2
+        mounting_hole_radius = mounting_hole_dia / 2
+        mounting_position = self.size / 2 - mounting_hole_displace
+
         l = []
-        l.append(Circle(0, 19 - displace))
-        l.append(Circle(np.array([ 16.5,  16.5]), 2 - displace))
-        l.append(Circle(np.array([-16.5,  16.5]), 2 - displace))
-        l.append(Circle(np.array([ 16.5, -16.5]), 2 - displace))
-        l.append(Circle(np.array([-16.5, -16.5]), 2 - displace))
+        l.append(Circle(0, main_radius - displace))
+        l.append(Circle(np.array([ mounting_position,  mounting_position]), mounting_hole_radius - displace))
+        l.append(Circle(np.array([-mounting_position,  mounting_position]), mounting_hole_radius - displace))
+        l.append(Circle(np.array([ mounting_position, -mounting_position]), mounting_hole_radius - displace))
+        l.append(Circle(np.array([-mounting_position, -mounting_position]), mounting_hole_radius - displace))
 
         return Object2D(l, self.layer)
 
