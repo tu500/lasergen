@@ -105,6 +105,13 @@ class Edge(PlanarObject):
             parts[-1][2] = (parts[-1][2], self.end_style)
 
         # remove empty parts
+        for p in parts:
+            if p[1] == 0:
+                bs, es = p[2]
+                if not (bs == EDGE_STYLE.INTERNAL_FLAT and es in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]) or \
+                        (es == EDGE_STYLE.INTERNAL_FLAT and bs in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]):
+                    raise Exception("Zero length edge element with incompatible edge styles.")
+
         parts = [p for p in parts if p[1] != 0]
 
         return sum(
