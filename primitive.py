@@ -111,12 +111,37 @@ class PlanarObject():
     Abstract base class for objects that render into an Object2D.
     """
 
+    data_to_local_coords = None
+    parent = None
+
     def __init__(self, layer='cut'):
         self.layer = layer
 
     def render(self, config):
         """Render into an Object2D."""
         raise NotImplementedError('Abstract method')
+
+    def set_parent(self, parent):
+        """
+        Save a reference to this object's parent, ie. the WallReference it was
+        added to. Automatically convert all parameters given by
+        `data_to_local_coords` to local coordinates according to the parent.
+
+        Automatically called by WallReference.add_child.
+        """
+
+        if self.parent is not None:
+            return
+
+        self.parent = parent
+
+        if self.data_to_local_coords:
+            for e in self.data_to_local_coords:
+                if hasattr(self, e):
+                    v = getattr(self, e)
+                    if v is not None and len(v) == 3:
+                        v = parent.to_local_coords(v)
+                        setattr(self, e, v)
 
 
 class Primitive2D(PlanarObject):

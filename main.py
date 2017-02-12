@@ -20,7 +20,7 @@ def main():
     cb.configure(c)
     cb.get_wall_by_direction(DIR.BACK).add_child(HexBoltCutout(6), [20,20,0])
     cb.get_wall_by_direction(DIR.BACK).add_child(CircleCutout(6), [40,20,0])
-    cb.get_wall_by_direction(DIR.BACK).add_child(MountingScrewCutout(6.5, 3, 20, cb.get_wall_by_direction(DIR.BACK).to_local_coords(DIR.DOWN)), [60,40,0])
+    cb.get_wall_by_direction(DIR.BACK).add_child(MountingScrewCutout(6.5, 3, 20, DIR.DOWN), [60,40,0])
     tb = ToplessBox(100, 120, 60)
     tb.configure(c)
 

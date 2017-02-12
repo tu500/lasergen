@@ -7,6 +7,8 @@ from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
 class CutoutRect(PlanarObject):
 
+    data_to_local_coords = ['size']
+
     def __init__(self, size, layer='cut'):
         super(CutoutRect, self).__init__(layer)
 
@@ -27,21 +29,23 @@ class CutoutRect(PlanarObject):
         return Object2D(l, self.layer)
 
 class CutoutRoundedRect(PlanarObject):
+
+    data_to_local_coords = ['size']
+
     def __init__(self, size, radius, layer='cut'):
         super(CutoutRoundedRect, self).__init__(layer)
 
         self.size = np.array(size)
         self.radius = radius
 
-        width, height = self.size
-        assert(width >= 2*radius)
-        assert(height >= 2*radius)
-
     def render(self, config):
 
         displace = config.cutting_width / 2
         width, height = self.size
         radius = self.radius
+
+        assert(width >= 2*radius)
+        assert(height >= 2*radius)
 
         l = []
 
@@ -95,6 +99,9 @@ class CircleCutout(PlanarObject):
         return Object2D([Circle(0, self.radius - displace)], self.layer)
 
 class MountingScrewCutout(PlanarObject):
+
+    data_to_local_coords = ['shaft_dir']
+
     def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir, layer='cut'):
         super(MountingScrewCutout, self).__init__(layer)
 
@@ -160,6 +167,9 @@ class FanCutout(PlanarObject):
         return Object2D(l, self.layer)
 
 class AirVentsCutout(PlanarObject):
+
+    data_to_local_coords = ['size']
+
     # TODO make more configurable
     def __init__(self, size, layer='cut'):
         super(AirVentsCutout, self).__init__(layer)

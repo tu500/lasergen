@@ -120,6 +120,7 @@ class WallReference():
         if len(pos) == 3 and self.projection_dir is not None:
             pos = self.to_local_coords(pos)
         pos = Frac.array_total_length(pos, self.size)
+        child.set_parent(self)
         self.target.add_child(child, self.position + pos, self.mirror_children ^ mirrored)
 
     def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
