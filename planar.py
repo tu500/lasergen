@@ -6,50 +6,53 @@ from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
 
 class CutoutRect(PlanarObject):
-    def __init__(self, width, height, layer='cut'):
+
+    def __init__(self, size, layer='cut'):
         super(CutoutRect, self).__init__(layer)
 
-        self.width = width
-        self.height = height
+        self.size = np.array(size)
 
     def render(self, config):
 
         displace = config.cutting_width / 2
+        width, height = self.size
 
         l = []
 
-        l.append(Line(np.array([displace,              displace]),               np.array([self.width - displace, displace])))
-        l.append(Line(np.array([self.width - displace, displace]),               np.array([self.width - displace, self.height - displace])))
-        l.append(Line(np.array([self.width - displace, self.height - displace]), np.array([displace,              self.height - displace])))
-        l.append(Line(np.array([displace,              self.height - displace]), np.array([displace,              displace])))
+        l.append(Line(np.array([displace,         displace]),          np.array([width - displace, displace])))
+        l.append(Line(np.array([width - displace, displace]),          np.array([width - displace, height - displace])))
+        l.append(Line(np.array([width - displace, height - displace]), np.array([displace,         height - displace])))
+        l.append(Line(np.array([displace,         height - displace]), np.array([displace,         displace])))
 
         return Object2D(l, self.layer)
 
 class CutoutRoundedRect(PlanarObject):
-    def __init__(self, width, height, radius, layer='cut'):
+    def __init__(self, size, radius, layer='cut'):
         super(CutoutRoundedRect, self).__init__(layer)
 
+        self.size = np.array(size)
+        self.radius = radius
+
+        width, height = self.size
         assert(width >= 2*radius)
         assert(height >= 2*radius)
-
-        self.width = width
-        self.height = height
-        self.radius = radius
 
     def render(self, config):
 
         displace = config.cutting_width / 2
+        width, height = self.size
+        radius = self.radius
 
         l = []
 
-        l.append(Line(np.array([displace + self.radius, displace]), np.array([self.width - self.radius - displace, displace])))
-        l.append(ArcPath(np.array([self.width - self.radius - displace, displace]), np.array([self.width - - displace, self.radius + displace]), self.radius, False, False))
-        l.append(Line(np.array([self.width - displace, self.radius + displace]), np.array([self.width - displace, self.height - self.radius - displace])))
-        l.append(ArcPath(np.array([self.width - displace, self.height - self.radius - displace]), np.array([self.width - self.radius - displace, self.height - displace]), self.radius, False, False))
-        l.append(Line(np.array([self.width - self.radius - displace, self.height - displace]), np.array([self.radius + displace, self.height - displace])))
-        l.append(ArcPath(np.array([self.radius + displace, self.height - displace]), np.array([displace, self.height - self.radius - displace]), self.radius, False, False))
-        l.append(Line(np.array([displace, self.height - self.radius - displace]), np.array([displace, self.radius + displace])))
-        l.append(ArcPath(np.array([displace, self.radius + displace]), np.array([displace + self.radius, displace]), self.radius, False, False))
+        l.append(Line(np.array([displace + radius, displace]), np.array([width - radius - displace, displace])))
+        l.append(ArcPath(np.array([width - radius - displace, displace]), np.array([width - - displace, radius + displace]), radius, False, False))
+        l.append(Line(np.array([width - displace, radius + displace]), np.array([width - displace, height - radius - displace])))
+        l.append(ArcPath(np.array([width - displace, height - radius - displace]), np.array([width - radius - displace, height - displace]), radius, False, False))
+        l.append(Line(np.array([width - radius - displace, height - displace]), np.array([radius + displace, height - displace])))
+        l.append(ArcPath(np.array([radius + displace, height - displace]), np.array([displace, height - radius - displace]), radius, False, False))
+        l.append(Line(np.array([displace, height - radius - displace]), np.array([displace, radius + displace])))
+        l.append(ArcPath(np.array([displace, radius + displace]), np.array([displace + radius, displace]), radius, False, False))
 
         return Object2D(l, self.layer)
 
@@ -100,7 +103,7 @@ class MountingScrewCutout(PlanarObject):
         self.radius_head = radius_head
         self.radius_shaft = radius_shaft
         self.shaft_length = shaft_length
-        self.shaft_dir = shaft_dir
+        self.shaft_dir = np.array(shaft_dir)
 
     def render(self, config):
         displace = config.cutting_width / 2
@@ -158,21 +161,21 @@ class FanCutout(PlanarObject):
 
 class AirVentsCutout(PlanarObject):
     # TODO make more configurable
-    def __init__(self, width, height, layer='cut'):
+    def __init__(self, size, layer='cut'):
         super(AirVentsCutout, self).__init__(layer)
 
-        self.width = width
-        self.height = height
+        self.size = np.array(size)
 
     def render(self, config):
 
         displace = config.cutting_width / 2
+        width, height = self.size
 
-        short_count = int(math.ceil((self.width + 5) / (5+5)))
-        short_length = (self.width + 5) / short_count
+        short_count = int(math.ceil((width + 5) / (5+5)))
+        short_length = (width + 5) / short_count
 
-        long_count = int(math.ceil((self.height + 5) / (30+5)))
-        long_length = (self.height + 5) / long_count
+        long_count = int(math.ceil((height + 5) / (30+5)))
+        long_length = (height + 5) / long_count
 
         short_positions = [(i*short_length, (i+1)*short_length-5) for i in range(short_count)]
         long_positions = [(i*long_length, (i+1)*long_length-5) for i in range(long_count)]

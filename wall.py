@@ -12,8 +12,8 @@ class Wall(PlanarObject):
     #children = None
     #edges = None
 
-    def __init__(self, width, height, name=None):
-        self.size = np.array([width, height])
+    def __init__(self, size, name=None):
+        self.size = np.array(size)
 
         self.children = []
 

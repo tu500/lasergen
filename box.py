@@ -307,9 +307,8 @@ class Box():
                     # need to create a new subwall
 
                     ref_wall = self.get_wall_by_direction(-d)
-                    w, h = ref_wall.size
                     name = '{}.SUB{}{}'.format(self.name, dir_to_axis_name(d), box_index)
-                    r = SubWall(w, h, name=name)
+                    r = SubWall(ref_wall.size, name=name)
 
                     n_walls[i] = r
                     n_pos[i] += c.abs_size[i] + config.subwall_thickness
@@ -413,23 +412,23 @@ class Box():
 class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
-        self.walls.append(SideWall(     *project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
-        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
-        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
+        self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
+        self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
         self._set_wallref_default_data()
 
 class ToplessBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
-        self.walls.append(ToplessWall(  *project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
+        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
         self.walls.append(None)
-        self.walls.append(ExtendedWall( *project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
         self._set_wallref_default_data()
 
 
