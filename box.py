@@ -2,7 +2,7 @@ import numpy as np
 
 from util import DIR, DIRS, AXES, project_along_axis, dir_to_axis_name, dir_to_name
 from units import Rel
-from edge import CutoutEdge
+from edge import CutoutEdge, EDGE_STYLE
 from wall import ToplessWall, ExtendedWall, SideWall, SubWall
 
 class Box():
@@ -323,7 +323,7 @@ class Box():
                         if target_wall is not None:
 
                             l = ref_wall.to_local_coords(other_dir).dot(ref_wall.size) # size of reference wall in direction other_dir
-                            e = CutoutEdge(l, target_wall.to_local_coords(d))
+                            e = CutoutEdge(l, target_wall.to_local_coords(d), EDGE_STYLE.TOOTHED, EDGE_STYLE.TOOTHED)
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
                             # TODO add edge reference to c's walls
