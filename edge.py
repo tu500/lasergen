@@ -121,10 +121,10 @@ class Edge(PlanarObject):
         displace = config.cutting_width / 2.
         wall_thickness = config.wall_thickness
 
-        parts = self._prepare_part_list()
+        elements = self._prepare_element_list()
 
         return sum(
-                (self._render_part(start, direction, self.outward_dir, displace, wall_thickness, config, p) for p in parts),
+                (self._render_element(start, direction, self.outward_dir, displace, wall_thickness, config, p) for p in elements),
                 Object2D()
             )
 
@@ -135,21 +135,21 @@ class Edge(PlanarObject):
         list must be sorted.
         """
 
-        part_positions = []
+        element_positions = []
 
         for e in sub_elements:
-            part_positions.append(e.pos)
-            part_positions.append(e.pos + e.length)
+            element_positions.append(e.pos)
+            element_positions.append(e.pos + e.length)
 
-        part_positions = [0] + part_positions + [self.length]
+        element_positions = [0] + element_positions + [self.length]
 
         # the resulting list must be sorted
-        assert( all(part_positions[i] <= part_positions[i+1] for i in range(len(part_positions)-1)) )
+        assert( all(element_positions[i] <= element_positions[i+1] for i in range(len(element_positions)-1)) )
 
-    def _prepare_part_list(self):
+    def _prepare_element_list(self):
         """
-        Prepare a part list for rendering. Interleave configured sub elements
-        with toothed segments, check begin/end styles, remove empty
+        Prepare an element list for rendering. Interleave configured sub
+        elements with toothed segments, check begin/end styles, remove empty
         intermediate elements.
         """
 
@@ -161,47 +161,47 @@ class Edge(PlanarObject):
             if self.sub_elements:
                 raise Exception("Not implemented")
 
-            parts = [_EdgeElement(0, self.length, 'flat', None, None)]
+            elements = [_EdgeElement(0, self.length, 'flat', None, None)]
 
         else:
 
-            parts = [_EdgeElement(0, None, EDGE_ELEMENT_STYLE.TOOTHED, self.begin_style, None)]
+            elements = [_EdgeElement(0, None, EDGE_ELEMENT_STYLE.TOOTHED, self.begin_style, None)]
 
             for elem in sub_elements:
-                prev_elem = parts[-1]
+                prev_elem = elements[-1]
 
                 # the previous element is a generated intermediate element with some unset values
                 prev_elem.length = elem.pos - prev_elem.pos
                 prev_elem.second_style = elem.first_style
 
-                parts.append(elem)
-                parts.append(_EdgeElement(elem.pos + elem.length, None, EDGE_ELEMENT_STYLE.TOOTHED, elem.second_style, None) )
+                elements.append(elem)
+                elements.append(_EdgeElement(elem.pos + elem.length, None, EDGE_ELEMENT_STYLE.TOOTHED, elem.second_style, None) )
 
-            last_elem = parts[-1]
+            last_elem = elements[-1]
             last_elem.length = self.length - last_elem.pos
             last_elem.second_style = self.end_style
 
-        # remove empty parts
-        for p in parts:
-            if p.length == 0:
+        # remove empty elements
+        for e in elements:
+            if e.length == 0:
 
                 # only remove intermediate toothed elements
-                assert(p.style == EDGE_ELEMENT_STYLE.TOOTHED)
+                assert(e.style == EDGE_ELEMENT_STYLE.TOOTHED)
 
                 # check whether the edge styles are compatible
-                bs, es = p.first_style, p.second_style
+                bs, es = e.first_style, e.second_style
                 if not ((bs == EDGE_STYLE.INTERNAL_FLAT and es in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]) or \
                         (es == EDGE_STYLE.INTERNAL_FLAT and bs in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED])):
                     raise Exception("Zero length toothed edge element with incompatible edge styles.")
 
-        return [p for p in parts if p.length != 0]
+        return [e for e in elements if e.length != 0]
 
 
-    def _render_part(self, start, direction, outward_dir, displace, wall_thickness, config, part):
+    def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
-        start = start + part.pos * direction
-        length = part.length
-        style = part.style
+        start = start + element.pos * direction
+        length = element.length
+        style = element.style
 
         if style == 'flat':
             return Object2D([Line(
@@ -231,9 +231,9 @@ class Edge(PlanarObject):
                         ),
                 ]
 
-            if part.first_style == EDGE_STYLE.INTERNAL_TOOTHED:
+            if element.first_style == EDGE_STYLE.INTERNAL_TOOTHED:
                 del l[0]
-            if part.second_style == EDGE_STYLE.INTERNAL_TOOTHED:
+            if element.second_style == EDGE_STYLE.INTERNAL_TOOTHED:
                 del l[-1]
 
             return Object2D(l)
@@ -243,7 +243,7 @@ class Edge(PlanarObject):
 
         elif style == EDGE_ELEMENT_STYLE.TOOTHED:
 
-            begin_style, end_style = part.first_style, part.second_style
+            begin_style, end_style = element.first_style, element.second_style
 
             if (begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT]) or \
                 (begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT] and end_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED]):
@@ -531,11 +531,11 @@ class CutoutEdge(Edge):
         return Object2D(lines)
 
 
-    def _render_part(self, start, direction, outward_dir, displace, wall_thickness, config, part):
+    def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
-        start = start + part.pos * direction
-        length = part.length
-        style = part.style
+        start = start + element.pos * direction
+        length = element.length
+        style = element.style
 
         if style in ['flat', EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
             return CutoutEdge._render_rectangle(start, 0, length, direction, outward_dir, wall_thickness, displace)
@@ -545,7 +545,7 @@ class CutoutEdge(Edge):
 
         elif style == EDGE_ELEMENT_STYLE.TOOTHED:
 
-            begin_style, end_style = part.first_style, part.second_style
+            begin_style, end_style = element.first_style, element.second_style
 
             if (begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT]) or \
                 (begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT] and end_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED]):
