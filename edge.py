@@ -306,7 +306,9 @@ class Edge(PlanarObject):
         self.sub_elements.append(new_element)
 
         # add counterpart with matching styles
-        if auto_add_counterpart and self.counterpart is not None:
+        if auto_add_counterpart:
+            assert(self.counterpart is not None)
+
             cp = new_element.get_counterpart_element()
             self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.first_style, cp.second_style, False)
 
