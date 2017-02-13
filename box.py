@@ -3,7 +3,7 @@ import numpy as np
 from util import DIR, DIRS, AXES, project_along_axis, dir_to_axis_name, dir_to_name
 from units import Rel
 from edge import CutoutEdge, EDGE_STYLE
-from wall import ToplessWall, ExtendedWall, SideWall, SubWall
+from wall import Wall, ToplessWall, ExtendedWall, SideWall, SubWall
 
 class Box():
     def __init__(self, width, height, depth, name=None):
@@ -278,7 +278,10 @@ class Box():
             n_pos = cur_pos.copy()
             n_walls = cur_wall_refs.copy()
 
-            for i, d in zip(range(3), AXES):
+            # sorting ensures other wallrefs are set before constructing a new
+            # subwall, thus being able to set the wallrefs' edge references to
+            # the new CutoutEdges
+            for i, d in sorted(zip(range(3), AXES), key=lambda x: c.size[x[0]] != 'ref'):
 
                 pos_index = self._get_wall_index_by_direction(d)
                 neg_index = self._get_wall_index_by_direction(-d)
@@ -325,10 +328,11 @@ class Box():
                             e = CutoutEdge(l, target_wall.to_local_coords(d), EDGE_STYLE.TOOTHED, EDGE_STYLE.TOOTHED)
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
-                            # TODO add edge reference to c's walls
-
                             e.counterpart = r.get_edge_by_direction(to_local_coords(target_dir)).get_reference()
-                            r.get_edge_by_direction(to_local_coords(target_dir)).counterpart = e.get_reference()
+                            r.get_edge_by_direction(to_local_coords(target_dir)).dereference().counterpart = e.get_reference()
+
+                            child_target_wall_ref = c.get_wall_by_direction(target_dir)
+                            child_target_wall_ref.edges[Wall._get_edge_index_by_direction(child_target_wall_ref.to_local_coords(d))] = e.get_reference()
 
                     c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
 
