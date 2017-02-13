@@ -250,43 +250,47 @@ class Edge(PlanarObject):
             return Object2D()
 
         elif style == EDGE_ELEMENT_STYLE.TOOTHED:
+            return self._render_toothed_element(start, direction, outward_dir, displace, wall_thickness, config, element)
 
-            begin_style, end_style = element.first_style, element.second_style
+    def _render_toothed_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
-            if (begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT]) or \
-                (begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT] and end_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED]):
+        length = element.length
+        begin_style, end_style = element.first_style, element.second_style
 
-                odd_tooth_count = False
+        if (begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT]) or \
+            (begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT] and end_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED]):
 
-            else:
-                odd_tooth_count = True
+            odd_tooth_count = False
 
-            tooth_count = self._get_tooth_count(config, length, odd_tooth_count)
-            tooth_length = length / tooth_count
+        else:
+            odd_tooth_count = True
 
-            tooth_length_satisfied = config.tooth_min_width <= tooth_length <= config.tooth_max_width
-            layer = 'cut' if tooth_length_satisfied else 'warn'
+        tooth_count = self._get_tooth_count(config, length, odd_tooth_count)
+        tooth_length = length / tooth_count
 
-            if not tooth_length_satisfied:
-                print('WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
-                        max = config.tooth_max_width,
-                        min = config.tooth_min_width,
-                        len = tooth_length,
-                    ))
+        tooth_length_satisfied = config.tooth_min_width <= tooth_length <= config.tooth_max_width
+        layer = 'cut' if tooth_length_satisfied else 'warn'
 
-            tooth_positions = [0] + list(np.cumsum([tooth_length for i in range(tooth_count)]))
+        if not tooth_length_satisfied:
+            print('WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
+                    max = config.tooth_max_width,
+                    min = config.tooth_min_width,
+                    len = tooth_length,
+                ))
 
-            return self._render_toothed_line(
-                    start,
-                    begin_style,
-                    end_style,
-                    tooth_positions,
-                    direction,
-                    outward_dir,
-                    wall_thickness,
-                    displace,
-                    layer
-                )
+        tooth_positions = [0] + list(np.cumsum([tooth_length for i in range(tooth_count)]))
+
+        return self._render_toothed_line(
+                start,
+                begin_style,
+                end_style,
+                tooth_positions,
+                direction,
+                outward_dir,
+                wall_thickness,
+                displace,
+                layer
+            )
 
     def add_element(self, pos, length, style, prev_style=None, next_style=None, auto_add_counterpart=True):
 
@@ -563,43 +567,7 @@ class CutoutEdge(Edge):
             return Object2D()
 
         elif style == EDGE_ELEMENT_STYLE.TOOTHED:
-
-            begin_style, end_style = element.first_style, element.second_style
-
-            if (begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED] and end_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT]) or \
-                (begin_style in [EDGE_STYLE.FLAT, EDGE_STYLE.INTERNAL_FLAT] and end_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_TOOTHED]):
-
-                odd_tooth_count = False
-
-            else:
-                odd_tooth_count = True
-
-            tooth_count = self._get_tooth_count(config, length, odd_tooth_count)
-            tooth_length = length / tooth_count
-
-            tooth_length_satisfied = config.tooth_min_width <= tooth_length <= config.tooth_max_width
-            layer = 'cut' if tooth_length_satisfied else 'warn'
-
-            if not tooth_length_satisfied:
-                print('WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
-                        max = config.tooth_max_width,
-                        min = config.tooth_min_width,
-                        len = tooth_length,
-                    ))
-
-            tooth_positions = [0] + list(np.cumsum([tooth_length for i in range(tooth_count)]))
-
-            return self._render_toothed_line(
-                    start,
-                    begin_style,
-                    end_style,
-                    tooth_positions,
-                    direction,
-                    outward_dir,
-                    wall_thickness,
-                    displace,
-                    layer
-                )
+            return self._render_toothed_element(start, direction, outward_dir, displace, wall_thickness, config, element)
 
 
     @staticmethod
