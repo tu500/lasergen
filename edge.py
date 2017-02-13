@@ -181,7 +181,15 @@ class Edge(PlanarObject):
             last_elem.length = self.length - last_elem.pos
             last_elem.second_style = self.end_style
 
-        # remove empty elements
+        return self._remove_empty_elements(elements)
+
+    @staticmethod
+    def _remove_empty_elements(elements):
+        """
+        Remove zero-length elements from the prepared element list. Check if
+        removed elements have valid edge styles.
+        """
+
         for e in elements:
             if e.length == 0:
 
@@ -530,6 +538,17 @@ class CutoutEdge(Edge):
 
         return Object2D(lines)
 
+
+    @staticmethod
+    def _remove_empty_elements(elements):
+
+        for e in elements:
+            if e.length == 0:
+
+                # only remove intermediate toothed elements
+                assert(e.style == EDGE_ELEMENT_STYLE.TOOTHED)
+
+        return [e for e in elements if e.length != 0]
 
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
