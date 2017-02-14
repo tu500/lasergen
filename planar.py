@@ -201,7 +201,3 @@ class AirVentsCutout(PlanarObject):
                 l.append(Line(np.array([x1 + displace, y2 - displace]), np.array([x1 + displace, y1 + displace])))
 
         return Object2D(l, self.layer)
-
-    @staticmethod
-    def _render_rectangle(pos, size):
-        pass
