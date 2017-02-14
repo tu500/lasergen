@@ -145,6 +145,19 @@ class PlanarObject():
                         v = Frac.array_total_length(v, parent.size)
                         setattr(self, e, v)
 
+    @staticmethod
+    def _calc_center_dir(v):
+        """
+        Helper function allowing boolean values for center parameters.
+        """
+
+        if v == True:
+            return np.array([1,1])
+        elif v == False:
+            return np.array([0,0])
+        else:
+            return np.array(v)
+
 
 class Primitive2D(PlanarObject):
     """

@@ -7,12 +7,13 @@ from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
 class CutoutRect(PlanarObject):
 
-    data_to_local_coords = ['size']
+    data_to_local_coords = ['size', 'center_dir']
 
-    def __init__(self, size, layer='cut'):
+    def __init__(self, size, center=False, layer='cut'):
         super(CutoutRect, self).__init__(layer)
 
         self.size = np.array(size)
+        self.center_dir = self._calc_center_dir(center)
 
     def render(self, config):
 
@@ -26,17 +27,18 @@ class CutoutRect(PlanarObject):
         l.append(Line(np.array([width - displace, height - displace]), np.array([displace,         height - displace])))
         l.append(Line(np.array([displace,         height - displace]), np.array([displace,         displace])))
 
-        return Object2D(l, self.layer)
+        return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
 
 class CutoutRoundedRect(PlanarObject):
 
-    data_to_local_coords = ['size']
+    data_to_local_coords = ['size', 'center_dir']
 
-    def __init__(self, size, radius, layer='cut'):
+    def __init__(self, size, radius, center=False, layer='cut'):
         super(CutoutRoundedRect, self).__init__(layer)
 
         self.size = np.array(size)
         self.radius = radius
+        self.center_dir = self._calc_center_dir(center)
 
     def render(self, config):
 
@@ -58,7 +60,7 @@ class CutoutRoundedRect(PlanarObject):
         l.append(Line(np.array([displace, height - radius - displace]), np.array([displace, radius + displace])))
         l.append(ArcPath(np.array([displace, radius + displace]), np.array([displace + radius, displace]), radius, False, False))
 
-        return Object2D(l, self.layer)
+        return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
 
 class HexBoltCutout(PlanarObject):
     def __init__(self, width, layer='cut'):
@@ -131,6 +133,8 @@ class MountingScrewCutout(PlanarObject):
 
 class FanCutout(PlanarObject):
 
+    data_to_local_coords = ['center_dir']
+
     # TODO only 40mm size verified
     dimensions = {
             # (main diameter, mounting hole diameter, mounting hole displace)
@@ -142,11 +146,12 @@ class FanCutout(PlanarObject):
             120: (117, 4, 7.0),
         }
 
-    def __init__(self, size, layer='cut'):
+    def __init__(self, size, center=True, layer='cut'):
         super(FanCutout, self).__init__(layer)
 
         assert(size in self.dimensions)
         self.size = size
+        self.center_dir = self._calc_center_dir(center)
 
     def render(self, config):
         displace = config.cutting_width / 2
@@ -164,17 +169,18 @@ class FanCutout(PlanarObject):
         l.append(Circle(np.array([ mounting_position, -mounting_position]), mounting_hole_radius - displace))
         l.append(Circle(np.array([-mounting_position, -mounting_position]), mounting_hole_radius - displace))
 
-        return Object2D(l, self.layer)
+        return Object2D(l, self.layer) - ((1-self.center_dir) * self.size / 2)
 
 class AirVentsCutout(PlanarObject):
 
-    data_to_local_coords = ['size']
+    data_to_local_coords = ['size', 'center_dir']
 
     # TODO make more configurable
-    def __init__(self, size, layer='cut'):
+    def __init__(self, size, center=False, layer='cut'):
         super(AirVentsCutout, self).__init__(layer)
 
         self.size = np.array(size)
+        self.center_dir = self._calc_center_dir(center)
 
     def render(self, config):
 
@@ -200,4 +206,4 @@ class AirVentsCutout(PlanarObject):
                 l.append(Line(np.array([x2 - displace, y2 - displace]), np.array([x1 + displace, y2 - displace])))
                 l.append(Line(np.array([x1 + displace, y2 - displace]), np.array([x1 + displace, y1 + displace])))
 
-        return Object2D(l, self.layer)
+        return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
