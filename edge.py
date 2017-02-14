@@ -159,7 +159,7 @@ class Edge(PlanarObject):
         if self.flat:
 
             if self.sub_elements:
-                raise Exception("Not implemented")
+                raise NotImplementedError('Flat edge with subelements not implemented')
 
             elements = [_EdgeElement(0, self.length, 'flat', None, None)]
 
@@ -200,7 +200,7 @@ class Edge(PlanarObject):
                 bs, es = e.first_style, e.second_style
                 if not ((bs == EDGE_STYLE.INTERNAL_FLAT and es in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]) or \
                         (es == EDGE_STYLE.INTERNAL_FLAT and bs in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED])):
-                    raise Exception("Zero length toothed edge element with incompatible edge styles.")
+                    raise ValueError('Zero length toothed edge element with incompatible edge styles.')
 
         return [e for e in elements if e.length != 0]
 
@@ -338,7 +338,7 @@ class Edge(PlanarObject):
 
         if len(tooth_data) == 1:
             #TODO only certain configurations allowed
-            raise Exception("Not Implemented")
+            raise NotImplementedError('One tooth long toothed line not Implemented')
 
         middle_teeth = tooth_data[1:-1]
 
@@ -595,7 +595,7 @@ class CutoutEdge(Edge):
 
         if len(tooth_data) == 1:
             #TODO only certain configurations allowed
-            raise Exception("Not Implemented")
+            raise NotImplementedError('One tooth long toothed line not Implemented')
 
 
         lines = Object2D()

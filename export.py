@@ -12,7 +12,7 @@ def place_2d_objects(objects, config):
 def export_svg(objects, config):
 
     if not objects:
-        raise Exception("PANIC!!!!!")
+        raise ValueError('No objects provided for export.')
 
     vmin, vmax = objects[0].bounding_box()
     for o in objects:
@@ -69,7 +69,7 @@ def export_svg(objects, config):
                     )
 
             else:
-                raise Exception("PANIC")
+                raise ValueError('Unknown primitive')
 
     s += '</svg>'
 
@@ -120,7 +120,7 @@ class PathAccumulator():
             self.add_object(first_object)
 
         else:
-            raise Exception("PANIC")
+            raise ValueError('Unknown primitive')
 
     def add_object(self, obj):
 
@@ -131,7 +131,7 @@ class PathAccumulator():
             return False
 
         if not (isinstance(obj, Line) or isinstance(obj, ArcPath)):
-            raise Exception("PANIC")
+            raise ValueError('Unknown primitive')
 
         if self.layer != obj.layer:
             return False
@@ -186,7 +186,7 @@ class PathAccumulator():
 def export_svg_with_paths(objects, config):
 
     if not objects:
-        raise Exception("PANIC!!!!!")
+        raise ValueError('No objects provided for export.')
 
     vmin, vmax = objects[0].bounding_box()
     for o in objects:

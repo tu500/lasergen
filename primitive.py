@@ -35,7 +35,7 @@ class Object2D():
         """
 
         if not self.primitives:
-            raise Exception("PANIC!!!!")
+            raise ValueError('Cannot calculate bounding box for empty collection.')
 
         p = self.primitives[0]
         if isinstance(p, Line):

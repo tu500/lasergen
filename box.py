@@ -382,7 +382,7 @@ class Box():
         if (v == DIR.BACK).all():  return 5
 
     def _construct_walls(self):
-        raise Exception("Abstract method")
+        raise NotImplementedError('Abstract method')
 
     def _set_wallref_default_data(self):
         self._set_wallref_projection_dirs()
