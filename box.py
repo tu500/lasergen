@@ -271,6 +271,11 @@ class Box():
         cur_pos = np.array([0.,0.,0.])
         cur_wall_refs = [self.get_wall_by_direction(-d) for d in AXES]
 
+        # assert subdivision only along one axis
+        non_ref_indices = [i for i,s in enumerate(self.subboxes[0].size) if s != 'ref']
+        assert(len(non_ref_indices) == 1)
+        working_axis_index = non_ref_indices[0]
+
         for box_index, c in enumerate(self.subboxes):
 
             c.walls = [None] * 6
@@ -282,6 +287,12 @@ class Box():
             # subwall, thus being able to set the wallrefs' edge references to
             # the new CutoutEdges
             for i, d in sorted(zip(range(3), AXES), key=lambda x: c.size[x[0]] != 'ref'):
+
+                # assert subdivision only along one axis
+                if i == working_axis_index:
+                    assert(c.size[i] != 'ref')
+                else:
+                    assert(c.size[i] == 'ref')
 
                 pos_index = self._get_wall_index_by_direction(d)
                 neg_index = self._get_wall_index_by_direction(-d)
