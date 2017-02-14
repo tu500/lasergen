@@ -139,8 +139,10 @@ class PlanarObject():
             for e in self.data_to_local_coords:
                 if hasattr(self, e):
                     v = getattr(self, e)
-                    if v is not None and len(v) == 3:
-                        v = parent.to_local_coords(v)
+                    if v is not None:
+                        if len(v) == 3:
+                            v = parent.to_local_coords(v)
+                        v = Frac.array_total_length(v, parent.size)
                         setattr(self, e, v)
 
 
