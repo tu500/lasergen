@@ -324,9 +324,6 @@ class Box():
                     name = '{}.SUB{}{}'.format(self.name, dir_to_axis_name(d), box_index)
                     r = SubWall(ref_wall.size, name=name)
 
-                    n_walls[i] = r
-                    n_pos[i] += c.abs_size[i] + config.subwall_thickness
-
                     # add cutout edges
                     j, k = [AXES[a] for a in range(3) if a != i]
 
@@ -335,22 +332,41 @@ class Box():
                         target_wall = self.get_wall_by_direction(target_dir)
                         if target_wall is not None:
 
+                            # create CutoutEdge object
                             l = ref_wall.to_local_coords(other_dir).dot(ref_wall.size) # size of reference wall in direction other_dir
                             e = CutoutEdge(l, target_wall.to_local_coords(d), EDGE_STYLE.TOOTHED, EDGE_STYLE.TOOTHED)
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
+                            # set counterpart between new CutoutEdge and corresponding edge of new SubWall
                             e.counterpart = r.get_edge_by_direction(to_local_coords(target_dir)).get_reference()
                             r.get_edge_by_direction(to_local_coords(target_dir)).dereference().counterpart = e.get_reference()
 
+                            # add edge reference in working direction to the wall reference perpendicular to working direction
                             child_target_wall_ref = c.get_wall_by_direction(target_dir)
                             child_target_wall_ref.edges[Wall._get_edge_index_by_direction(child_target_wall_ref.to_local_coords(d))] = e.get_reference()
 
+                    # add wall reference in working direction to current sobbox
                     c.walls[pos_index] = r.get_reference(to_local_coords(cur_pos), to_local_coords(c.abs_size), projection_dir=d)
 
-            c._set_wallref_names()
+                    cur_pos[i] += c.abs_size[i] + config.subwall_thickness
+                    cur_wall_refs[i] = r
 
-            cur_pos = n_pos
-            cur_wall_refs = n_walls
+            # add edge reference in negative working direction to the wall references perpendicular to working direction
+            if box_index > 0:
+                j, k = [AXES[a] for a in range(3) if a != working_axis_index]
+
+                for target_dir in [j, -j, k, -k]:
+
+                    working_dir = AXES[working_axis_index]
+
+                    local_target_dir = project_along_axis(target_dir, working_dir)
+                    cutout_edge = cur_wall_refs[working_axis_index].get_edge_by_direction(local_target_dir).dereference()
+
+                    child_target_wall_ref = c.get_wall_by_direction(target_dir)
+                    edge_index = Wall._get_edge_index_by_direction(child_target_wall_ref.to_local_coords(-working_dir))
+                    child_target_wall_ref.edges[edge_index] = cutout_edge.get_reference()
+
+            c._set_wallref_names()
 
 
     def get_wall_by_direction(self, v):
