@@ -1,6 +1,6 @@
 import numpy as np
 
-from util import DIR, DIRS, AXES, project_along_axis, dir_to_axis_name, dir_to_name
+from util import DIR, project_along_axis
 from units import Rel
 from edge import CutoutEdge, EDGE_STYLE
 from wall import Wall, ToplessWall, ExtendedWall, SideWall, SubWall
@@ -20,7 +20,7 @@ class Box():
     def subdivide(self, direction, *sizes):
         assert(self.subboxes == [])
 
-        subbox_name = self.name + '.DIR' + dir_to_axis_name(direction) + '{}'
+        subbox_name = self.name + '.DIR' + DIR.dir_to_axis_name(direction) + '{}'
 
         if (direction == DIR.RIGHT).all():
             self.subboxes = [SubBox(size, 'ref', 'ref', name=subbox_name.format(i)) for i, size in enumerate(sizes)]
@@ -269,12 +269,13 @@ class Box():
             return
 
         cur_pos = np.array([0.,0.,0.])
-        cur_wall_refs = [self.get_wall_by_direction(-d) for d in AXES]
+        cur_wall_refs = [self.get_wall_by_direction(-d) for d in DIR.AXES]
 
         # assert subdivision only along one axis
         non_ref_indices = [i for i,s in enumerate(self.subboxes[0].size) if s != 'ref']
         assert(len(non_ref_indices) == 1)
         working_axis_index = non_ref_indices[0]
+        working_axis= DIR.AXES[working_axis_index]
 
         for box_index, c in enumerate(self.subboxes):
 
@@ -286,7 +287,7 @@ class Box():
             # sorting ensures other wallrefs are set before constructing a new
             # subwall, thus being able to set the wallrefs' edge references to
             # the new CutoutEdges
-            for i, d in sorted(zip(range(3), AXES), key=lambda x: c.size[x[0]] != 'ref'):
+            for i, d in sorted(enumerate(DIR.AXES), key=lambda x: c.size[x[0]] != 'ref'):
 
                 # assert subdivision only along one axis
                 if i == working_axis_index:
@@ -321,11 +322,11 @@ class Box():
                     # need to create a new subwall
 
                     ref_wall = self.get_wall_by_direction(-d)
-                    name = '{}.SUB{}{}'.format(self.name, dir_to_axis_name(d), box_index)
+                    name = '{}.SUB{}{}'.format(self.name, DIR.dir_to_axis_name(d), box_index)
                     r = SubWall(ref_wall.size, name=name)
 
                     # add cutout edges
-                    j, k = [AXES[a] for a in range(3) if a != i]
+                    j, k = [DIR.AXES[a] for a in range(3) if a != i]
 
                     for target_dir, other_dir in [(j,k), (-j,k), (k,j), (-k,j)]:
 
@@ -353,17 +354,14 @@ class Box():
 
             # add edge reference in negative working direction to the wall references perpendicular to working direction
             if box_index > 0:
-                j, k = [AXES[a] for a in range(3) if a != working_axis_index]
 
-                for target_dir in [j, -j, k, -k]:
+                for target_dir in DIR.perpendicular_dirs(working_axis):
 
-                    working_dir = AXES[working_axis_index]
-
-                    local_target_dir = project_along_axis(target_dir, working_dir)
+                    local_target_dir = project_along_axis(target_dir, working_axis)
                     cutout_edge = cur_wall_refs[working_axis_index].get_edge_by_direction(local_target_dir).dereference()
 
                     child_target_wall_ref = c.get_wall_by_direction(target_dir)
-                    edge_index = Wall._get_edge_index_by_direction(child_target_wall_ref.to_local_coords(-working_dir))
+                    edge_index = Wall._get_edge_index_by_direction(child_target_wall_ref.to_local_coords(-working_axis))
                     child_target_wall_ref.edges[edge_index] = cutout_edge.get_reference()
 
             c._set_wallref_names()
@@ -392,7 +390,7 @@ class Box():
 
     def _set_wallref_projection_dirs(self):
 
-        for d in DIRS:
+        for d in DIR.DIRS:
             wref = self.get_wall_by_direction(d)
 
             if wref is not None:
@@ -400,30 +398,27 @@ class Box():
 
     def _set_wall_names(self):
 
-        for d in DIRS:
+        for d in DIR.DIRS:
             wref = self.get_wall_by_direction(d)
 
             if wref is not None:
                 w = wref.dereference()
-                w.name = self.name + '.' + dir_to_name(d)
+                w.name = self.name + '.' + DIR.dir_to_name(d)
 
     def _set_wallref_names(self):
 
-        for d in DIRS:
+        for d in DIR.DIRS:
             wref = self.get_wall_by_direction(d)
 
             if wref is not None:
-                wref.name = self.name + '.' + dir_to_name(d)
+                wref.name = self.name + '.' + DIR.dir_to_name(d)
 
     def _set_egde_counterparts(self):
         # needs setup projection dirs
 
-        for i, wall_dir in zip(range(3), AXES):
+        for wall_dir in DIR.AXES:
 
-            # perpendicular axes
-            j, k = [AXES[a] for a in range(3) if a != i]
-
-            for edge_dir in [j,-j,k,-k]:
+            for edge_dir in DIR.perpendicular_dirs(wall_dir):
                 if self.get_wall_by_direction(wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
                     self.get_wall_by_direction(wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(wall_dir).dereference().get_reference()
                 if self.get_wall_by_direction(-wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:

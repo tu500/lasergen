@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR, DIR2, project_along_axis, dir_to_name
+from util import DIR, DIR2, project_along_axis
 from units import Frac
 from primitive import Object2D, PlanarObject, Text
 from edge import EDGE_STYLE, Edge
@@ -133,7 +133,7 @@ class WallReference():
                 posy   = self.position[1],
                 sizex  = self.size[0],
                 sizey  = self.size[1],
-                dir    = dir_to_name(self.projection_dir) + ' ' if self.projection_dir is not None else '',
+                dir    = DIR.dir_to_name(self.projection_dir) + ' ' if self.projection_dir is not None else '',
                 name   = self.name,
                 target = self.target
             )

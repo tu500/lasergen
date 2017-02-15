@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import orthon
+from util import DIR2
 from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
 
@@ -117,7 +117,7 @@ class MountingScrewCutout(PlanarObject):
     def render(self, config):
         displace = config.cutting_width / 2
 
-        on = orthon(self.shaft_dir)
+        on = DIR2.orthon(self.shaft_dir)
         rh = self.radius_head - displace
         rs = (self.radius_shaft - displace)
 

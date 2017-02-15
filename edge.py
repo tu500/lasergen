@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import orthon, project_along_axis
+from util import DIR2, project_along_axis
 from primitive import Object2D, PlanarObject, Line
 
 
@@ -116,7 +116,7 @@ class Edge(PlanarObject):
 
         # perpendicular to outward direction
         # abs works because this should be a unit vector or its negative
-        direction = abs(orthon(self.outward_dir))
+        direction = abs(DIR2.orthon(self.outward_dir))
 
         displace = config.cutting_width / 2.
         wall_thickness = config.wall_thickness
