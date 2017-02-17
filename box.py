@@ -17,17 +17,36 @@ class Box():
         else:
             self.name = name
 
-    def subdivide(self, direction, *sizes):
+    def subdivide(self, direction, sizes, names=None):
         assert(self.subboxes == [])
 
-        subbox_name = self.name + '.DIR' + DIR.dir_to_axis_name(direction) + '{}'
+        def normalize_size_entry(index, entry):
+
+            default_name = '{}.DIR{}{}'.format(
+                    self.name,
+                    DIR.dir_to_axis_name(direction),
+                    index
+                )
+
+            if isinstance(entry, tuple):
+                if entry[1] is not None:
+                    return entry
+                else:
+                    return (entry, default_name)
+            else:
+                return (entry, default_name)
+
+        if names is not None:
+            sizes_and_names = (normalize_size_entry(*t) for t in enumerate(zip(sizes, names)))
+        else:
+            sizes_and_names = (normalize_size_entry(*t) for t in enumerate(sizes))
 
         if (direction == DIR.RIGHT).all():
-            self.subboxes = [SubBox(size, 'ref', 'ref', name=subbox_name.format(i)) for i, size in enumerate(sizes)]
+            self.subboxes = [SubBox(size, 'ref', 'ref', name=name) for size, name in sizes_and_names]
         elif (direction == DIR.UP).all():
-            self.subboxes = [SubBox('ref', size, 'ref', name=subbox_name.format(i)) for i, size in enumerate(sizes)]
+            self.subboxes = [SubBox('ref', size, 'ref', name=name) for size, name in sizes_and_names]
         elif (direction == DIR.FRONT).all():
-            self.subboxes = [SubBox('ref', 'ref', size, name=subbox_name.format(i)) for i, size in enumerate(sizes)]
+            self.subboxes = [SubBox('ref', 'ref', size, name=name) for size, name in sizes_and_names]
 
         return self.subboxes
 

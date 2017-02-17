@@ -16,7 +16,7 @@ def main():
     c = Config(8., 12., 4., 3., 2.)
 
     cb = ClosedBox(100, 120, 60)
-    cb.subdivide(DIR.UP, Rel(3), Rel(1))
+    cb.subdivide(DIR.UP, [Rel(3), Rel(1)])
     cb.configure(c)
     cb.get_wall_by_direction(DIR.BACK).add_child(HexBoltCutout(6), [20,20,0])
     cb.get_wall_by_direction(DIR.BACK).add_child(CircleCutout(6), [40,20,0])
