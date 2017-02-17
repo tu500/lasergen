@@ -151,6 +151,8 @@ class PlanarObject():
         Helper function allowing boolean values for center parameters.
         """
 
+        if isinstance(v, np.ndarray):
+            return v
         if v == True:
             return np.array([1,1])
         elif v == False:
