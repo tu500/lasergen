@@ -56,6 +56,13 @@ class _EdgeElement():
             EDGE_ELEMENT_STYLE.TOOTHED       : set([EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED, EDGE_STYLE.INTERNAL_FLAT, EDGE_STYLE.OUTWARD, EDGE_STYLE.INTERNAL_OUTWARD, EDGE_STYLE.EXTENDED]),
         }
 
+    default_end_styles = {
+            EDGE_ELEMENT_STYLE.FLAT          : EDGE_STYLE.INTERNAL_FLAT,
+            EDGE_ELEMENT_STYLE.FLAT_EXTENDED : EDGE_STYLE.TOOTHED,
+            EDGE_ELEMENT_STYLE.REMOVE        : EDGE_STYLE.INTERNAL_FLAT,
+            EDGE_ELEMENT_STYLE.TOOTHED       : EDGE_STYLE.TOOTHED,
+        }
+
     allowed_neighbour_styles = {
             EDGE_STYLE.TOOTHED          : set([EDGE_STYLE.INTERNAL_FLAT]),
             EDGE_STYLE.EXTENDED         : set(),
@@ -65,71 +72,57 @@ class _EdgeElement():
             EDGE_STYLE.INTERNAL_OUTWARD : set([EDGE_STYLE.OUTWARD]),
         }
 
-    allowed_neighbour_element_styles = {
-            EDGE_ELEMENT_STYLE.FLAT          : set([EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]),
-            EDGE_ELEMENT_STYLE.FLAT_EXTENDED : set([EDGE_STYLE.INTERNAL_FLAT, EDGE_STYLE.INTERNAL_OUTWARD]),
-            EDGE_ELEMENT_STYLE.REMOVE        : set([EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED, EDGE_STYLE.INTERNAL_FLAT, EDGE_STYLE.INTERNAL_OUTWARD]),
-        }
-
-    default_neighbour_styles = {
-            EDGE_ELEMENT_STYLE.FLAT          : EDGE_STYLE.TOOTHED,
-            EDGE_ELEMENT_STYLE.FLAT_EXTENDED : EDGE_STYLE.INTERNAL_FLAT,
-            EDGE_ELEMENT_STYLE.REMOVE        : EDGE_STYLE.TOOTHED,
-        }
-
-    def __init__(self, pos, length, style, first_style, second_style):
-        """
-        For style == EDGE_ELEMENT_STYLE.TOOTHED first_style/second_style mean begin_style/end_style,
-        for other values they mean previous_style/next_style.
-        """
+    def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None):
 
         self.pos = pos
         self.length = length
         self.style = style
-        self.first_style = first_style
-        self.second_style = second_style
+        self.begin_style = begin_style
+        self.end_style = end_style
+        self.prev_style = prev_style
+        self.next_style = next_style
 
     def get_counterpart_element(self):
 
         if self.style == EDGE_ELEMENT_STYLE.FLAT:
             d = {
-                    EDGE_STYLE.FLAT    : EDGE_STYLE.INTERNAL_OUTWARD,
-                    EDGE_STYLE.TOOTHED : EDGE_STYLE.INTERNAL_FLAT,
+                    EDGE_STYLE.FLAT          : EDGE_STYLE.INTERNAL_OUTWARD,
+                    EDGE_STYLE.INTERNAL_FLAT : EDGE_STYLE.OUTWARD,
+                    EDGE_STYLE.TOOTHED       : EDGE_STYLE.INTERNAL_FLAT,
+                    None                     : None,
                 }
-            return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, d[self.first_style], d[self.second_style])
+            return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, None, None, d[self.prev_style], d[self.next_style])
 
         elif self.style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
             d = {
                     EDGE_STYLE.INTERNAL_FLAT    : EDGE_STYLE.TOOTHED,
                     EDGE_STYLE.INTERNAL_OUTWARD : EDGE_STYLE.FLAT,
+                    EDGE_STYLE.OUTWARD          : EDGE_STYLE.INTERNAL_FLAT,
+                    None                        : None,
                 }
-            return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT, d[self.first_style], d[self.second_style])
+            return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT, None, None, d[self.prev_style], d[self.next_style])
 
         elif self.style == EDGE_ELEMENT_STYLE.REMOVE:
             d = {
                     EDGE_STYLE.FLAT             : EDGE_STYLE.INTERNAL_OUTWARD,
+                    EDGE_STYLE.INTERNAL_FLAT    : EDGE_STYLE.OUTWARD,
                     EDGE_STYLE.TOOTHED          : EDGE_STYLE.INTERNAL_FLAT,
-                    EDGE_STYLE.INTERNAL_FLAT    : EDGE_STYLE.INTERNAL_OUTWARD,
-                    EDGE_STYLE.INTERNAL_OUTWARD : EDGE_STYLE.INTERNAL_FLAT,
+                    EDGE_STYLE.INTERNAL_OUTWARD : EDGE_STYLE.FLAT,
+                    EDGE_STYLE.OUTWARD          : EDGE_STYLE.INTERNAL_FLAT,
+                    None                        : None,
                 }
-            return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, d[self.first_style], d[self.second_style])
-
-    def get_own_edge_style(self, neighbour_style):
-        allowed_styles = self.allowed_neighbour_styles[neighbour_style]
-        end_styles = allowed_styles.intersection(self.allowed_end_styles[self.style])
-        assert(len(end_styles) == 1)
-        return end_styles.pop()
+            return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, None, None, d[self.prev_style], d[self.next_style])
 
     def copy(self):
-        return _EdgeElement(self.pos, self.length, self.style, self.first_style, self.second_style)
+        return _EdgeElement(self.pos, self.length, self.style, self.begin_style, self.end_style, self.prev_style, self.next_style)
 
     def __str__(self):
-        return '[{style} {pos},{len} {fs} {ss}]'.format(
+        return '[EE {style} {pos},{len} {fs} {ss}]'.format(
                 style = self.style,
                 pos = self.pos,
                 len = self.length,
-                fs = self.first_style,
-                ss = self.second_style,
+                fs = self.begin_style,
+                ss = self.end_style,
             )
 
 
@@ -196,31 +189,28 @@ class Edge(PlanarObject):
             if self.sub_elements:
                 raise NotImplementedError('Flat edge with subelements not implemented')
 
-            elements = [_EdgeElement(0, self.length, EDGE_ELEMENT_STYLE.FLAT, EDGE_STYLE.FLAT, EDGE_STYLE.FLAT)]
+            elements = [_EdgeElement(0, self.length, EDGE_ELEMENT_STYLE.FLAT, EDGE_STYLE.FLAT, EDGE_STYLE.FLAT, None, None)]
 
         else:
 
-            elements = [_EdgeElement(0, None, EDGE_ELEMENT_STYLE.TOOTHED, self.begin_style, None)]
+            elements = [_EdgeElement(0, None, EDGE_ELEMENT_STYLE.TOOTHED, self.begin_style, None, None, None)]
 
             for elem in sub_elements:
-                elem = elem.copy()
                 prev_elem = elements[-1]
 
                 # the previous element is a generated intermediate element with some unset values
                 prev_elem.length = elem.pos - prev_elem.pos
-                prev_elem.second_style = elem.first_style
+                prev_elem.end_style = elem.prev_style
 
-                elements.append(elem)
-                elements.append(_EdgeElement(elem.pos + elem.length, None, EDGE_ELEMENT_STYLE.TOOTHED, elem.second_style, None) )
-
-                elem.first_style = elem.get_own_edge_style(elem.first_style)
-                elem.second_style = elem.get_own_edge_style(elem.second_style)
+                elements.append(elem.copy())
+                elements.append(_EdgeElement(elem.pos + elem.length, None, EDGE_ELEMENT_STYLE.TOOTHED, elem.next_style, None, None, None) )
 
             last_elem = elements[-1]
             last_elem.length = self.length - last_elem.pos
-            last_elem.second_style = self.end_style
+            last_elem.end_style = self.end_style
 
         elements = self._remove_empty_elements(elements)
+        elements = self._calculate_element_edge_styles(elements)
         elements = self._convert_toothed_elements(elements, config)
 
         return elements
@@ -229,22 +219,104 @@ class Edge(PlanarObject):
     def _remove_empty_elements(elements):
         """
         Remove zero-length elements from the prepared element list. Check if
-        removed elements have valid edge styles.
+        removed elements' edge styles match with their neighbour elements,
+        transfer if needed.
         """
 
-        for e in elements:
-            if e.length == 0:
+        t = [None] + elements + [None]
 
-                # only remove intermediate toothed elements
-                assert(e.style == EDGE_ELEMENT_STYLE.TOOTHED)
+        for prev_elem, cur_elem, next_elem in zip(t, t[1:], t[2:]):
+            if cur_elem.length == 0:
 
-                # check whether the edge styles are compatible
-                bs, es = e.first_style, e.second_style
-                if not ((bs == EDGE_STYLE.INTERNAL_FLAT and es in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]) or \
-                        (es == EDGE_STYLE.INTERNAL_FLAT and bs in [EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED])):
-                    raise ValueError('Zero length toothed edge element with incompatible edge styles.')
+                if prev_elem is not None:
+
+                    if prev_elem.length == 0:
+                        raise Exception('Neighbouring zero-length edge elements.')
+
+                    if cur_elem.end_style is not None:
+
+                        if not (prev_elem.end_style == cur_elem.end_style or prev_elem.end_style is None):
+                            raise Exception('Zero-length edge element with non-matching previous end_style.')
+
+                        prev_elem.end_style = cur_elem.end_style
+
+                if next_elem is not None:
+
+                    if next_elem.length == 0:
+                        raise Exception('Neighbouring zero-length edge elements.')
+
+                    if cur_elem.begin_style is not None:
+
+                        if not (next_elem.begin_style == cur_elem.begin_style or next_elem.begin_style is None):
+                            raise Exception('Zero-length edge element with non-matching next begin_style.')
+                        next_elem.begin_style = cur_elem.begin_style
 
         return [e for e in elements if e.length != 0]
+
+    @staticmethod
+    def _calculate_element_edge_styles(elements):
+        """
+        Set neighbouring edge elements' edge styles to default values, if still
+        unspecified.
+        """
+
+        for first_elem, second_elem in zip(elements, elements[1:]):
+
+            if first_elem.end_style is None and second_elem.begin_style is None:
+
+                default_first  = _EdgeElement.default_end_styles[first_elem.style]
+                default_second = _EdgeElement.default_end_styles[second_elem.style]
+
+                allowed_first  = _EdgeElement.allowed_end_styles[first_elem.style]
+                allowed_second = _EdgeElement.allowed_end_styles[second_elem.style]
+
+                allowed_from_neigh_first  = set.union(*(_EdgeElement.allowed_neighbour_styles[s] for s in allowed_second))
+                allowed_from_neigh_second = set.union(*(_EdgeElement.allowed_neighbour_styles[s] for s in allowed_first))
+
+                allowed_first  = set.intersection(allowed_first,  allowed_from_neigh_first)
+                allowed_second = set.intersection(allowed_second, allowed_from_neigh_second)
+
+                assert(len(allowed_first)  >= 1)
+                assert(len(allowed_second) >= 1)
+
+                if default_first in allowed_first:
+                    first_elem.end_style = default_first
+
+                elif default_second in allowed_second:
+                    second_elem.begin_style = default_second
+
+                else:
+                    first_elem.end_style = allowed_first.pop()
+
+                # fallthrough
+
+            if first_elem.end_style is None:
+
+                t = _EdgeElement.allowed_neighbour_styles[second_elem.begin_style]
+                t = set.intersection(t, _EdgeElement.allowed_end_styles[first_elem.style])
+
+                assert(len(t) >= 1)
+
+                default = _EdgeElement.default_end_styles[first_elem.style]
+                first_elem.end_style = default if default in t else t.pop()
+
+            elif second_elem.begin_style is None:
+
+                t = _EdgeElement.allowed_neighbour_styles[first_elem.end_style]
+                t = set.intersection(t, _EdgeElement.allowed_end_styles[second_elem.style])
+
+                assert(len(t) >= 1)
+
+                default = _EdgeElement.default_end_styles[second_elem.style]
+                second_elem.begin_style = default if default in t else t.pop()
+
+            assert(first_elem.end_style is not None and second_elem.begin_style is not None)
+
+            # one should be enough, but...
+            assert(first_elem.end_style in _EdgeElement.allowed_neighbour_styles[second_elem.begin_style])
+            assert(second_elem.begin_style in _EdgeElement.allowed_neighbour_styles[first_elem.end_style])
+
+        return elements
 
 
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
@@ -252,7 +324,7 @@ class Edge(PlanarObject):
         start = start + element.pos * direction
         length = element.length
         style = element.style
-        begin_style, end_style = element.first_style, element.second_style
+        begin_style, end_style = element.begin_style, element.end_style
 
         assert(begin_style in _EdgeElement.allowed_end_styles[style])
         assert(end_style   in _EdgeElement.allowed_end_styles[style])
@@ -324,7 +396,7 @@ class Edge(PlanarObject):
         assert(element.style == EDGE_ELEMENT_STYLE.TOOTHED)
 
         length = element.length
-        begin_style, end_style = element.first_style, element.second_style
+        begin_style, end_style = element.begin_style, element.end_style
 
         assert(begin_style != EDGE_STYLE.OUTWARD)
         assert(end_style != EDGE_STYLE.OUTWARD)
@@ -366,24 +438,21 @@ class Edge(PlanarObject):
                 style,
                 EDGE_STYLE.INTERNAL_FLAT if style == EDGE_ELEMENT_STYLE.FLAT else EDGE_STYLE.TOOTHED,
                 EDGE_STYLE.INTERNAL_FLAT if style == EDGE_ELEMENT_STYLE.FLAT else EDGE_STYLE.TOOTHED,
+                None,
+                None,
             ) for pos, style in tooth_data]
 
-        elements[0].first_style = begin_style
-        elements[-1].second_style = end_style
+        elements[0].begin_style = begin_style
+        elements[-1].end_style = end_style
 
         return elements
 
-    def add_element(self, pos, length, style, prev_style=None, next_style=None, auto_add_counterpart=True):
+    def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
 
-        if prev_style is None:
-            prev_style = _EdgeElement.default_neighbour_styles[style]
-        if next_style is None:
-            next_style = _EdgeElement.default_neighbour_styles[style]
+        assert(begin_style is None or begin_style in _EdgeElement.allowed_end_styles[style])
+        assert(end_style   is None or end_style   in _EdgeElement.allowed_end_styles[style])
 
-        assert(prev_style in _EdgeElement.allowed_neighbour_element_styles[style])
-        assert(next_style in _EdgeElement.allowed_neighbour_element_styles[style])
-
-        new_element = _EdgeElement(pos, length, style, prev_style, next_style)
+        new_element = _EdgeElement(pos, length, style, begin_style, end_style, prev_style, next_style)
         self.sub_elements.append(new_element)
 
         # add counterpart with matching styles
@@ -391,7 +460,7 @@ class Edge(PlanarObject):
             assert(self.counterpart is not None)
 
             cp = new_element.get_counterpart_element()
-            self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.first_style, cp.second_style, False)
+            self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.begin_style, cp.end_style, cp.prev_style, cp.next_style, False)
 
 
     @staticmethod
@@ -497,23 +566,12 @@ class CutoutEdge(Edge):
         return Object2D(lines)
 
 
-    @staticmethod
-    def _remove_empty_elements(elements):
-
-        for e in elements:
-            if e.length == 0:
-
-                # only remove intermediate toothed elements
-                assert(e.style == EDGE_ELEMENT_STYLE.TOOTHED)
-
-        return [e for e in elements if e.length != 0]
-
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
         start = start + element.pos * direction
         length = element.length
         style = element.style
-        begin_style, end_style = element.first_style, element.second_style
+        begin_style, end_style = element.begin_style, element.end_style
 
         if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
 
@@ -552,8 +610,8 @@ class EdgeReference():
         else:
             self.counterpart = None
 
-    def add_element(self, pos, length, style, prev_style=None, next_style=None, auto_add_counterpart=True):
-        self.target.add_element(self.position + pos, length, style, prev_style, next_style, auto_add_counterpart)
+    def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
+        self.target.add_element(self.position + pos, length, style, begin_style, end_style, prev_style, next_style, auto_add_counterpart)
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
