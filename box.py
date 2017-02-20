@@ -3,7 +3,7 @@ import numpy as np
 from util import DIR, project_along_axis
 from units import Rel
 from edge import CutoutEdge, EDGE_STYLE
-from wall import Wall, ToplessWall, ExtendedWall, SideWall, SubWall
+from wall import Wall, ToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
 
 class Box():
     def __init__(self, width, height, depth, name=None):
@@ -457,9 +457,9 @@ class Box():
 class ClosedBox(Box):
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(InvSideWall(  project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
         self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
-        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(InvSideWall(  project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
         self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
         self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
         self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
