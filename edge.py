@@ -511,7 +511,7 @@ class Edge(PlanarObject):
                 EDGE_STYLE.INTERNAL_FLAT if style == EDGE_ELEMENT_STYLE.FLAT else EDGE_STYLE.TOOTHED,
                 None,
                 None,
-                None if tooth_length_satisfied else 'warn',
+                layer,
             ) for pos, style in tooth_data]
 
         elements[0].begin_style = begin_style
