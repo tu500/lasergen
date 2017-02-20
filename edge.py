@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR2, project_along_axis
+from util import DIR2, project_along_axis, almost_equal
 from primitive import Object2D, PlanarObject, Line
 
 
@@ -152,10 +152,55 @@ class Edge(PlanarObject):
 
         elements = self._prepare_element_list(config)
 
+        self._check_counterpart_elements_matching(elements, config)
+
         return sum(
                 (self._render_element(start, direction, self.outward_dir, displace, wall_thickness, config, p) for p in elements),
                 Object2D()
             )
+
+    def _check_counterpart_elements_matching(self, elements, config):
+        """
+        Check whether the calculated elements match the ones of the counterpart
+        edge, if it exists.
+        """
+
+        if self.counterpart is None:
+            return
+
+        cp_elements = self.counterpart.dereference()._prepare_element_list(config)
+
+        if len(elements) != len(cp_elements):
+            print('Edge counterpart count mismatch, rendering into warn layer.')
+            for e in elements:
+                e.layer = 'warn'
+            return
+
+        for a, b in zip(elements, cp_elements):
+
+            if not almost_equal(a.pos, b.pos):
+                a.layer = 'warn'
+                print('Edge element counterpart position mismatch, rendering into warn layer.')
+                continue
+            if not almost_equal(a.length, b.length):
+                a.layer = 'warn'
+                print('Edge element counterpart length mismatch, rendering into warn layer.')
+                continue
+
+            if a.style == EDGE_ELEMENT_STYLE.FLAT:
+                if not b.style in [EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
+                    a.layer = 'warn'
+                    print('Edge element counterpart style mismatch, rendering into warn layer.')
+            elif a.style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
+                if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
+                    a.layer = 'warn'
+                    print('Edge element counterpart style mismatch, rendering into warn layer.')
+            elif a.style == EDGE_ELEMENT_STYLE.REMOVE:
+                if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
+                    a.layer = 'warn'
+                    print('Edge element counterpart style mismatch, rendering into warn layer.')
+            else:
+                assert(False)
 
     def _check_sub_element_list_non_overlapping(self, sub_elements):
         """
