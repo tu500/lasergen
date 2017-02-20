@@ -148,12 +148,12 @@ class _EdgeElement():
 
 
 class Edge(PlanarObject):
-    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, flat=False):
+    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED):
         self.length = length
         self.outward_dir = outward_dir / np.linalg.norm(outward_dir)
         self.begin_style = begin_style
         self.end_style = end_style
-        self.flat = flat
+        self.style = style
 
         self.counterpart = None
 
@@ -250,30 +250,23 @@ class Edge(PlanarObject):
         sub_elements = sorted(self.sub_elements, key=lambda x: x.pos)
         self._check_sub_element_list_non_overlapping(sub_elements)
 
-        if self.flat:
 
-            if self.sub_elements:
-                raise NotImplementedError('Flat edge with subelements not implemented')
+        elements = [_EdgeElement(0, None, self.style, self.begin_style, None, None, None)]
 
-            elements = [_EdgeElement(0, self.length, EDGE_ELEMENT_STYLE.FLAT, EDGE_STYLE.FLAT, EDGE_STYLE.FLAT, None, None)]
+        for elem in sub_elements:
+            prev_elem = elements[-1]
 
-        else:
+            # the previous element is a generated intermediate element with some unset values
+            prev_elem.length = elem.pos - prev_elem.pos
+            prev_elem.end_style = elem.prev_style
 
-            elements = [_EdgeElement(0, None, EDGE_ELEMENT_STYLE.TOOTHED, self.begin_style, None, None, None)]
+            elements.append(elem.copy())
+            elements.append(_EdgeElement(elem.pos + elem.length, None, self.style, elem.next_style, None, None, None) )
 
-            for elem in sub_elements:
-                prev_elem = elements[-1]
+        last_elem = elements[-1]
+        last_elem.length = self.length - last_elem.pos
+        last_elem.end_style = self.end_style
 
-                # the previous element is a generated intermediate element with some unset values
-                prev_elem.length = elem.pos - prev_elem.pos
-                prev_elem.end_style = elem.prev_style
-
-                elements.append(elem.copy())
-                elements.append(_EdgeElement(elem.pos + elem.length, None, EDGE_ELEMENT_STYLE.TOOTHED, elem.next_style, None, None, None) )
-
-            last_elem = elements[-1]
-            last_elem.length = self.length - last_elem.pos
-            last_elem.end_style = self.end_style
 
         elements = self._remove_empty_elements(elements)
         elements = self._calculate_element_edge_styles(elements)
