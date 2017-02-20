@@ -175,6 +175,11 @@ class PathAccumulator():
     def finalize(self):
 
         if not self.finalized:
+
+            if self.config.warn_for_unclosed_paths:
+                print('WARNING: unclosed path, rendering into warn layer.')
+                self.layer = 'warn'
+
             self.output += '" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
                     color = self.config.layers[self.layer]
                 )
