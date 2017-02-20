@@ -397,8 +397,7 @@ class Edge(PlanarObject):
             return Object2D([Line(
                 start + direction * s + outward_dir * displace,
                 start + direction * t + outward_dir * displace,
-                layer
-                )])
+                )], layer)
 
         elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
 
@@ -418,23 +417,20 @@ class Edge(PlanarObject):
                 l.append(Line(
                         start + direction * s + outward_dir * displace,
                         start + direction * s + outward_dir * (wall_thickness + displace),
-                        layer
                     ))
 
             l.append(Line(
                         start + direction * s + outward_dir * (wall_thickness + displace),
                         start + direction * t + outward_dir * (wall_thickness + displace),
-                        layer
                 ))
 
             if end_style == EDGE_STYLE.TOOTHED:
                 l.append(Line(
                         start + direction * t + outward_dir * (wall_thickness + displace),
                         start + direction * t + outward_dir * displace,
-                        layer
                     ))
 
-            return Object2D(l)
+            return Object2D(l, layer)
 
         elif style == EDGE_ELEMENT_STYLE.REMOVE:
             return Object2D()
