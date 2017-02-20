@@ -72,7 +72,7 @@ class _EdgeElement():
             EDGE_STYLE.INTERNAL_OUTWARD : set([EDGE_STYLE.OUTWARD]),
         }
 
-    def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None):
+    def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None, layer=None):
 
         self.pos = pos
         self.length = length
@@ -81,6 +81,7 @@ class _EdgeElement():
         self.end_style = end_style
         self.prev_style = prev_style
         self.next_style = next_style
+        self.layer = layer
 
     def get_counterpart_element(self):
 
@@ -114,7 +115,7 @@ class _EdgeElement():
             return _EdgeElement(self.pos, self.length, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, None, None, d[self.prev_style], d[self.next_style])
 
     def copy(self):
-        return _EdgeElement(self.pos, self.length, self.style, self.begin_style, self.end_style, self.prev_style, self.next_style)
+        return _EdgeElement(self.pos, self.length, self.style, self.begin_style, self.end_style, self.prev_style, self.next_style, self.layer)
 
     def __str__(self):
         return '[EE {style} {pos},{len} {fs} {ss}]'.format(
@@ -325,6 +326,7 @@ class Edge(PlanarObject):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
+        layer = element.layer or 'cut'
 
         assert(begin_style in _EdgeElement.allowed_end_styles[style])
         assert(end_style   in _EdgeElement.allowed_end_styles[style])
@@ -336,7 +338,8 @@ class Edge(PlanarObject):
 
             return Object2D([Line(
                 start + direction * s + outward_dir * displace,
-                start + direction * t + outward_dir * displace
+                start + direction * t + outward_dir * displace,
+                layer
                 )])
 
         elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
@@ -356,18 +359,21 @@ class Edge(PlanarObject):
             if begin_style == EDGE_STYLE.TOOTHED:
                 l.append(Line(
                         start + direction * s + outward_dir * displace,
-                        start + direction * s + outward_dir * (wall_thickness + displace)
+                        start + direction * s + outward_dir * (wall_thickness + displace),
+                        layer
                     ))
 
             l.append(Line(
                         start + direction * s + outward_dir * (wall_thickness + displace),
-                        start + direction * t + outward_dir * (wall_thickness + displace)
+                        start + direction * t + outward_dir * (wall_thickness + displace),
+                        layer
                 ))
 
             if end_style == EDGE_STYLE.TOOTHED:
                 l.append(Line(
                         start + direction * t + outward_dir * (wall_thickness + displace),
-                        start + direction * t + outward_dir * displace
+                        start + direction * t + outward_dir * displace,
+                        layer
                     ))
 
             return Object2D(l)
@@ -440,6 +446,7 @@ class Edge(PlanarObject):
                 EDGE_STYLE.INTERNAL_FLAT if style == EDGE_ELEMENT_STYLE.FLAT else EDGE_STYLE.TOOTHED,
                 None,
                 None,
+                None if tooth_length_satisfied else 'warn',
             ) for pos, style in tooth_data]
 
         elements[0].begin_style = begin_style
