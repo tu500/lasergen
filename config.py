@@ -1,9 +1,10 @@
 class Config():
 
     layers = {
-            'cut'  : 'black',
-            'warn' : 'red',
-            'info' : 'green',
+            'cut'   : 'black',
+            'error' : 'red',
+            'info'  : 'green',
+            'warn'  : 'orange',
         }
 
     abort_on_tooth_length_error = False
