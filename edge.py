@@ -126,6 +126,26 @@ class _EdgeElement():
                 ss = self.end_style,
             )
 
+    def __repr__(self):
+
+        opt = ''
+
+        if self.prev_style is not None:
+            opt += ', prev_style={}'.format(self.prev_style)
+        if self.next_style is not None:
+            opt += ', next_style={}'.format(self.next_style)
+        if self.layer is not None:
+            opt += ', layer={}'.format(self.layer)
+
+        return '_EdgeElement({}, {}, {}, {}, {}{})'.format(
+                self.pos,
+                self.length,
+                self.style,
+                self.begin_style,
+                self.end_style,
+                opt,
+            )
+
 
 class Edge(PlanarObject):
     def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, flat=False):
