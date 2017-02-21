@@ -650,46 +650,47 @@ class CutoutEdge(Edge):
     Used to place a wall into the middle of another wall.
     """
 
-    @staticmethod
-    def _render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace):
-        lines = []
-
-        lines.append(Line(
-            start + direction * (start_pos + displace) + outward_dir * displace,
-            start + direction * (end_pos - displace) + outward_dir * displace
-            ))
-        lines.append(Line(
-            start + direction * (end_pos - displace) + outward_dir * displace,
-            start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace)
-            ))
-        lines.append(Line(
-            start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace),
-            start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace)
-            ))
-        lines.append(Line(
-            start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace),
-            start + direction * (start_pos + displace) + outward_dir * displace
-            ))
-
-        return Object2D(lines)
-
-
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
         start = start + element.pos * direction
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
+        layer = element.layer or 'cut'
 
         if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
 
             assert(begin_style in _EdgeElement.allowed_end_styles[EDGE_ELEMENT_STYLE.FLAT])
             assert(end_style   in _EdgeElement.allowed_end_styles[EDGE_ELEMENT_STYLE.FLAT])
 
-            assert(begin_style == EDGE_STYLE.INTERNAL_FLAT)
-            assert(end_style   == EDGE_STYLE.INTERNAL_FLAT)
+            start_pos = 0
+            end_pos = length
 
-            return CutoutEdge._render_rectangle(start, 0, length, direction, outward_dir, wall_thickness, displace)
+            lines = []
+
+            lines.append(Line(
+                        start + direction * (start_pos + displace) + outward_dir * displace,
+                        start + direction * (end_pos - displace) + outward_dir * displace
+                ))
+
+            if end_style == EDGE_STYLE.INTERNAL_FLAT:
+                lines.append(Line(
+                        start + direction * (end_pos - displace) + outward_dir * displace,
+                        start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace)
+                    ))
+
+            lines.append(Line(
+                        start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace),
+                        start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace)
+                ))
+
+            if begin_style == EDGE_STYLE.INTERNAL_FLAT:
+                lines.append(Line(
+                        start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace),
+                        start + direction * (start_pos + displace) + outward_dir * displace
+                    ))
+
+            return Object2D(lines, layer)
 
         elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
             return Object2D()
