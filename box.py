@@ -79,6 +79,20 @@ class Box():
 
         return self.subboxes
 
+
+    def get_wall_by_direction(self, v):
+        return self.walls[self._get_wall_index_by_direction(v)]
+
+    @staticmethod
+    def _get_wall_index_by_direction(v):
+        if (v == DIR.UP).all():    return 0
+        if (v == DIR.DOWN).all():  return 1
+        if (v == DIR.LEFT).all():  return 2
+        if (v == DIR.RIGHT).all(): return 3
+        if (v == DIR.FRONT).all(): return 4
+        if (v == DIR.BACK).all():  return 5
+
+
     def render(self, config):
         """
         Render this box's and all its subboxes' walls into a list of Object2Ds.
@@ -101,6 +115,7 @@ class Box():
 
         return s
 
+
     def configure(self, config):
         """
         Calculate absolute sizes for this box and its subboxes.
@@ -111,19 +126,6 @@ class Box():
 
         self._configure_rec(config)
         self._construct_rec(config)
-
-    def _construct_rec(self, config):
-        """
-        Recursive implementation of construct.
-
-        Construct the boxes' walls and subwalls.
-        """
-
-        self._construct_walls()
-        self._construct_subwalls(config)
-
-        for c in self.subboxes:
-            c._construct_rec(config)
 
     def _configure_rec(self, config):
         """
@@ -358,6 +360,28 @@ class Box():
 
         return sum_size, unknown_children_count
 
+
+    def _construct_rec(self, config):
+        """
+        Recursive implementation of construct.
+
+        Construct the boxes' walls and subwalls.
+        """
+
+        self._construct_walls()
+        self._construct_subwalls(config)
+
+        for c in self.subboxes:
+            c._construct_rec(config)
+
+    def _construct_walls(self):
+        """
+        Defined for box templates. Use to automatically construct walls for
+        root boxes.
+        """
+
+        raise NotImplementedError('Abstract method')
+
     def _construct_subwalls(self, config):
         """
         Construct subwalls and add to own subboxes.
@@ -467,26 +491,6 @@ class Box():
             c._set_wallref_names()
 
 
-    def get_wall_by_direction(self, v):
-        return self.walls[self._get_wall_index_by_direction(v)]
-
-    @staticmethod
-    def _get_wall_index_by_direction(v):
-        if (v == DIR.UP).all():    return 0
-        if (v == DIR.DOWN).all():  return 1
-        if (v == DIR.LEFT).all():  return 2
-        if (v == DIR.RIGHT).all(): return 3
-        if (v == DIR.FRONT).all(): return 4
-        if (v == DIR.BACK).all():  return 5
-
-    def _construct_walls(self):
-        """
-        Defined for box templates. Use to automatically construct walls for
-        root boxes.
-        """
-
-        raise NotImplementedError('Abstract method')
-
     def _set_wallref_default_data(self):
         """
         Set default data of walls, common to all box templates.
@@ -546,6 +550,7 @@ class Box():
                 if self.get_wall_by_direction(wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
                     self.get_wall_by_direction(wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(wall_dir).dereference().get_reference()
 
+
     def __str__(self):
         return '[Box "{name}" ({sx}, {sy}, {sz}) / ({asx}, {asy}, {asz})]'.format(
                 name = self.name,
@@ -556,6 +561,7 @@ class Box():
                 asy = self.abs_size[1],
                 asz = self.abs_size[2],
             )
+
 
 class ClosedBox(Box):
     """
@@ -571,6 +577,7 @@ class ClosedBox(Box):
         self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
         self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
         self._set_wallref_default_data()
+
 
 class ToplessBox(Box):
     """

@@ -30,9 +30,6 @@ class Wall(PlanarObject):
         else:
             self.name = name
 
-    def _construct_edges(self):
-        raise NotImplementedError('Abstract method')
-
     def get_edge_by_direction(self, v):
         return self.edges[self._get_edge_index_by_direction(v)]
 
@@ -71,6 +68,9 @@ class Wall(PlanarObject):
 
     def dereference(self):
         return self
+
+    def _construct_edges(self):
+        raise NotImplementedError('Abstract method')
 
     def __str__(self):
         return '[Wall "{name}" ({sizex}, {sizey})]'.format(

@@ -173,6 +173,29 @@ class Edge(PlanarObject):
 
         self.sub_elements = []
 
+
+    def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
+        """
+        Add a new edge element subelement to this edge. If auto_add_counterpart
+        is True a corresponding edge element is also added to this edge's
+        counterpart. In this case an exception is raised, if no counterpart is
+        configured.
+        """
+
+        assert(begin_style is None or begin_style in _EdgeElement.allowed_end_styles[style])
+        assert(end_style   is None or end_style   in _EdgeElement.allowed_end_styles[style])
+
+        new_element = _EdgeElement(pos, length, style, begin_style, end_style, prev_style, next_style)
+        self.sub_elements.append(new_element)
+
+        # add counterpart with matching styles
+        if auto_add_counterpart:
+            assert(self.counterpart is not None)
+
+            cp = new_element.get_counterpart_element()
+            self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.begin_style, cp.end_style, cp.prev_style, cp.next_style, False)
+
+
     def render(self, config):
 
         start = np.array([0,0])
@@ -193,66 +216,6 @@ class Edge(PlanarObject):
                 Object2D()
             )
 
-    def _check_counterpart_elements_matching(self, elements, config):
-        """
-        Check whether the calculated elements match the ones of the counterpart
-        edge, if it exists.
-        """
-
-        if self.counterpart is None:
-            return
-
-        cp_elements = self.counterpart.dereference()._prepare_element_list(config)
-
-        if len(elements) != len(cp_elements):
-            print('WARNING: Edge counterpart count mismatch, rendering into error layer.')
-            for e in elements:
-                e.layer = 'error'
-            return
-
-        for a, b in zip(elements, cp_elements):
-
-            if not almost_equal(a.pos, b.pos):
-                a.layer = 'error'
-                print('WARNING: Edge element counterpart position mismatch, rendering into error layer.')
-                continue
-            if not almost_equal(a.length, b.length):
-                a.layer = 'error'
-                print('WARNING: Edge element counterpart length mismatch, rendering into error layer.')
-                continue
-
-            if a.style == EDGE_ELEMENT_STYLE.FLAT:
-                if not b.style in [EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
-                    a.layer = 'error'
-                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
-            elif a.style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
-                if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
-                    a.layer = 'error'
-                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
-            elif a.style == EDGE_ELEMENT_STYLE.REMOVE:
-                if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
-                    a.layer = 'error'
-                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
-            else:
-                assert(False)
-
-    def _check_sub_element_list_non_overlapping(self, sub_elements):
-        """
-        Check whether the given sub elements list contains no overlapping
-        elements and the elements are contained in self's dimensions. The given
-        list must be sorted.
-        """
-
-        element_positions = []
-
-        for e in sub_elements:
-            element_positions.append(e.pos)
-            element_positions.append(e.pos + e.length)
-
-        element_positions = [0] + element_positions + [self.length]
-
-        # the resulting list must be sorted
-        assert( all(element_positions[i] <= element_positions[i+1] for i in range(len(element_positions)-1)) )
 
     def _prepare_element_list(self, config):
         """
@@ -287,6 +250,25 @@ class Edge(PlanarObject):
         elements = self._convert_toothed_elements(elements, config)
 
         return elements
+
+    def _check_sub_element_list_non_overlapping(self, sub_elements):
+        """
+        Check whether the given sub elements list contains no overlapping
+        elements and the elements are contained in self's dimensions. The given
+        list must be sorted.
+        """
+
+        element_positions = []
+
+        for e in sub_elements:
+            element_positions.append(e.pos)
+            element_positions.append(e.pos + e.length)
+
+        element_positions = [0] + element_positions + [self.length]
+
+        # the resulting list must be sorted
+        assert( all(element_positions[i] <= element_positions[i+1] for i in range(len(element_positions)-1)) )
+
 
     @staticmethod
     def _remove_empty_elements(elements):
@@ -325,6 +307,7 @@ class Edge(PlanarObject):
                         next_elem.begin_style = cur_elem.begin_style
 
         return [e for e in elements if e.length != 0]
+
 
     @staticmethod
     def _calculate_element_edge_styles(elements):
@@ -391,69 +374,6 @@ class Edge(PlanarObject):
 
         return elements
 
-
-    def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
-        """
-        Render a single edge element into an Object2D.
-        """
-
-        start = start + element.pos * direction
-        length = element.length
-        style = element.style
-        begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or 'cut'
-
-        assert(begin_style in _EdgeElement.allowed_end_styles[style])
-        assert(end_style   in _EdgeElement.allowed_end_styles[style])
-
-        if style == EDGE_ELEMENT_STYLE.FLAT:
-
-            s = -displace         if begin_style == EDGE_STYLE.FLAT else displace
-            t = length + displace if end_style   == EDGE_STYLE.FLAT else length - displace
-
-            return Object2D([Line(
-                start + direction * s + outward_dir * displace,
-                start + direction * t + outward_dir * displace,
-                )], layer)
-
-        elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
-
-            pd = {
-                    EDGE_STYLE.TOOTHED          : displace,
-                    EDGE_STYLE.EXTENDED         : wall_thickness + displace,
-                    EDGE_STYLE.OUTWARD          : displace,
-                    EDGE_STYLE.INTERNAL_OUTWARD : -displace,
-                }
-
-            s = -pd[begin_style]
-            t = length + pd[end_style]
-
-            l = []
-
-            if begin_style == EDGE_STYLE.TOOTHED:
-                l.append(Line(
-                        start + direction * s + outward_dir * displace,
-                        start + direction * s + outward_dir * (wall_thickness + displace),
-                    ))
-
-            l.append(Line(
-                        start + direction * s + outward_dir * (wall_thickness + displace),
-                        start + direction * t + outward_dir * (wall_thickness + displace),
-                ))
-
-            if end_style == EDGE_STYLE.TOOTHED:
-                l.append(Line(
-                        start + direction * t + outward_dir * (wall_thickness + displace),
-                        start + direction * t + outward_dir * displace,
-                    ))
-
-            return Object2D(l, layer)
-
-        elif style == EDGE_ELEMENT_STYLE.REMOVE:
-            return Object2D()
-
-        else:
-            raise Exception("Invalid _EdgeElement for rendering.")
 
     def _convert_toothed_elements(self, elements, config):
         """
@@ -536,26 +456,113 @@ class Edge(PlanarObject):
 
         return elements
 
-    def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
+
+    def _check_counterpart_elements_matching(self, elements, config):
         """
-        Add a new edge element subelement to this edge. If auto_add_counterpart
-        is True a corresponding edge element is also added to this edge's
-        counterpart. In this case an exception is raised, if no counterpart is
-        configured.
+        Check whether the calculated elements match the ones of the counterpart
+        edge, if it exists.
         """
 
-        assert(begin_style is None or begin_style in _EdgeElement.allowed_end_styles[style])
-        assert(end_style   is None or end_style   in _EdgeElement.allowed_end_styles[style])
+        if self.counterpart is None:
+            return
 
-        new_element = _EdgeElement(pos, length, style, begin_style, end_style, prev_style, next_style)
-        self.sub_elements.append(new_element)
+        cp_elements = self.counterpart.dereference()._prepare_element_list(config)
 
-        # add counterpart with matching styles
-        if auto_add_counterpart:
-            assert(self.counterpart is not None)
+        if len(elements) != len(cp_elements):
+            print('WARNING: Edge counterpart count mismatch, rendering into error layer.')
+            for e in elements:
+                e.layer = 'error'
+            return
 
-            cp = new_element.get_counterpart_element()
-            self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.begin_style, cp.end_style, cp.prev_style, cp.next_style, False)
+        for a, b in zip(elements, cp_elements):
+
+            if not almost_equal(a.pos, b.pos):
+                a.layer = 'error'
+                print('WARNING: Edge element counterpart position mismatch, rendering into error layer.')
+                continue
+            if not almost_equal(a.length, b.length):
+                a.layer = 'error'
+                print('WARNING: Edge element counterpart length mismatch, rendering into error layer.')
+                continue
+
+            if a.style == EDGE_ELEMENT_STYLE.FLAT:
+                if not b.style in [EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
+                    a.layer = 'error'
+                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
+            elif a.style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
+                if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
+                    a.layer = 'error'
+                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
+            elif a.style == EDGE_ELEMENT_STYLE.REMOVE:
+                if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
+                    a.layer = 'error'
+                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
+            else:
+                assert(False)
+
+
+    def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
+        """
+        Render a single edge element into an Object2D.
+        """
+
+        start = start + element.pos * direction
+        length = element.length
+        style = element.style
+        begin_style, end_style = element.begin_style, element.end_style
+        layer = element.layer or 'cut'
+
+        assert(begin_style in _EdgeElement.allowed_end_styles[style])
+        assert(end_style   in _EdgeElement.allowed_end_styles[style])
+
+        if style == EDGE_ELEMENT_STYLE.FLAT:
+
+            s = -displace         if begin_style == EDGE_STYLE.FLAT else displace
+            t = length + displace if end_style   == EDGE_STYLE.FLAT else length - displace
+
+            return Object2D([Line(
+                start + direction * s + outward_dir * displace,
+                start + direction * t + outward_dir * displace,
+                )], layer)
+
+        elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
+
+            pd = {
+                    EDGE_STYLE.TOOTHED          : displace,
+                    EDGE_STYLE.EXTENDED         : wall_thickness + displace,
+                    EDGE_STYLE.OUTWARD          : displace,
+                    EDGE_STYLE.INTERNAL_OUTWARD : -displace,
+                }
+
+            s = -pd[begin_style]
+            t = length + pd[end_style]
+
+            l = []
+
+            if begin_style == EDGE_STYLE.TOOTHED:
+                l.append(Line(
+                        start + direction * s + outward_dir * displace,
+                        start + direction * s + outward_dir * (wall_thickness + displace),
+                    ))
+
+            l.append(Line(
+                        start + direction * s + outward_dir * (wall_thickness + displace),
+                        start + direction * t + outward_dir * (wall_thickness + displace),
+                ))
+
+            if end_style == EDGE_STYLE.TOOTHED:
+                l.append(Line(
+                        start + direction * t + outward_dir * (wall_thickness + displace),
+                        start + direction * t + outward_dir * displace,
+                    ))
+
+            return Object2D(l, layer)
+
+        elif style == EDGE_ELEMENT_STYLE.REMOVE:
+            return Object2D()
+
+        else:
+            raise Exception("Invalid _EdgeElement for rendering.")
 
 
     @staticmethod
@@ -625,6 +632,7 @@ class Edge(PlanarObject):
             tooth_count = c - 1
 
         return tooth_count
+
 
     def get_reference(self, pos=0, length=None, projection_dir=None):
         if length is not None:
