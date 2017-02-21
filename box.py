@@ -6,6 +6,12 @@ from edge import CutoutEdge, EDGE_STYLE
 from wall import Wall, ToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
 
 class Box():
+    """
+    Object representing a box.
+
+    References its walls and possibly subboxes.
+    """
+
     def __init__(self, width, height, depth, name=None):
         self.size = [width, height, depth]
         self.abs_size = np.array([None, None, None])
@@ -18,6 +24,29 @@ class Box():
             self.name = name
 
     def subdivide(self, direction, sizes, names=None):
+        """
+        Subdivide this box along given direction.
+
+        Sizes can be specified as non-absolute values, automatically summing up
+        and calculating relative sizes. This process is inspired by CSS-like
+        star notation.
+
+        Given values may be absolute values, relative values (`Rel` objects) or
+        `None` (meaning sum of its children).
+
+        Absolute values will be calculated by calling `.configure`. Make sure
+        to call this after setting up all subboxes and before using any walls.
+
+        The subboxes' names will be assigned from the given list of names.
+        Alternatively names may be specified in the `sizes` parameter as a
+        tuple of `(size, name)` for each subbox.
+
+        A name of `None` will be replaced with a default name. Also default
+        names will be generated if no names are provided.
+
+        Returns a list of the newly added subboxes.
+        """
+
         assert(self.subboxes == [])
 
         def normalize_size_entry(index, entry):
@@ -51,12 +80,20 @@ class Box():
         return self.subboxes
 
     def render(self, config):
+        """
+        Render this box's and all its subboxes' walls into a list of Object2Ds.
+        """
+
         # uniquify wall references, keep order for deterministic output
         seen = set()
         walls = [x for x in self._gather_walls() if not (x in seen or seen.add(x))]
         return [w.render(config) for w in walls]
 
     def _gather_walls(self):
+        """
+        Get a list of this box and its subboxes' walls.
+        """
+
         s = [w.dereference() for w in self.walls if w is not None]
 
         for c in self.subboxes:
@@ -65,10 +102,23 @@ class Box():
         return s
 
     def configure(self, config):
+        """
+        Calculate absolute sizes for this box and its subboxes.
+
+        Make sure to call this after setting up all subboxes and before using
+        any walls.
+        """
+
         self._configure_rec(config)
         self._construct_rec(config)
 
     def _construct_rec(self, config):
+        """
+        Recursive implementation of construct.
+
+        Construct the boxes' walls and subwalls.
+        """
+
         self._construct_walls()
         self._construct_subwalls(config)
 
@@ -76,11 +126,17 @@ class Box():
             c._construct_rec(config)
 
     def _configure_rec(self, config):
+        """
+        Recursive implementation of configure.
+
+        Follows a bottom-up approach.
+        """
 
         self.abs_size = np.array([None, None, None])
 
         for c in self.subboxes:
             c._configure_rec(config)
+
 
         # dimensions
         for i in range(3):
@@ -169,6 +225,12 @@ class Box():
                         c._set_absolute_size(self.abs_size[i], i, config)
 
     def _get_sum(self, config):
+        """
+        Internal, for configure step.
+
+        Sum up the children's configured and already calculated sizes and
+        assert some restrictions.
+        """
 
         # sum of all absolute configured children (size is int, float or None) plus subwalls
         sum_abs_size = [0, 0, 0]
@@ -219,6 +281,11 @@ class Box():
         return sum_abs_size, sum_rel_size, unit_length, ref_size
 
     def _set_absolute_size(self, value, i, config):
+        """
+        Internal, for configure step.
+
+        Top-down approach for setting now known sizes for subboxes.
+        """
 
         assert(isinstance(self.size[i], Rel) or self.size[i] == 'ref')
         assert(self.abs_size[i] is None)
@@ -250,9 +317,18 @@ class Box():
                     assert(False)
 
     def _has_absolute_width_configured(self, i):
+        """
+        Internal, for configure step.
+        """
+
         return isinstance(self.size[i], int) or isinstance(self.size[i], float)
 
     def _get_final_sum(self, config):
+        """
+        Internal, for configure step.
+
+        Sum up the total sum all children, also considering subwall thicknesses.
+        """
 
         # sum of final size of all non-ref children plus subwalls, None if there are none (with known size)
         sum_size = [None, None, None]
@@ -283,6 +359,11 @@ class Box():
         return sum_size, unknown_children_count
 
     def _construct_subwalls(self, config):
+        """
+        Construct subwalls and add to own subboxes.
+
+        Setup subbox wall references, add cutout edges to own walls.
+        """
 
         if not self.subboxes:
             return
@@ -399,15 +480,27 @@ class Box():
         if (v == DIR.BACK).all():  return 5
 
     def _construct_walls(self):
+        """
+        Defined for box templates. Use to automatically construct walls for
+        root boxes.
+        """
+
         raise NotImplementedError('Abstract method')
 
     def _set_wallref_default_data(self):
+        """
+        Set default data of walls, common to all box templates.
+        """
+
         self._set_wallref_projection_dirs()
         self._set_wall_names()
         self._set_wallref_names()
         self._set_egde_counterparts()
 
     def _set_wallref_projection_dirs(self):
+        """
+        Set all wall refs' projection dirs.
+        """
 
         for d in DIR.DIRS:
             wref = self.get_wall_by_direction(d)
@@ -416,6 +509,9 @@ class Box():
                 wref.projection_dir = d
 
     def _set_wall_names(self):
+        """
+        Set all walls' names to default values.
+        """
 
         for d in DIR.DIRS:
             wref = self.get_wall_by_direction(d)
@@ -425,6 +521,11 @@ class Box():
                 w.name = self.name + '.' + DIR.dir_to_name(d)
 
     def _set_wallref_names(self):
+        """
+        Set all wall ref's names to default values.
+
+        Separate from `_set_wall_names` because this is used for subboxes too.
+        """
 
         for d in DIR.DIRS:
             wref = self.get_wall_by_direction(d)
@@ -433,7 +534,11 @@ class Box():
                 wref.name = self.name + '.' + DIR.dir_to_name(d)
 
     def _set_egde_counterparts(self):
-        # needs setup projection dirs
+        """
+        Set all walls' edges' counterparts.
+
+        Needs setup projection dirs
+        """
 
         for wall_dir in DIR.DIRS:
 
@@ -453,6 +558,10 @@ class Box():
             )
 
 class ClosedBox(Box):
+    """
+    A box template for a completely closed box.
+    """
+
     def _construct_walls(self):
         self.walls = []
         self.walls.append(InvSideWall(  project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
@@ -464,6 +573,10 @@ class ClosedBox(Box):
         self._set_wallref_default_data()
 
 class ToplessBox(Box):
+    """
+    A box template for a box with one open side.
+    """
+
     def _construct_walls(self):
         self.walls = []
         self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
@@ -476,6 +589,10 @@ class ToplessBox(Box):
 
 
 class SubBox(Box):
+    """
+    A box object leaving out some root box logic.
+    """
+
     def __init__(self, width, height, depth, name=None):
         self.size = [width, height, depth]
         self.abs_size = np.array([None, None, None])
@@ -488,6 +605,7 @@ class SubBox(Box):
             self.name = name
 
     def _construct_rec(self, config):
+        # subboxes don't have a `_construct_walls` method
         self._construct_subwalls(config)
 
         for c in self.subboxes:

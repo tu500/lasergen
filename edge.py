@@ -84,6 +84,10 @@ class _EdgeElement():
         self.layer = layer
 
     def get_counterpart_element(self):
+        """
+        Get an edge element representing a matching counterpart for this
+        element.
+        """
 
         if self.style == EDGE_ELEMENT_STYLE.FLAT:
             d = {
@@ -148,6 +152,16 @@ class _EdgeElement():
 
 
 class Edge(PlanarObject):
+    """
+    A 2D object representing a wall's edge.
+
+    Renders a toothed line according to configured values.
+
+    Always renders into positive X or Y direction. The direction in which
+    extending teeth are rendered is controlled by the outward_dir parameter.
+    This one also controls the general rendering direction of the edge.
+    """
+
     def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED):
         self.length = length
         self.outward_dir = outward_dir / np.linalg.norm(outward_dir)
@@ -379,6 +393,9 @@ class Edge(PlanarObject):
 
 
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
+        """
+        Render a single edge element into an Object2D.
+        """
 
         start = start + element.pos * direction
         length = element.length
@@ -439,6 +456,11 @@ class Edge(PlanarObject):
             raise Exception("Invalid _EdgeElement for rendering.")
 
     def _convert_toothed_elements(self, elements, config):
+        """
+        Convert all toothed edge elements in the list into their corresponding
+        list of teeth given by FLAT / FLAT_EXTENDED edge elements.
+        """
+
         l = []
 
         for e in elements:
@@ -452,6 +474,12 @@ class Edge(PlanarObject):
         return l
 
     def _prepare_toothed_element(self, element, config):
+        """
+        Convert a single toothed edge element into its corresponding list of
+        teeth given by FLAT / FLAT_EXTENDED edge elements.
+
+        This is where tooth length calculation is done.
+        """
 
         assert(element.style == EDGE_ELEMENT_STYLE.TOOTHED)
 
@@ -509,6 +537,12 @@ class Edge(PlanarObject):
         return elements
 
     def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
+        """
+        Add a new edge element subelement to this edge. If auto_add_counterpart
+        is True a corresponding edge element is also added to this edge's
+        counterpart. In this case an exception is raised, if no counterpart is
+        configured.
+        """
 
         assert(begin_style is None or begin_style in _EdgeElement.allowed_end_styles[style])
         assert(end_style   is None or end_style   in _EdgeElement.allowed_end_styles[style])
@@ -602,6 +636,11 @@ class Edge(PlanarObject):
 
 
 class CutoutEdge(Edge):
+    """
+    A specialized edge rendering flat teeth as rectangular cutouts.
+
+    Used to place a wall into the middle of another wall.
+    """
 
     @staticmethod
     def _render_rectangle(start, start_pos, end_pos, direction, outward_dir, wall_thickness, displace):
@@ -651,6 +690,16 @@ class CutoutEdge(Edge):
             raise Exception("Invalid _EdgeElement for rendering.")
 
 class EdgeReference():
+    """
+    A reference object for edges.
+
+    Contains logic to do coordinate transformations to automatically project
+    coordinates to 1D and translate children's positions when adding them to
+    the target edge.
+
+    This allows to reference a subpart of an edge and use it as if it were a
+    complete edge.
+    """
 
     def __init__(self, target, pos=0, length=None, projection_dir=None):
         assert(pos >= 0)

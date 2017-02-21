@@ -8,6 +8,12 @@ from edge import EDGE_STYLE, EDGE_ELEMENT_STYLE, Edge
 
 
 class Wall(PlanarObject):
+    """
+    Object representing a wall.
+
+    Walls contain edges and other 2D children.
+    """
+
     #size = None
     #children = None
     #edges = None
@@ -74,6 +80,18 @@ class Wall(PlanarObject):
             )
 
 class WallReference():
+    """
+    A reference object for walls.
+
+    Contains logic to do coordinate transformations to automatically project
+    coordinates to 2D and translate children's positions when adding them to
+    the target wall.
+
+    Also stores local edge references.
+
+    This allows to reference a subpart of a wall and use it as if it were a
+    complete wall.
+    """
 
     def __init__(self, target, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None, name=None):
         assert( (pos >= np.array([0,0])).all() )
@@ -140,6 +158,10 @@ class WallReference():
 
 
 class ToplessWall(Wall):
+    """
+    A wall template defining a side wall with one flat edge.
+    """
+
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.size[0], DIR.UP[:2],    style=EDGE_ELEMENT_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
@@ -148,6 +170,10 @@ class ToplessWall(Wall):
         self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
 class ExtendedWall(Wall):
+    """
+    A wall template defining a cover wall with extended corners.
+    """
+
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.UP))
@@ -156,6 +182,10 @@ class ExtendedWall(Wall):
         self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.RIGHT))
 
 class SideWall(Wall):
+    """
+    A wall template defining a side wall.
+    """
+
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
@@ -164,6 +194,10 @@ class SideWall(Wall):
         self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
 class InvSideWall(Wall):
+    """
+    A wall template defining a side wall with inverted toothing.
+    """
+
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
@@ -173,6 +207,10 @@ class InvSideWall(Wall):
 
 
 class SubWall(Wall):
+    """
+    A wall template defining a wall used as subbox divider.
+    """
+
     def _construct_edges(self):
         self.edges = []
         self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))

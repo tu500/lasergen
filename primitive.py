@@ -183,6 +183,10 @@ class Primitive2D(PlanarObject):
 
 
 class Line(Primitive2D):
+    """
+    A simple line primitive.
+    """
+
     def __init__(self, start, end, layer='cut'):
         super(Line, self).__init__(layer)
 
@@ -200,6 +204,10 @@ class Line(Primitive2D):
         return Line(self.end, self.start, layer=self.layer)
 
 class Circle(Primitive2D):
+    """
+    A simple circle primitive.
+    """
+
     def __init__(self, center, radius, layer='cut'):
         super(Circle, self).__init__(layer)
 
@@ -218,6 +226,13 @@ class Circle(Primitive2D):
         return self
 
 class ArcPath(Primitive2D):
+    """
+    A primitive inspired by the SVG path arc command.
+
+    Rendered one-to-one into the corresponding SVG element. Mainly used for
+    drawing circle segments.
+    """
+
     def __init__(self, start, end, radius, large_arc=True, sweep=True, layer='cut'):
         super(ArcPath, self).__init__(layer)
 
@@ -240,12 +255,23 @@ class ArcPath(Primitive2D):
 
     @staticmethod
     def from_center_angle(center, angle_start, angle_end, radius, layer='cut'):
+        """
+        Construct an ArcPath object from a given center, radius and angle interval.
+
+        The angles are given in degrees, measuring counterclockwise. Angle 0 is
+        pointing right, in the direction of the X axis.
+        """
+
         start = center + radius * np.array([math.cos(angle_start / 180 * math.pi), math.sin(angle_start / 180 * math.pi)])
         end = center + radius * np.array([math.cos(angle_end / 180 * math.pi), math.sin(angle_end / 180 * math.pi)])
         large_arc = angle_end - angle_start >= 180
         return ArcPath(start, end, radius, large_arc=large_arc, layer=layer)
 
 class Text(Primitive2D):
+    """
+    A text primitive.
+    """
+
     def __init__(self, position, text, fontsize=5, layer='info'):
         super(Text, self).__init__(layer)
 

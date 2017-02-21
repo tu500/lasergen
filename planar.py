@@ -6,6 +6,9 @@ from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 
 
 class CutoutRect(PlanarObject):
+    """
+    A planar object rendering a rectangle.
+    """
 
     data_to_local_coords = ['size', 'center_dir']
 
@@ -30,6 +33,9 @@ class CutoutRect(PlanarObject):
         return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
 
 class CutoutRoundedRect(PlanarObject):
+    """
+    A planar object rendering a rectangle with rounded off corners.
+    """
 
     data_to_local_coords = ['size', 'center_dir']
 
@@ -63,6 +69,12 @@ class CutoutRoundedRect(PlanarObject):
         return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
 
 class HexBoltCutout(PlanarObject):
+    """
+    A planar object rendering a hexagon.
+
+    Useful for cutting out a hexbolt shape.
+    """
+
     def __init__(self, width, layer='cut'):
         super(HexBoltCutout, self).__init__(layer)
 
@@ -90,6 +102,10 @@ class HexBoltCutout(PlanarObject):
         return Object2D([Line(a,b) for a,b in zip(corners, corners[1:])], self.layer)
 
 class CircleCutout(PlanarObject):
+    """
+    A planar object rendering a circle.
+    """
+
     def __init__(self, radius, layer='cut'):
         super(CircleCutout, self).__init__(layer)
 
@@ -101,6 +117,9 @@ class CircleCutout(PlanarObject):
         return Object2D([Circle(0, self.radius - displace)], self.layer)
 
 class MountingScrewCutout(PlanarObject):
+    """
+    A planar object rendering a cutout for a backside screw mounting hole.
+    """
 
     data_to_local_coords = ['shaft_dir']
 
@@ -132,6 +151,11 @@ class MountingScrewCutout(PlanarObject):
         return Object2D(l, self.layer)
 
 class FanCutout(PlanarObject):
+    """
+    A planar object rendering cutouts for a standard sized fan.
+
+    Renders mounting holes for the screws and an appropriate sized air hole.
+    """
 
     data_to_local_coords = ['center_dir']
 
@@ -172,6 +196,9 @@ class FanCutout(PlanarObject):
         return Object2D(l, self.layer) - ((1-self.center_dir) * self.size / 2)
 
 class AirVentsCutout(PlanarObject):
+    """
+    A planar object rendering a gutter of rectangular air vents.
+    """
 
     data_to_local_coords = ['size', 'center_dir']
 

@@ -4,12 +4,23 @@ from primitive import Line, Circle, ArcPath, Text
 from util import min_vec, max_vec, almost_equal
 
 def place_2d_objects(objects, config):
+    """
+    A simple default placement.
+
+    Automatically place the given Object2Ds, stacking them on the Y-axis.
+    """
+
     bounding_boxes = [o.bounding_box() for o in objects]
     heights = [bb[1][1] - bb[0][1] + config.object_distance for bb in bounding_boxes]
     y_positions = [0] + list(np.cumsum(heights))
     return [o - bb[0] + np.array([0,y]) for o, bb, y in zip(objects, bounding_boxes, y_positions)]
 
 def export_svg(objects, config):
+    """
+    Export given objects to SVG.
+
+    Returns the resulting SVG file as string.
+    """
 
     if not objects:
         raise ValueError('No objects provided for export.')
@@ -77,6 +88,10 @@ def export_svg(objects, config):
 
 
 class PathAccumulator():
+    """
+    Accumulates primitives, joining them into SVG paths, if appropriate.
+    """
+
     def __init__(self, first_object, config):
 
         self.objects = []
@@ -123,6 +138,12 @@ class PathAccumulator():
             raise ValueError('Unknown primitive')
 
     def add_object(self, obj):
+        """
+        Add an object to the accumulator.
+
+        Returns False if the object could not be added due to different layers,
+        endpoints or inherent object incompatability.
+        """
 
         if self.finalized:
             return False
@@ -173,6 +194,9 @@ class PathAccumulator():
         return True
 
     def finalize(self):
+        """
+        Close the accumulator and return the generated SVG path code.
+        """
 
         if not self.finalized:
 
@@ -189,6 +213,12 @@ class PathAccumulator():
 
 
 def export_svg_with_paths(objects, config):
+    """
+    Export given objects to SVG, converting contained Line objects to SVG paths
+    and joining adjacent primitive pairs.
+
+    Returns the resulting SVG file as string.
+    """
 
     if not objects:
         raise ValueError('No objects provided for export.')
