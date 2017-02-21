@@ -435,13 +435,11 @@ class Box():
     def _set_egde_counterparts(self):
         # needs setup projection dirs
 
-        for wall_dir in DIR.AXES:
+        for wall_dir in DIR.DIRS:
 
             for edge_dir in DIR.perpendicular_dirs(wall_dir):
                 if self.get_wall_by_direction(wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
                     self.get_wall_by_direction(wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(wall_dir).dereference().get_reference()
-                if self.get_wall_by_direction(-wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
-                    self.get_wall_by_direction(-wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(-wall_dir).dereference().get_reference()
 
     def __str__(self):
         return '[Box "{name}" ({sx}, {sy}, {sz}) / ({asx}, {asy}, {asz})]'.format(
