@@ -186,10 +186,10 @@ class ToplessWall(Wall):
 
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    style=EDGE_ELEMENT_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
+        self.edges.append(Edge(self.size[0], DIR2.UP,    style=EDGE_ELEMENT_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR2.DOWN,  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
 class ExtendedWall(Wall):
     """
@@ -198,10 +198,10 @@ class ExtendedWall(Wall):
 
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.UP))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.DOWN))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.LEFT))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.RIGHT))
+        self.edges.append(Edge(self.size[0], DIR2.UP,    EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR2.DOWN,  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.EXTENDED, EDGE_STYLE.EXTENDED).get_reference(projection_dir=DIR2.RIGHT))
 
 class SideWall(Wall):
     """
@@ -210,10 +210,10 @@ class SideWall(Wall):
 
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
+        self.edges.append(Edge(self.size[0], DIR2.UP,    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR2.DOWN,  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
 class InvSideWall(Wall):
     """
@@ -222,10 +222,10 @@ class InvSideWall(Wall):
 
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.LEFT))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.RIGHT))
+        self.edges.append(Edge(self.size[0], DIR2.UP,    EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR2.DOWN,  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.RIGHT))
 
 
 class SubWall(Wall):
@@ -235,7 +235,7 @@ class SubWall(Wall):
 
     def _construct_edges(self):
         self.edges = []
-        self.edges.append(Edge(self.size[0], DIR.UP[:2],    EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
-        self.edges.append(Edge(self.size[0], DIR.DOWN[:2],  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
-        self.edges.append(Edge(self.size[1], DIR.LEFT[:2],  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.LEFT))
-        self.edges.append(Edge(self.size[1], DIR.RIGHT[:2], EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
+        self.edges.append(Edge(self.size[0], DIR2.UP,    EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR2.DOWN,  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.FLAT, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
