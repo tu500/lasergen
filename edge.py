@@ -195,6 +195,25 @@ class Edge(PlanarObject):
             cp = new_element.get_counterpart_element()
             self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.begin_style, cp.end_style, cp.prev_style, cp.next_style, False)
 
+    def set_style(self, style, set_counterpart=True):
+        """
+        Set the edge's main style. If set_counterpart is True the counterpart's
+        style will be changed accordingly, too. In this case an exception is
+        raised, if no counterpart is configured.
+        """
+
+        self.style = style
+
+        if set_counterpart:
+            assert(self.counterpart is not None)
+
+            if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
+                self.counterpart.set_style(EDGE_ELEMENT_STYLE.FLAT_EXTENDED, set_counterpart=False)
+            elif style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
+                self.counterpart.set_style(EDGE_ELEMENT_STYLE.FLAT, set_counterpart=False)
+            elif style == EDGE_ELEMENT_STYLE.TOOTHED:
+                self.counterpart.set_style(EDGE_ELEMENT_STYLE.TOOTHED, set_counterpart=False)
+
 
     def render(self, config):
 
@@ -731,6 +750,12 @@ class EdgeReference():
 
     def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
         self.target.add_element(self.position + pos, length, style, begin_style, end_style, prev_style, next_style, auto_add_counterpart)
+
+    def set_style(self, style, set_counterpart=True):
+        if self.position != 0 and self.length != target.length:
+            raise Exception('Setting main edge style not supported for partial edge references.')
+
+        self.target.set_style(style, set_counterpart)
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
