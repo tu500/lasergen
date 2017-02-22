@@ -1,6 +1,8 @@
+import collections
 import numpy as np
 import math
 
+from units import Frac
 from util import DIR2, almost_equal
 from primitive import Object2D, PlanarObject, Line
 
@@ -774,6 +776,15 @@ class EdgeReference():
             self.counterpart = None
 
     def add_element(self, pos, length, style, begin_style=None, end_style=None, prev_style=None, next_style=None, auto_add_counterpart=True):
+        if isinstance(pos, collections.Iterable) and len(pos) == 2 and self.projection_dir is not None:
+            pos = DIR2.project_along_axis(pos, self.projection_dir)
+        if isinstance(pos, Frac):
+            pos = pos.total_length(self.length)
+        if isinstance(length, collections.Iterable) and len(length) == 2 and self.projection_dir is not None:
+            length = DIR2.project_along_axis(length, self.projection_dir)
+        if isinstance(length, Frac):
+            length = length.total_length(self.length)
+
         self.target.add_element(self.position + pos, length, style, begin_style, end_style, prev_style, next_style, auto_add_counterpart)
 
     def set_style(self, style, set_counterpart=True):
