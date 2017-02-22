@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR2, project_along_axis, almost_equal
+from util import DIR2, almost_equal
 from primitive import Object2D, PlanarObject, Line
 
 
@@ -790,7 +790,7 @@ class EdgeReference():
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
-        return project_along_axis(v, self.projection_dir)
+        return DIR2.project_along_axis(v, self.projection_dir)
 
     def get_reference(self, pos=0, length=None, projection_dir=None):
         if length is not None:

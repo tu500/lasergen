@@ -56,19 +56,35 @@ class DIR():
         assert(index is not None)
         return [DIR.AXES[i] for i in range(3) if i != index]
 
+    def project_along_axis(vec, axis):
+        assert(DIR.is_dir(axis))
+        return np.array([v for v,a in zip(vec, axis) if a == 0])
+
 class DIR2():
     UP    = np.array([ 0, 1])
     DOWN  = np.array([ 0,-1])
     LEFT  = np.array([-1, 0])
     RIGHT = np.array([ 1, 0])
 
+    AXES = [RIGHT, UP]
+    DIRS = [RIGHT, LEFT, UP, DOWN]
+
+    def is_dir(d):
+        for i in DIR.DIRS:
+            if (d == i).all():
+                return True
+        return False
+
+    def project_along_axis(vec, axis):
+        assert(DIR2.is_dir(axis))
+        if axis[0] == 0:
+            return vec[0]
+        else:
+            return vec[1]
+
     def orthon(v):
         # rotate by 90 deg CCW
         return np.array([-v[1], v[0]]) / np.linalg.norm(v)
-
-def project_along_axis(vec, axis):
-    assert(DIR.is_dir(axis))
-    return np.array([v for v,a in zip(vec, axis) if a == 0])
 
 def mirror_array_bool_to_factor(v):
     return np.array([(-1 if b else 1) for b in v])

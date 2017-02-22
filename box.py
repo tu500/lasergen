@@ -1,6 +1,6 @@
 import numpy as np
 
-from util import DIR, project_along_axis
+from util import DIR
 from units import Rel
 from edge import CutoutEdge, EDGE_STYLE
 from wall import Wall, ToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
@@ -423,7 +423,7 @@ class Box():
                 neg_index = self._get_wall_index_by_direction(-d)
 
                 # needed because some of the surrounding walls may not be references / have projection_dirs
-                to_local_coords = lambda v: project_along_axis(v, d)
+                to_local_coords = lambda v: DIR.project_along_axis(v, d)
 
                 # set negative wall
                 r = cur_wall_refs[i]
@@ -480,7 +480,7 @@ class Box():
 
                 for target_dir in DIR.perpendicular_dirs(working_axis):
 
-                    local_target_dir = project_along_axis(target_dir, working_axis)
+                    local_target_dir = DIR.project_along_axis(target_dir, working_axis)
                     cutout_edge = cur_wall_refs[working_axis_index].get_edge_by_direction(local_target_dir).dereference()
 
                     child_target_wall_ref = c.get_wall_by_direction(target_dir)
@@ -572,12 +572,12 @@ class ClosedBox(Box):
 
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(InvSideWall(  project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
-        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
-        self.walls.append(InvSideWall(  project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
-        self.walls.append(SideWall(     project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
-        self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
-        self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self.walls.append(InvSideWall(  DIR.project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(SideWall(     DIR.project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(InvSideWall(  DIR.project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(SideWall(     DIR.project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
+        self.walls.append(ExtendedWall( DIR.project_along_axis(self.abs_size, DIR.FRONT) ).get_reference())
+        self.walls.append(ExtendedWall( DIR.project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
         self._set_wallref_default_data()
 
 
@@ -588,12 +588,12 @@ class ToplessBox(Box):
 
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
-        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
-        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
-        self.walls.append(ToplessWall(  project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
+        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
         self.walls.append(None)
-        self.walls.append(ExtendedWall( project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self.walls.append(ExtendedWall( DIR.project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
         self._set_wallref_default_data()
 
 

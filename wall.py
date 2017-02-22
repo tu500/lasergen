@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from util import DIR, DIR2, project_along_axis
+from util import DIR, DIR2
 from units import Frac
 from primitive import Object2D, PlanarObject, Text
 from edge import EDGE_STYLE, EDGE_ELEMENT_STYLE, _EdgeElement, Edge
@@ -150,7 +150,7 @@ class WallReference():
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
-        return project_along_axis(v, self.projection_dir)
+        return DIR.project_along_axis(v, self.projection_dir)
 
     def add_child(self, child, pos, mirrored=np.array([False, False])):
         if len(pos) == 3 and self.projection_dir is not None:
