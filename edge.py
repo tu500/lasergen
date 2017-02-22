@@ -225,6 +225,20 @@ class Edge(PlanarObject):
             elif style == EDGE_ELEMENT_STYLE.TOOTHED:
                 self.counterpart.set_style(EDGE_ELEMENT_STYLE.TOOTHED, set_counterpart=False)
 
+    def set_counterpart(self, counterpart, backreference=True):
+        """
+        Set the edge's counterpart. If backreference is True the a reference to
+        this edge is added to the new counterpart, too.
+        """
+
+        assert(self.counterpart is None)
+        assert(self.length == counterpart.length)
+
+        self.counterpart = counterpart.get_reference()
+
+        if backreference:
+            counterpart.set_counterpart(self, False)
+
 
     def render(self, config):
 
@@ -767,6 +781,12 @@ class EdgeReference():
             raise Exception('Setting main edge style not supported for partial edge references.')
 
         self.target.set_style(style, set_counterpart)
+
+    def set_counterpart(self, counterpart, backreference=True):
+        if self.position != 0 and self.length != target.length:
+            raise Exception('Setting counterpart not supported for partial edge references.')
+
+        self.target.set_counterpart(counterpart, backreference)
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)

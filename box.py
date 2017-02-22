@@ -463,8 +463,7 @@ class Box():
                             target_wall.add_child(e, cur_pos + c.abs_size[i] * d)
 
                             # set counterpart between new CutoutEdge and corresponding edge of new SubWall
-                            e.counterpart = r.get_edge_by_direction(to_local_coords(target_dir)).get_reference()
-                            r.get_edge_by_direction(to_local_coords(target_dir)).dereference().counterpart = e.get_reference()
+                            e.set_counterpart(r.get_edge_by_direction(to_local_coords(target_dir)).dereference())
 
                             # add edge reference in working direction to the wall reference perpendicular to working direction
                             child_target_wall_ref = c.get_wall_by_direction(target_dir)
@@ -548,7 +547,10 @@ class Box():
 
             for edge_dir in DIR.perpendicular_dirs(wall_dir):
                 if self.get_wall_by_direction(wall_dir) is not None and self.get_wall_by_direction(edge_dir) is not None:
-                    self.get_wall_by_direction(wall_dir).get_edge_by_direction(edge_dir).dereference().counterpart = self.get_wall_by_direction(edge_dir).get_edge_by_direction(wall_dir).dereference().get_reference()
+                    self.get_wall_by_direction(wall_dir).get_edge_by_direction(edge_dir).set_counterpart(
+                            self.get_wall_by_direction(edge_dir).get_edge_by_direction(wall_dir).dereference(),
+                            False
+                        )
 
 
     def __str__(self):
