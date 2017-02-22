@@ -554,7 +554,7 @@ class Edge(PlanarObject):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or self.layer or 'cut'
+        layer = element.layer or self.layer
 
         assert(begin_style in _EdgeElement.allowed_end_styles[style])
         assert(end_style   in _EdgeElement.allowed_end_styles[style])
@@ -700,7 +700,7 @@ class CutoutEdge(Edge):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or self.layer or 'cut'
+        layer = element.layer or self.layer
 
         if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
 
