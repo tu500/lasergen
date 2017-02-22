@@ -137,6 +137,18 @@ class PathAccumulator():
         else:
             raise ValueError('Unknown primitive')
 
+    def add_object_list(self, lst):
+        """
+        Add several objects to the accumulator.
+
+        Raises an exception if any object could not be added.
+        """
+
+        for o in lst:
+
+            if not self.add_object(o):
+                raise Exception('Could not add complete list to PathAccumulator.')
+
     def add_object(self, obj):
         """
         Add an object to the accumulator.
@@ -213,7 +225,7 @@ class PathAccumulator():
         return self.output
 
 
-def export_svg_with_paths(objects, config):
+def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
     """
     Export given objects to SVG, converting contained Line objects to SVG paths
     and joining adjacent primitive pairs.
@@ -236,8 +248,43 @@ def export_svg_with_paths(objects, config):
                 viewBox="{} {} {} {}">
         """.format(vmin[0]-5, -(vmax[1]-vmin[1]) - 5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
 
+
+    def join_into_list(acc, lst):
+
+        if acc.finalized or not join_nonconsecutive_paths:
+            lst.append(acc)
+            return
+
+        for index, elem in enumerate(lst):
+
+            if not elem.finalized and elem.layer == acc.layer:
+
+                if almost_equal(elem.current_point, acc.start_point):
+                    elem.add_object_list(acc.objects)
+                    return
+
+                elif almost_equal(elem.current_point, acc.current_point):
+                    elem.add_object_list(o.reverse() for o in reversed(acc.objects))
+                    return
+
+                elif almost_equal(elem.start_point, acc.current_point):
+                    acc.add_object_list(elem.objects)
+                    lst[index] = acc
+                    return
+
+                elif almost_equal(elem.start_point, acc.start_point):
+                    objects = [o.reverse() for o in reversed(acc.objects)] + elem.objects
+                    a = PathAccumulator(objects[0], config)
+                    a.add_object_list(objects[1:])
+                    lst[index] = a
+                    return
+
+        lst.append(acc)
+
+
     for o in objects:
 
+        acc_list = []
         acc = None
 
         for p in o.primitives:
@@ -249,10 +296,13 @@ def export_svg_with_paths(objects, config):
                 r = acc.add_object(p)
 
                 if not r:
-                    s += acc.finalize()
+                    join_into_list(acc, acc_list)
+
                     acc = PathAccumulator(p, config)
 
-        s += acc.finalize()
+        join_into_list(acc, acc_list)
+
+        s += ''.join(acc.finalize() for acc in acc_list)
 
     s += '</svg>'
 
