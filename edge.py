@@ -72,6 +72,15 @@ class _EdgeElement():
             EDGE_STYLE.INTERNAL_OUTWARD : set([EDGE_STYLE.OUTWARD]),
         }
 
+    allowed_neighbour_corner_styles = {
+            EDGE_STYLE.TOOTHED          : set([EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]),
+            EDGE_STYLE.EXTENDED         : set([EDGE_STYLE.EXTENDED]),
+            EDGE_STYLE.FLAT             : set([EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED]),
+            EDGE_STYLE.INTERNAL_FLAT    : set(),
+            EDGE_STYLE.OUTWARD          : set(),
+            EDGE_STYLE.INTERNAL_OUTWARD : set(),
+        }
+
     def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None, layer=None):
 
         self.pos = pos
@@ -162,7 +171,9 @@ class Edge(PlanarObject):
     This one also controls the general rendering direction of the edge.
     """
 
-    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED):
+    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer='cut'):
+        super(Edge, self).__init__(layer)
+
         self.length = length
         self.outward_dir = outward_dir / np.linalg.norm(outward_dir)
         self.begin_style = begin_style
@@ -439,7 +450,7 @@ class Edge(PlanarObject):
         tooth_length = length / tooth_count
 
         tooth_length_satisfied = config.tooth_min_width <= tooth_length <= config.tooth_max_width
-        layer = 'cut' if tooth_length_satisfied else 'warn'
+        layer = None if tooth_length_satisfied else 'warn'
 
         if not tooth_length_satisfied:
             print('WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
@@ -529,7 +540,7 @@ class Edge(PlanarObject):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or 'cut'
+        layer = element.layer or self.layer or 'cut'
 
         assert(begin_style in _EdgeElement.allowed_end_styles[style])
         assert(end_style   in _EdgeElement.allowed_end_styles[style])
@@ -675,7 +686,7 @@ class CutoutEdge(Edge):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or 'cut'
+        layer = element.layer or self.layer or 'cut'
 
         if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
 
