@@ -57,14 +57,14 @@ class CutoutRoundedRect(PlanarObject):
 
         l = []
 
-        l.append(Line(np.array([displace + radius, displace]), np.array([width - radius - displace, displace])))
-        l.append(ArcPath(np.array([width - radius - displace, displace]), np.array([width - - displace, radius + displace]), radius, False, False))
-        l.append(Line(np.array([width - displace, radius + displace]), np.array([width - displace, height - radius - displace])))
-        l.append(ArcPath(np.array([width - displace, height - radius - displace]), np.array([width - radius - displace, height - displace]), radius, False, False))
-        l.append(Line(np.array([width - radius - displace, height - displace]), np.array([radius + displace, height - displace])))
-        l.append(ArcPath(np.array([radius + displace, height - displace]), np.array([displace, height - radius - displace]), radius, False, False))
-        l.append(Line(np.array([displace, height - radius - displace]), np.array([displace, radius + displace])))
-        l.append(ArcPath(np.array([displace, radius + displace]), np.array([displace + radius, displace]), radius, False, False))
+        l.append(ArcPath(np.array([width - radius, displace]), np.array([width - displace, radius]), radius - displace, False, False))
+        l.append(Line(np.array([width - displace, radius]), np.array([width - displace, height - radius])))
+        l.append(ArcPath(np.array([width - displace, height - radius]), np.array([width - radius, height - displace]), radius - displace, False, False))
+        l.append(Line(np.array([width - radius, height - displace]), np.array([radius, height - displace])))
+        l.append(ArcPath(np.array([radius, height - displace]), np.array([displace, height - radius]), radius - displace, False, False))
+        l.append(Line(np.array([displace, height - radius]), np.array([displace, radius])))
+        l.append(ArcPath(np.array([displace, radius]), np.array([radius, displace]), radius - displace, False, False))
+        l.append(Line(np.array([radius, displace]), np.array([width - radius, displace])))
 
         return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
 
