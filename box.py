@@ -3,7 +3,7 @@ import numpy as np
 from util import DIR
 from units import Rel
 from edge import CutoutEdge, EDGE_STYLE
-from wall import Wall, ToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
+from wall import Wall, ToplessWall, InvToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
 
 class Box():
     """
@@ -588,12 +588,12 @@ class ToplessBox(Box):
 
     def _construct_walls(self):
         self.walls = []
-        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
-        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
-        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
-        self.walls.append(ToplessWall(  DIR.project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
+        self.walls.append(InvToplessWall( DIR.project_along_axis(self.abs_size, DIR.UP)    ).get_reference())
+        self.walls.append(ToplessWall(    DIR.project_along_axis(self.abs_size, DIR.DOWN)  ).get_reference())
+        self.walls.append(InvToplessWall( DIR.project_along_axis(self.abs_size, DIR.LEFT)  ).get_reference())
+        self.walls.append(ToplessWall(    DIR.project_along_axis(self.abs_size, DIR.RIGHT) ).get_reference())
         self.walls.append(None)
-        self.walls.append(ExtendedWall( DIR.project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
+        self.walls.append(ExtendedWall(   DIR.project_along_axis(self.abs_size, DIR.BACK)  ).get_reference())
         self._set_wallref_default_data()
 
 

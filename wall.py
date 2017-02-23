@@ -191,6 +191,18 @@ class ToplessWall(Wall):
         self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.FLAT,    EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.LEFT))
         self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.TOOTHED, EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.RIGHT))
 
+class InvToplessWall(Wall):
+    """
+    A wall template defining a side wall with one flat edge.
+    """
+
+    def _construct_edges(self):
+        self.edges = []
+        self.edges.append(Edge(self.size[0], DIR2.UP,    style=EDGE_ELEMENT_STYLE.FLAT).get_reference(projection_dir=DIR2.UP))
+        self.edges.append(Edge(self.size[0], DIR2.DOWN,  EDGE_STYLE.FLAT,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.DOWN))
+        self.edges.append(Edge(self.size[1], DIR2.LEFT,  EDGE_STYLE.TOOTHED,    EDGE_STYLE.FLAT).get_reference(projection_dir=DIR2.LEFT))
+        self.edges.append(Edge(self.size[1], DIR2.RIGHT, EDGE_STYLE.FLAT, EDGE_STYLE.TOOTHED).get_reference(projection_dir=DIR2.RIGHT))
+
 class ExtendedWall(Wall):
     """
     A wall template defining a cover wall with extended corners.
