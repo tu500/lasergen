@@ -517,7 +517,7 @@ class Edge(PlanarObject):
         cp_elements = self.counterpart.dereference()._prepare_element_list(config)
 
         if len(elements) != len(cp_elements):
-            print('WARNING: Edge counterpart count mismatch, rendering into error layer.')
+            print('ERROR: Edge counterpart count mismatch, rendering into error layer.')
             for e in elements:
                 e.layer = 'error'
             return
@@ -526,25 +526,25 @@ class Edge(PlanarObject):
 
             if not almost_equal(a.pos, b.pos):
                 a.layer = 'error'
-                print('WARNING: Edge element counterpart position mismatch, rendering into error layer.')
+                print('ERROR: Edge element counterpart position mismatch, rendering into error layer.')
                 continue
             if not almost_equal(a.length, b.length):
                 a.layer = 'error'
-                print('WARNING: Edge element counterpart length mismatch, rendering into error layer.')
+                print('ERROR: Edge element counterpart length mismatch, rendering into error layer.')
                 continue
 
             if a.style == EDGE_ELEMENT_STYLE.FLAT:
                 if not b.style in [EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
                     a.layer = 'error'
-                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
+                    print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
             elif a.style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
                 if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
                     a.layer = 'error'
-                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
+                    print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
             elif a.style == EDGE_ELEMENT_STYLE.REMOVE:
                 if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
                     a.layer = 'error'
-                    print('WARNING: Edge element counterpart style mismatch, rendering into error layer.')
+                    print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
             else:
                 assert(False)
 
