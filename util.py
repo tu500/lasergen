@@ -70,7 +70,7 @@ class DIR2():
     DIRS = [RIGHT, LEFT, UP, DOWN]
 
     def is_dir(d):
-        for i in DIR.DIRS:
+        for i in DIR2.DIRS:
             if (d == i).all():
                 return True
         return False
