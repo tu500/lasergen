@@ -25,7 +25,7 @@ def main():
     tb.configure(c)
 
     e = ExtendedWall([100., 120.])
-    e.add_child(CutoutEdge(120, np.array([1,0]), EDGE_STYLE.FLAT, EDGE_STYLE.FLAT), [40, 0])
+    e.add_child(CutoutEdge(120, np.array([1,0]), EDGE_STYLE.INTERNAL_FLAT, EDGE_STYLE.INTERNAL_FLAT), [40, 0])
 
     objects = place_2d_objects(cb.render(c) + tb.render(c) + [e.render(c)], c)
 
