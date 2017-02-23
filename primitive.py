@@ -250,8 +250,8 @@ class ArcPath(Primitive2D):
         # TODO this is not trivial
         return self
     def reverse(self):
-        # TODO this is not trivial
-        return self
+        # TODO is this right?
+        return ArcPath(self.end, self.start, self.radius, self.large_arc, self.sweep)
 
     @staticmethod
     def from_center_angle(center, angle_start, angle_end, radius, layer='cut'):
