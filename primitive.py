@@ -121,7 +121,7 @@ class PlanarObject():
         """Render into an Object2D."""
         raise NotImplementedError('Abstract method')
 
-    def set_parent(self, parent):
+    def set_parent(self, parent, own_position):
         """
         Save a reference to this object's parent, ie. the WallReference it was
         added to. Automatically convert all parameters given by
@@ -134,6 +134,7 @@ class PlanarObject():
             return
 
         self.parent = parent
+        self.position = own_position #TODO i don't like this design
 
         if self.data_to_local_coords:
             for e in self.data_to_local_coords:
@@ -144,6 +145,14 @@ class PlanarObject():
                             v = parent.to_local_coords(v)
                         v = Frac.array_total_length(v, parent.size)
                         setattr(self, e, v)
+
+        self.init_parent()
+
+    def init_parent(self):
+        """
+        Callback for initializing the object if access to the parent is needed.
+        """
+        pass
 
     @staticmethod
     def _calc_center_dir(v):

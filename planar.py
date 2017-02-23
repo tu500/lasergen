@@ -3,6 +3,7 @@ import math
 
 from util import DIR2
 from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
+from edge import EDGE_STYLE, EDGE_ELEMENT_STYLE
 
 
 class CutoutRect(PlanarObject):
@@ -234,3 +235,91 @@ class AirVentsCutout(PlanarObject):
                 l.append(Line(np.array([x1 + displace, y2 - displace]), np.array([x1 + displace, y1 + displace])))
 
         return Object2D(l, self.layer) - (self.center_dir * self.size / 2)
+
+
+class RectEdgeCutout(PlanarObject):
+    """
+    A planar object rendering a rectangular cutout from a wall's edge.
+    """
+
+    data_to_local_coords = ['size', 'edge_dir']
+
+    def __init__(self, size, edge_dir, layer='cut'):
+        super(RectEdgeCutout, self).__init__(layer)
+
+        self.size = np.array(size)
+        self.edge_dir = np.array(edge_dir)
+
+    def init_parent(self):
+        e = self.parent.get_edge_by_direction(self.edge_dir)
+        e.add_element(
+                self.position,
+                self.size,
+                EDGE_ELEMENT_STYLE.REMOVE,
+                EDGE_STYLE.INTERNAL_FLAT,
+                EDGE_STYLE.INTERNAL_FLAT,
+            )
+
+    def render(self, config):
+
+        edge_dir = self.edge_dir
+        n_dir = abs(DIR2.orthon(edge_dir))
+
+        displace = config.cutting_width / 2
+        width = DIR2.project_along_axis(self.size, edge_dir)
+        height = DIR2.project_along_axis(self.size, n_dir)
+
+        l = []
+
+        l.append(Line(edge_dir * displace + n_dir * displace, edge_dir * (-height + displace) + n_dir * displace))
+        l.append(Line(edge_dir * (-height + displace) + n_dir * displace, edge_dir * (-height + displace) + n_dir * (width - displace)))
+        l.append(Line(edge_dir * (-height + displace) + n_dir * (width - displace), edge_dir * displace + n_dir * (width - displace)))
+
+        return Object2D(l, self.layer)
+
+class RoundedRectEdgeCutout(PlanarObject):
+    """
+    A planar object rendering a rounded rectangular cutout from a wall's edge.
+    """
+
+    data_to_local_coords = ['size', 'edge_dir']
+
+    def __init__(self, size, radius, edge_dir, layer='cut'):
+        super(RoundedRectEdgeCutout, self).__init__(layer)
+
+        self.size = np.array(size)
+        self.radius = radius
+        self.edge_dir = np.array(edge_dir)
+
+    def init_parent(self):
+        e = self.parent.get_edge_by_direction(self.edge_dir)
+        e.add_element(
+                self.position,
+                self.size,
+                EDGE_ELEMENT_STYLE.REMOVE,
+                EDGE_STYLE.INTERNAL_FLAT,
+                EDGE_STYLE.INTERNAL_FLAT,
+            )
+
+    def render(self, config):
+
+        edge_dir = self.edge_dir
+        n_dir = abs(DIR2.orthon(edge_dir))
+
+        displace = config.cutting_width / 2
+        width = DIR2.project_along_axis(self.size, edge_dir)
+        height = DIR2.project_along_axis(self.size, n_dir)
+        radius = self.radius
+
+        assert(width >= 2*radius)
+        assert(height >= radius)
+
+        l = []
+
+        l.append(Line(edge_dir * displace + n_dir * displace, edge_dir * (-height + radius) + n_dir * displace))
+        l.append(ArcPath(edge_dir * (-height + radius) + n_dir * displace, edge_dir * (-height + displace) + n_dir * radius, radius - displace, False, False))
+        l.append(Line(edge_dir * (-height + displace) + n_dir * radius, edge_dir * (-height + displace) + n_dir * (width - radius)))
+        l.append(ArcPath(edge_dir * (-height + displace) + n_dir * (width - radius), edge_dir * (-height + radius) + n_dir * (width - displace), radius - displace, False, False))
+        l.append(Line(edge_dir * (-height + radius) + n_dir * (width - displace), edge_dir * displace + n_dir * (width - displace)))
+
+        return Object2D(l, self.layer)
