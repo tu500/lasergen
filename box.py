@@ -540,7 +540,7 @@ class Box():
         """
         Set all walls' edges' counterparts.
 
-        Needs setup projection dirs
+        Needs setup projection dirs.
         """
 
         for wall_dir in DIR.DIRS:
