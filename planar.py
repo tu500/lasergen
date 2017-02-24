@@ -11,7 +11,7 @@ class CutoutRect(PlanarObject):
     A planar object rendering a rectangle.
     """
 
-    data_to_local_coords = ['size', 'center_dir']
+    _data_to_local_coords = ['size', 'center_dir']
 
     def __init__(self, size, center=False, layer='cut'):
         super(CutoutRect, self).__init__(layer)
@@ -38,7 +38,7 @@ class CutoutRoundedRect(PlanarObject):
     A planar object rendering a rectangle with rounded off corners.
     """
 
-    data_to_local_coords = ['size', 'center_dir']
+    _data_to_local_coords = ['size', 'center_dir']
 
     def __init__(self, size, radius, center=False, layer='cut'):
         super(CutoutRoundedRect, self).__init__(layer)
@@ -122,7 +122,7 @@ class MountingScrewCutout(PlanarObject):
     A planar object rendering a cutout for a backside screw mounting hole.
     """
 
-    data_to_local_coords = ['shaft_dir']
+    _data_to_local_coords = ['shaft_dir']
 
     def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir, layer='cut'):
         super(MountingScrewCutout, self).__init__(layer)
@@ -158,7 +158,7 @@ class FanCutout(PlanarObject):
     Renders mounting holes for the screws and an appropriate sized air hole.
     """
 
-    data_to_local_coords = ['center_dir']
+    _data_to_local_coords = ['center_dir']
 
     # TODO only 40mm size verified
     dimensions = {
@@ -201,7 +201,7 @@ class AirVentsCutout(PlanarObject):
     A planar object rendering a gutter of rectangular air vents.
     """
 
-    data_to_local_coords = ['size', 'center_dir', 'hole_target_size']
+    _data_to_local_coords = ['size', 'center_dir', 'hole_target_size']
 
     def __init__(self, size, hole_target_size=(5,30), hole_distance=5, center=False, layer='cut'):
         super(AirVentsCutout, self).__init__(layer)
@@ -245,7 +245,7 @@ class RectEdgeCutout(PlanarObject):
     A planar object rendering a rectangular cutout from a wall's edge.
     """
 
-    data_to_local_coords = ['size', 'edge_dir']
+    _data_to_local_coords = ['size', 'edge_dir']
 
     def __init__(self, size, edge_dir, center=False, layer='cut'):
         super(RectEdgeCutout, self).__init__(layer)
@@ -297,7 +297,7 @@ class RoundedRectEdgeCutout(PlanarObject):
     A planar object rendering a rounded rectangular cutout from a wall's edge.
     """
 
-    data_to_local_coords = ['size', 'edge_dir']
+    _data_to_local_coords = ['size', 'edge_dir']
 
     def __init__(self, size, radius, edge_dir, center=False, layer='cut'):
         super(RoundedRectEdgeCutout, self).__init__(layer)

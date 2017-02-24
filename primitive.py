@@ -111,7 +111,7 @@ class PlanarObject():
     Abstract base class for objects that render into an Object2D.
     """
 
-    data_to_local_coords = None
+    _data_to_local_coords = None
     parent = None
 
     def __init__(self, layer='cut'):
@@ -125,7 +125,7 @@ class PlanarObject():
         """
         Save a reference to this object's parent, ie. the WallReference it was
         added to. Automatically convert all parameters given by
-        `data_to_local_coords` to local coordinates according to the parent.
+        `_data_to_local_coords` to local coordinates according to the parent.
 
         Automatically called by WallReference.add_child.
         """
@@ -136,8 +136,8 @@ class PlanarObject():
         self.parent = parent
         self.position = own_position #TODO i don't like this design
 
-        if self.data_to_local_coords:
-            for e in self.data_to_local_coords:
+        if self._data_to_local_coords:
+            for e in self._data_to_local_coords:
                 if hasattr(self, e):
                     v = getattr(self, e)
                     if v is not None:

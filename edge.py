@@ -173,7 +173,7 @@ class Edge(PlanarObject):
     This one also controls the general rendering direction of the edge.
     """
 
-    data_to_local_coords = ['outward_dir']
+    _data_to_local_coords = ['outward_dir']
 
     def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer='cut'):
         super(Edge, self).__init__(layer)
