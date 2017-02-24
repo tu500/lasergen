@@ -790,16 +790,19 @@ class EdgeReference():
         self.target.add_element(self.position + pos, length, style, begin_style, end_style, prev_style, next_style, auto_add_counterpart)
 
     def set_style(self, style, set_counterpart=True):
-        if self.position != 0 and self.length != target.length:
+        if not self.is_full_reference():
             raise Exception('Setting main edge style not supported for partial edge references.')
 
         self.target.set_style(style, set_counterpart)
 
     def set_counterpart(self, counterpart, backreference=True):
-        if self.position != 0 and self.length != target.length:
+        if not self.is_full_reference():
             raise Exception('Setting counterpart not supported for partial edge references.')
 
         self.target.set_counterpart(counterpart, backreference)
+
+    def is_full_reference(self):
+        return self.position == 0 and self.length == self.target.length
 
     def to_local_coords(self, v):
         assert(self.projection_dir is not None)
