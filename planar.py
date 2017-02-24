@@ -201,33 +201,36 @@ class AirVentsCutout(PlanarObject):
     A planar object rendering a gutter of rectangular air vents.
     """
 
-    data_to_local_coords = ['size', 'center_dir']
+    data_to_local_coords = ['size', 'center_dir', 'hole_target_size']
 
-    # TODO make more configurable
-    def __init__(self, size, center=False, layer='cut'):
+    def __init__(self, size, hole_target_size=(5,30), hole_distance=5, center=False, layer='cut'):
         super(AirVentsCutout, self).__init__(layer)
 
         self.size = np.array(size)
         self.center_dir = self._calc_center_dir(center)
+        self.hole_target_size = np.array(hole_target_size)
+        self.hole_distance = hole_distance
 
     def render(self, config):
 
         displace = config.cutting_width / 2
         width, height = self.size
+        h_dist = self.hole_distance
+        ht_width, ht_height = self.hole_target_size
 
-        short_count = int(math.ceil((width + 5) / (5+5)))
-        short_length = (width + 5) / short_count
+        x_count = int(math.ceil((width + h_dist) / (ht_width + h_dist)))
+        x_length = (width + h_dist) / x_count
 
-        long_count = int(math.ceil((height + 5) / (30+5)))
-        long_length = (height + 5) / long_count
+        y_count = int(math.ceil((height + h_dist) / (ht_height + h_dist)))
+        y_length = (height + h_dist) / y_count
 
-        short_positions = [(i*short_length, (i+1)*short_length-5) for i in range(short_count)]
-        long_positions = [(i*long_length, (i+1)*long_length-5) for i in range(long_count)]
+        x_positions = [(i * x_length, (i+1) * x_length - h_dist) for i in range(x_count)]
+        y_positions = [(i * y_length, (i+1) * y_length - h_dist) for i in range(y_count)]
 
         l = []
 
-        for x1, x2 in short_positions:
-            for y1, y2 in long_positions:
+        for x1, x2 in x_positions:
+            for y1, y2 in y_positions:
 
                 l.append(Line(np.array([x1 + displace, y1 + displace]), np.array([x2 - displace, y1 + displace])))
                 l.append(Line(np.array([x2 - displace, y1 + displace]), np.array([x2 - displace, y2 - displace])))
