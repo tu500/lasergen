@@ -390,6 +390,7 @@ class Edge(PlanarObject):
         elements = self._prepare_element_list(config)
 
         self._check_counterpart_elements_matching(elements, config)
+        self._check_corner_counterpart_styles_matching(elements, config)
 
         return sum(
                 (self._render_element(start, direction, self.outward_dir, displace, wall_thickness, config, p) for p in elements),
@@ -679,6 +680,25 @@ class Edge(PlanarObject):
                     print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
             else:
                 assert(False)
+
+    def _check_corner_counterpart_styles_matching(self, elements, config):
+        """
+        Check whether the neighbouring edges' corner styles match this edge's.
+
+        Do nothing if the references aren't set.
+        """
+
+        if self.begin_corner_counterpart is not None:
+
+            if not self.begin_corner_counterpart.get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[self.begin_style]:
+                elements[0].layer = 'error'
+                print('ERROR: Edge corner counterpart style mismatch, rendering into error layer.')
+
+        if self.end_corner_counterpart is not None:
+
+            if not self.end_corner_counterpart.get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[self.end_style]:
+                elements[0].layer = 'error'
+                print('ERROR: Edge corner counterpart style mismatch, rendering into error layer.')
 
 
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):

@@ -41,7 +41,6 @@ class Wall(PlanarObject):
         if (v == DIR2.RIGHT).all(): return 3
 
     def render(self, config):
-        self._check_corner_edge_styles_matching()
 
         l = Object2D()
 
@@ -70,26 +69,6 @@ class Wall(PlanarObject):
 
     def dereference(self):
         return self
-
-    def _check_corner_edge_styles_matching(self):
-        l = [
-                (DIR2.LEFT,  'begin_style', DIR2.DOWN, 'begin_style'),
-                (DIR2.LEFT,  'end_style',   DIR2.UP,   'begin_style'),
-                (DIR2.RIGHT, 'begin_style', DIR2.DOWN, 'end_style'),
-                (DIR2.RIGHT, 'end_style',   DIR2.UP,   'end_style'),
-            ]
-
-        for d1, t1, d2, t2 in l:
-            e1 = self.get_edge_by_direction(d1).dereference()
-            e2 = self.get_edge_by_direction(d2).dereference()
-
-            s1 = getattr(e1, t1)
-            s2 = getattr(e2, t2)
-
-            if not s1 in _EdgeElement.allowed_neighbour_corner_styles[s2]:
-                print('ERROR: Corner edge style mismatch, rendering into error layer.')
-                e1.layer = 'error'
-                e2.layer = 'error'
 
     def _set_edgeref_default_data(self):
         """
