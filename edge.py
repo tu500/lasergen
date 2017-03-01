@@ -326,7 +326,7 @@ class Edge(PlanarObject):
 
     def set_counterpart(self, counterpart, backreference=True):
         """
-        Set the edge's counterpart. If backreference is True the a reference to
+        Set the edge's counterpart. If backreference is True a reference to
         this edge is added to the new counterpart, too.
         """
 
