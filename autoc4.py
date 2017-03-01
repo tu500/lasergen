@@ -82,8 +82,8 @@ def main():
     cw.add_child(CutoutRoundedRect([30,30], 5, center=True), [Frac(0.5), Frac(0.5)])
     cw.add_child(CutoutRoundedRect([35,35], 7.5, center=True, layer='info'), [Frac(0.5), Frac(0.5)])
     for d in [DIR2.UP, DIR2.DOWN, DIR2.LEFT, DIR2.RIGHT]:
-        cw.get_edge_by_direction(d).dereference().begin_style = EDGE_STYLE.TOOTHED
-        cw.get_edge_by_direction(d).dereference().end_style = EDGE_STYLE.TOOTHED
+        cw.get_edge_by_direction(d).set_begin_style(EDGE_STYLE.TOOTHED, False)
+        cw.get_edge_by_direction(d).set_end_style(EDGE_STYLE.TOOTHED, False)
     for d in [DIR.UP, DIR.DOWN]:
         led.get_wall_by_direction(d).get_edge_by_direction(DIR.FRONT).add_element(0, Frac(1), EDGE_ELEMENT_STYLE.REMOVE, prev_style=EDGE_STYLE.FLAT, next_style=EDGE_STYLE.FLAT)
         # these edges are probably overkill, but they handle displacement

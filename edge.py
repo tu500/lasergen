@@ -83,6 +83,33 @@ class _EdgeElement():
             EDGE_STYLE.INTERNAL_OUTWARD : set(),
         }
 
+    default_neighbour_corner_styles = {
+            EDGE_STYLE.TOOTHED          : EDGE_STYLE.FLAT,
+            EDGE_STYLE.EXTENDED         : EDGE_STYLE.EXTENDED,
+            EDGE_STYLE.FLAT             : EDGE_STYLE.TOOTHED,
+            #EDGE_STYLE.INTERNAL_FLAT    : None,
+            #EDGE_STYLE.OUTWARD          : None,
+            #EDGE_STYLE.INTERNAL_OUTWARD : None,
+        }
+
+    allowed_counterpart_corner_styles = {
+            EDGE_STYLE.TOOTHED          : set([EDGE_STYLE.FLAT]),
+            EDGE_STYLE.EXTENDED         : set([EDGE_STYLE.FLAT]),
+            EDGE_STYLE.FLAT             : set([EDGE_STYLE.EXTENDED, EDGE_STYLE.TOOTHED]),
+            EDGE_STYLE.INTERNAL_FLAT    : set(),
+            EDGE_STYLE.OUTWARD          : set(),
+            EDGE_STYLE.INTERNAL_OUTWARD : set(),
+        }
+
+    default_counterpart_corner_styles = {
+            EDGE_STYLE.TOOTHED          : EDGE_STYLE.FLAT,
+            EDGE_STYLE.EXTENDED         : EDGE_STYLE.FLAT,
+            EDGE_STYLE.FLAT             : EDGE_STYLE.TOOTHED,
+            #EDGE_STYLE.INTERNAL_FLAT    : None,
+            #EDGE_STYLE.OUTWARD          : None,
+            #EDGE_STYLE.INTERNAL_OUTWARD : None,
+        }
+
     def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None, layer=None):
 
         self.pos = pos
@@ -230,6 +257,72 @@ class Edge(PlanarObject):
                 self.counterpart.set_style(EDGE_ELEMENT_STYLE.FLAT, set_counterpart=False)
             elif style == EDGE_ELEMENT_STYLE.TOOTHED:
                 self.counterpart.set_style(EDGE_ELEMENT_STYLE.TOOTHED, set_counterpart=False)
+
+    def get_corner_style_by_direction(self, direction):
+        """
+        Returns the edge's corner style in a given direction.
+
+        A value of `-1` corresponds to the begin style, `+1` corresponds to the
+        end style.
+        """
+
+        if direction == -1:
+            return self.begin_style
+
+        elif direction == 1:
+            return self.end_style
+
+        else:
+            raise ValueError('Wrong direction given.')
+
+    def set_corner_style(self, style, direction, set_counterpart=True):
+        """
+        Sets the edge's corner style in a given direction.
+
+        A value of `-1` corresponds to the begin style, `+1` corresponds to the
+        end style.
+
+        If set_counterpart is True the counterpart's edge style will be changed
+        accordingly. This includes the edge's counterpart along the edge
+        direction, as well as the counterpart forming the corner. In this case
+        an exception is raised if either counterpart is not configured.
+        """
+
+        if direction == -1:
+            self.begin_style = style
+
+        elif direction == 1:
+            self.end_style = style
+
+        else:
+            raise ValueError('Wrong direction given.')
+
+
+        if set_counterpart:
+
+            assert(self.counterpart is not None)
+            assert(self.begin_corner_counterpart is not None)
+            assert(self.end_corner_counterpart is not None)
+
+            if not self.get_corner_counterpart_by_direction(direction).get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[style]:
+                self.get_corner_counterpart_by_direction(direction).set_corner_style(_EdgeElement.default_neighbour_corner_styles[style], direction)
+
+            if not self.counterpart.get_corner_style_by_direction(direction) in _EdgeElement.allowed_counterpart_corner_styles[style]:
+                self.counterpart.set_corner_style(_EdgeElement.default_counterpart_corner_styles[style], direction)
+
+    def set_begin_style(self, style, set_counterpart=True):
+        """
+        A shortcut function to set the begin style, see `set_corner_style`.
+        """
+
+        self.set_corner_style(style, -1, set_counterpart)
+
+    def set_end_style(self, style, set_counterpart=True):
+        """
+        A shortcut function to set the end style, see `set_corner_style`.
+        """
+
+        self.set_corner_style(style, 1, set_counterpart)
 
     def set_counterpart(self, counterpart, backreference=True):
         """
@@ -833,6 +926,30 @@ class EdgeReference():
             raise Exception('Setting main edge style not supported for partial edge references.')
 
         self.target.set_style(style, set_counterpart)
+
+    def get_corner_style_by_direction(self, direction):
+        if not self.is_full_reference():
+            raise Exception('Getting corner edge style not supported for partial edge references.')
+
+        if isinstance(direction, collections.Iterable) and len(direction) == 2 and self.projection_dir is not None:
+            direction = self.to_local_coords(direction)
+
+        return self.target.get_corner_style_by_direction(direction)
+
+    def set_corner_style(self, style, direction, set_counterpart=True):
+        if not self.is_full_reference():
+            raise Exception('Setting corner edge style not supported for partial edge references.')
+
+        if isinstance(direction, collections.Iterable) and len(direction) == 2 and self.projection_dir is not None:
+            direction = self.to_local_coords(direction)
+
+        self.target.set_corner_style(style, direction, set_counterpart)
+
+    def set_begin_style(self, style, set_counterpart=True):
+        self.set_corner_style(style, -1, set_counterpart)
+
+    def set_end_style(self, style, set_counterpart=True):
+        self.set_corner_style(style, 1, set_counterpart)
 
     def set_counterpart(self, counterpart, backreference=True):
         if not self.is_full_reference():
