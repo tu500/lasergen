@@ -185,6 +185,8 @@ class Edge(PlanarObject):
         self.style = style
 
         self.counterpart = None
+        self.begin_corner_counterpart = None
+        self.end_corner_counterpart = None
 
         self.sub_elements = []
 
@@ -242,6 +244,43 @@ class Edge(PlanarObject):
 
         if backreference:
             counterpart.set_counterpart(self, False)
+
+    def get_corner_counterpart_by_direction(self, direction):
+        """
+        Returns the edge's corner style in a given direction.
+        """
+
+        if direction == -1:
+            return self.begin_corner_counterpart
+
+        elif direction == 1:
+            return self.end_corner_counterpart
+
+        else:
+            raise ValueError('Wrong direction given.')
+
+    def set_corner_counterpart(self, counterpart, direction, backreference=True):
+        """
+        Set the edge's counterpart. If backreference is True a reference to
+        this edge is added to the new counterpart, too.
+        """
+
+        if direction == -1:
+            assert(self.begin_corner_counterpart is None)
+            self.begin_corner_counterpart = counterpart.get_reference()
+
+            if backreference:
+                self.begin_corner_counterpart.set_corner_counterpart(self, self.outward_dir, False)
+
+        elif direction == 1:
+            assert(self.end_corner_counterpart is None)
+            self.end_corner_counterpart = counterpart.get_reference()
+
+            if backreference:
+                self.end_corner_counterpart.set_corner_counterpart(self, self.outward_dir, False)
+
+        else:
+            raise ValueError('Wrong direction given.')
 
 
     def render(self, config):
@@ -800,6 +839,24 @@ class EdgeReference():
             raise Exception('Setting counterpart not supported for partial edge references.')
 
         self.target.set_counterpart(counterpart, backreference)
+
+    def get_corner_counterpart_by_direction(self, direction):
+        if not self.is_full_reference():
+            raise Exception('Getting corner counterpart not supported for partial edge references.')
+
+        if isinstance(direction, collections.Iterable) and len(direction) == 2 and self.projection_dir is not None:
+            direction = self.to_local_coords(direction)
+
+        return self.target.get_corner_counterpart_by_direction(direction)
+
+    def set_corner_counterpart(self, counterpart, direction, backreference=True):
+        if not self.is_full_reference():
+            raise Exception('Setting corner counterpart not supported for partial edge references.')
+
+        if isinstance(direction, collections.Iterable) and len(direction) == 2 and self.projection_dir is not None:
+            direction = self.to_local_coords(direction)
+
+        self.target.set_corner_counterpart(counterpart, direction, backreference)
 
     def is_full_reference(self):
         return self.position == 0 and self.length == self.target.length

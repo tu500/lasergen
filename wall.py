@@ -96,8 +96,21 @@ class Wall(PlanarObject):
         Set default data of edge references.
         """
 
+        # first set projection dirs
         for d in DIR2.DIRS:
             self.get_edge_by_direction(d).projection_dir = d
+
+        # then add counterpart references
+        for d, neg_pd, pos_pd in [
+                (DIR2.UP, DIR2.LEFT, DIR2.RIGHT),
+                (DIR2.DOWN, DIR2.LEFT, DIR2.RIGHT),
+                (DIR2.RIGHT, DIR2.DOWN, DIR2.UP),
+                (DIR2.LEFT, DIR2.DOWN, DIR2.UP),
+            ]:
+
+            e = self.get_edge_by_direction(d)
+            e.set_corner_counterpart(self.get_edge_by_direction(neg_pd), -1, False)
+            e.set_corner_counterpart(self.get_edge_by_direction(pos_pd), 1, False)
 
     def _construct_edges(self):
         raise NotImplementedError('Abstract method')
