@@ -358,6 +358,13 @@ class Edge(PlanarObject):
         this edge is added to the new counterpart, too.
         """
 
+        # TODO
+        # Maybe the constructed references here need to be given a projection
+        # dir. At least `set_corner_style` depends on this.
+        # For now this works because the previous reference in the chain
+        # usually has a working projection dir set and all calls are passed
+        # through the entire chain.
+
         if direction == -1:
             assert(self.begin_corner_counterpart is None)
             self.begin_corner_counterpart = counterpart.get_reference()
