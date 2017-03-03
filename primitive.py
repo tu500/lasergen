@@ -31,34 +31,17 @@ class Object2D():
     def bounding_box(self):
         """
         Calculate an axis aligned bounding box containing all primitives.
-        Return value is (min_corner, max_corner).
+
+        Return value is `(min_corner, max_corner)`.
         """
 
         if not self.primitives:
             raise ValueError('Cannot calculate bounding box for empty collection.')
 
-        p = self.primitives[0]
-        if isinstance(p, Line):
-            vmin = p.start
-            vmax = p.start
-        elif isinstance(p, Circle):
-            vmin = p.center
-            vmax = p.center
+        bounding_boxes = [p.bounding_box() for p in self.primitives]
 
-        for p in self.primitives:
-            if isinstance(p, Line):
-                vmin = min_vec(vmin, p.start, p.end)
-                vmax = max_vec(vmax, p.start, p.end)
-            elif isinstance(p, Circle):
-                vmin = min_vec(vmin, p.center - np.array([p.radius, p.radius]))
-                vmax = max_vec(vmax, p.center + np.array([p.radius, p.radius]))
-            elif isinstance(p, ArcPath):
-                # TODO: this is only a (bad) heuristic
-                vmin = min_vec(vmin, p.start - 2*np.array([p.radius, p.radius]), p.end - 2*np.array([p.radius, p.radius]))
-                vmax = max_vec(vmax, p.start + 2*np.array([p.radius, p.radius]), p.end + 2*np.array([p.radius, p.radius]))
-            else:
-                # TODO
-                pass
+        vmin = min_vec(*(pmin for pmin, pmax in bounding_boxes))
+        vmax = max_vec(*(pmax for pmin, pmax in bounding_boxes))
 
         return (vmin, vmax)
 
@@ -197,6 +180,14 @@ class Primitive2D(PlanarObject):
         """
         raise NotImplementedError('Abstract method')
 
+    def bounding_box(self):
+        """
+        Calculate an axis aligned bounding box.
+
+        Return value is `(min_corner, max_corner)`.
+        """
+        raise NotImplementedError('Abstract method')
+
     def render(self, config):
         """Render into an Object2D."""
         return Object2D([self])
@@ -222,6 +213,10 @@ class Line(Primitive2D):
         return Line(self.start * fac, self.end * fac, layer=self.layer)
     def reverse(self):
         return Line(self.end, self.start, layer=self.layer)
+    def bounding_box(self):
+        vmin = min_vec(self.start, self.end)
+        vmax = max_vec(self.start, self.end)
+        return (vmin, vmax)
 
 class Circle(Primitive2D):
     """
@@ -244,6 +239,11 @@ class Circle(Primitive2D):
     def reverse(self):
         # not applicable
         return self
+
+    def bounding_box(self):
+        vmin = min_vec(self.center - np.array([self.radius, self.radius]))
+        vmax = max_vec(self.center + np.array([self.radius, self.radius]))
+        return (vmin, vmax)
 
 class ArcPath(Primitive2D):
     """
@@ -272,6 +272,19 @@ class ArcPath(Primitive2D):
     def reverse(self):
         # TODO is this right?
         return ArcPath(self.end, self.start, self.radius, self.large_arc, self.sweep)
+
+    def bounding_box(self):
+        # TODO: this is only a heuristic
+
+        if self.large_arc:
+            t = 2*np.array([self.radius, self.radius])
+        else:
+            t = np.array([self.radius, self.radius])
+
+        center = (self.start + self.end) / 2
+        vmin = center - t
+        vmax = center + t
+        return (vmin, vmax)
 
     @staticmethod
     def from_center_angle(center, angle_start, angle_end, radius, layer='cut'):
@@ -309,3 +322,9 @@ class Text(Primitive2D):
     def reverse(self):
         # not applicable
         return self
+
+    def bounding_box(self):
+        # TODO
+        vmin = self.position
+        vmax = self.position
+        return (vmin, vmax)
