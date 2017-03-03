@@ -182,8 +182,19 @@ class Primitive2D(PlanarObject):
         """Translation."""
         raise NotImplementedError('Abstract method')
     def mirror(self, mirror_axes):
+        """
+        Mirror the primitive along the specified axes.
+
+        The axes are specified by a boolean array `mirror_axes` indicating
+        which axes should be inverted.
+        """
         raise NotImplementedError('Abstract method')
     def reverse(self):
+        """
+        Reverse the direction of the primitive, if applicable.
+
+        This is mainly used for exporting to continuous SVG path elements.
+        """
         raise NotImplementedError('Abstract method')
 
     def render(self, config):
