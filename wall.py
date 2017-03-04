@@ -31,6 +31,13 @@ class Wall(PlanarObject):
             self.name = name
 
     def get_edge_by_direction(self, v):
+        """
+        Get the edge lying in the specified direction.
+
+        Returns an edge reference that automatically converts wall coordinates
+        to the local edge coordinates.
+        """
+
         return self.edges[self._get_edge_index_by_direction(v)]
 
     @staticmethod
@@ -59,15 +66,30 @@ class Wall(PlanarObject):
         return l
 
     def add_child(self, child, pos, mirrored=np.array([False, False])):
+        """
+        Add a PlanarObject as new child to this wall.
+
+        If any position coordinates are given as `Frac` values they will be
+        interpreted relative to this wall's size.
+        """
+
         pos = Frac.array_total_length(pos, self.size)
         self.children.append((child, pos, mirrored))
 
     def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
+        """
+        Construct a new reference given its offset and size relative to this
+        wall.
+        """
+
         if size is not None:
             assert( (pos + size <= self.size).all() )
         return WallReference(self, pos, size, mirror_children, projection_dir)
 
     def dereference(self):
+        """
+        Used for transparently dereferecing WallReferences. Returns self.
+        """
         return self
 
     def _set_edgeref_default_data(self):
@@ -92,6 +114,10 @@ class Wall(PlanarObject):
             e.set_corner_counterpart(self.get_edge_by_direction(pos_pd), 1, False)
 
     def _construct_edges(self):
+        """
+        Abstract method implemented by subclasses defining wall templates to
+        construct their edges accordingly.
+        """
         raise NotImplementedError('Abstract method')
 
     def __str__(self):
@@ -132,6 +158,11 @@ class WallReference():
         self._init_edges_from_target()
 
     def _init_edges_from_target(self):
+        """
+        Automatically add local edge references referencing the target's edges
+        if the specified region extends to the respective target's edge.
+        """
+
         self.edges = [None] * 4
 
         if self.position[0] == 0:
@@ -144,15 +175,45 @@ class WallReference():
             self.edges[Wall._get_edge_index_by_direction(DIR2.UP)]    = self.target.get_edge_by_direction(DIR2.UP   ).get_reference(self.position[0], self.size[0], projection_dir=DIR2.UP)
 
     def get_edge_by_direction(self, v):
+        """
+        Get the edge lying in the specified direction.
+
+        Returns an edge reference that automatically converts wall coordinates
+        to the local edge coordinates.
+
+        Note that the edges returned are specific to this wall reference and
+        may differ from those of the target, as this reference may specifiy a
+        subregion of the target wall.
+        """
+
         if len(v) == 3 and self.projection_dir is not None:
             v = self.to_local_coords(v)
         return self.edges[Wall._get_edge_index_by_direction(v)]
 
     def to_local_coords(self, v):
+        """
+        Convert external 3D coordinates to local 2D wall coordinates according
+        to the configured projection dir.
+
+        An error is raised if no projection dir is configured.
+        """
+
         assert(self.projection_dir is not None)
         return DIR.project_along_axis(v, self.projection_dir)
 
     def add_child(self, child, pos, mirrored=np.array([False, False])):
+        """
+        Add a PlanarObject as new child to the target wall.
+
+        The given position is relative to this wall reference's coordinate
+        system and will be automatically converted to the one of the target
+        wall. This also applies to coordinate values specified as `Frac`
+        values.
+
+        If possible and applicable the child's parameters will be converted,
+        too.
+        """
+
         if len(pos) == 3 and self.projection_dir is not None:
             pos = self.to_local_coords(pos)
         pos = Frac.array_total_length(pos, self.size)
@@ -160,11 +221,19 @@ class WallReference():
         self.target.add_child(child, self.position + pos, self.mirror_children ^ mirrored)
 
     def get_reference(self, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None):
+        """
+        Construct a new reference given its offset and size relative to this
+        wall reference.
+        """
+
         if size is not None:
             assert( (pos + size <= self.size).all() )
         return WallReference(self, pos, size, self.mirror_children ^ mirror_children, projection_dir)
 
     def dereference(self):
+        """
+        Returns the eventual wall object this reference points to.
+        """
         return self.target.dereference()
 
     def __str__(self):

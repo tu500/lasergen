@@ -38,7 +38,7 @@ class Box():
         to call this after setting up all subboxes and before using any walls.
 
         The subboxes' names will be assigned from the given list of names.
-        Alternatively names may be specified in the `sizes` parameter as a
+        Alternatively, names may be specified in the `sizes` parameter as a
         tuple of `(size, name)` for each subbox.
 
         A name of `None` will be replaced with a default name. Also default
@@ -81,6 +81,13 @@ class Box():
 
 
     def get_wall_by_direction(self, v):
+        """
+        Get the wall lying in the specified direction.
+
+        Returns a wall reference that automatically converts box coordinates to
+        the local wall coordinates.
+        """
+
         return self.walls[self._get_wall_index_by_direction(v)]
 
     @staticmethod
@@ -95,7 +102,7 @@ class Box():
 
     def render(self, config):
         """
-        Render this box's and all its subboxes' walls into a list of Object2Ds.
+        Render this box's and all its subboxes' walls into a list of `Object2D`s.
         """
 
         # uniquify wall references, keep order for deterministic output
