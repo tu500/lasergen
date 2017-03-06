@@ -139,6 +139,22 @@ class PathAccumulator():
         else:
             raise ValueError('Unknown primitive')
 
+    @staticmethod
+    def from_list(objects, config, strict_layer_matching=True):
+        """
+        Create a PathAccumulator objects directly from a list of primitives.
+
+        Raises an exception if the list is empty or any object could not be
+        added.
+        """
+
+        assert(len(objects) > 0)
+
+        acc = PathAccumulator(objects[0], config, strict_layer_matching)
+        acc.add_object_list(objects[1:])
+
+        return acc
+
     def add_object_list(self, lst):
         """
         Add several objects to the accumulator.
@@ -241,6 +257,119 @@ class PathAccumulator():
             return self.layer.compatible(other_layer)
 
 
+def accumulate_paths(obj, config, join_nonconsecutive_paths=True):
+    """
+    Accumulate an Object2D's primitives into PathAccumulator objects.
+    """
+
+
+    def join_into_list(acc, lst):
+
+        if acc.finalized or not join_nonconsecutive_paths:
+            lst.append(acc)
+            return
+
+        start_matching = []
+        end_matching = []
+
+        for index, elem in enumerate(lst):
+
+            if not elem.finalized and elem.layer_compatible(acc.layer):
+
+                if almost_equal(acc.start_point, elem.current_point):
+                    start_matching.append( (index, elem, True) )
+
+                elif almost_equal(acc.start_point, elem.start_point):
+                    start_matching.append( (index, elem, False) )
+
+                if almost_equal(acc.current_point, elem.start_point):
+                    end_matching.append( (index, elem, True) )
+
+                elif almost_equal(acc.current_point, elem.current_point):
+                    end_matching.append( (index, elem, False) )
+
+        assert(len(start_matching) in [0, 1])
+        assert(len(end_matching) in [0, 1])
+
+        if start_matching and end_matching:
+
+            s_index, s_elem, s_dir_matching = start_matching[0]
+            e_index, e_elem, e_dir_matching = end_matching[0]
+
+            if s_index == e_index:
+                assert(s_dir_matching == e_dir_matching)
+                if s_dir_matching:
+                    s_elem.add_object_list(acc.objects)
+                else:
+                    s_elem.add_object_list([o.reverse() for o in reversed(acc.objects)])
+
+            elif s_dir_matching and e_dir_matching:
+                s_elem.add_object_list(acc.objects + e_elem.objects)
+                lst.pop(e_index)
+            elif s_dir_matching:
+                s_elem.add_object_list(
+                        acc.objects + [o.reverse() for o in reversed(e_elem.objects)]
+                    )
+                lst.pop(e_index)
+            elif e_dir_matching:
+                lst[s_index] = PathAccumulator.from_list(
+                        [o.reverse() for o in reversed(s_elem.objects)] + acc.objects + e_elem.objects,
+                        config
+                    )
+                lst.pop(e_index)
+            else:
+                e_elem.add_object_list(
+                        [o.reverse() for o in reversed(acc.objects)] + s_elem.objects
+                    )
+                lst.pop(s_index)
+
+        elif start_matching:
+            index, elem, dir_matching = start_matching[0]
+
+            if dir_matching:
+                elem.add_object_list(acc.objects)
+            else:
+                lst[index] = PathAccumulator.from_list(
+                        [o.reverse() for o in reversed(acc.objects)] + elem.objects,
+                        config
+                    )
+
+        elif end_matching:
+            index, elem, dir_matching = end_matching[0]
+
+            if dir_matching:
+                acc.add_object_list(elem.objects)
+                lst[index] = acc
+            else:
+                elem.add_object_list(
+                        [o.reverse() for o in reversed(acc.objects)]
+                    )
+
+        else:
+            lst.append(acc)
+
+
+    acc_list = []
+    acc = None
+
+    for p in obj.primitives:
+
+        if acc is None:
+            acc = PathAccumulator(p, config)
+
+        else:
+            r = acc.add_object(p)
+
+            if not r:
+                join_into_list(acc, acc_list)
+
+                acc = PathAccumulator(p, config)
+
+    join_into_list(acc, acc_list)
+
+    return acc_list
+
+
 def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
     """
     Export given objects to SVG, converting contained Line objects to SVG paths
@@ -264,59 +393,9 @@ def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
                 viewBox="{} {} {} {}">
         """.format(vmin[0]-5, -(vmax[1]-vmin[1]) - 5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
 
-
-    def join_into_list(acc, lst):
-
-        if acc.finalized or not join_nonconsecutive_paths:
-            lst.append(acc)
-            return
-
-        for index, elem in enumerate(lst):
-
-            if not elem.finalized and elem.layer_compatible(acc.layer):
-
-                if almost_equal(elem.current_point, acc.start_point):
-                    elem.add_object_list(acc.objects)
-                    return
-
-                elif almost_equal(elem.current_point, acc.current_point):
-                    elem.add_object_list(o.reverse() for o in reversed(acc.objects))
-                    return
-
-                elif almost_equal(elem.start_point, acc.current_point):
-                    acc.add_object_list(elem.objects)
-                    lst[index] = acc
-                    return
-
-                elif almost_equal(elem.start_point, acc.start_point):
-                    objects = [o.reverse() for o in reversed(acc.objects)] + elem.objects
-                    a = PathAccumulator(objects[0], config)
-                    a.add_object_list(objects[1:])
-                    lst[index] = a
-                    return
-
-        lst.append(acc)
-
-
     for o in objects:
 
-        acc_list = []
-        acc = None
-
-        for p in o.primitives:
-
-            if acc is None:
-                acc = PathAccumulator(p, config)
-
-            else:
-                r = acc.add_object(p)
-
-                if not r:
-                    join_into_list(acc, acc_list)
-
-                    acc = PathAccumulator(p, config)
-
-        join_into_list(acc, acc_list)
+        acc_list = accumulate_paths(o, config, join_nonconsecutive_paths)
 
         s += ''.join(acc.finalize() for acc in acc_list)
 
