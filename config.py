@@ -27,3 +27,14 @@ class Config():
 
         else:
             return self.colors[layer.name]
+
+    def get_displacement_from_layer(self, layer):
+
+        if layer.name == 'edge':
+            return self.cutting_width / 2
+
+        elif layer.name == 'cut':
+            return -self.cutting_width / 2
+
+        elif layer.name == 'info':
+            return 0

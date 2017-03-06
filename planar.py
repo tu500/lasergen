@@ -22,7 +22,7 @@ class CutoutRect(PlanarObject):
 
     def render(self, config):
 
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
         width, height = self.size
 
         l = []
@@ -50,7 +50,7 @@ class CutoutRoundedRect(PlanarObject):
 
     def render(self, config):
 
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
         width, height = self.size
         radius = self.radius
 
@@ -83,7 +83,7 @@ class HexBoltCutout(PlanarObject):
         self.width = width
 
     def render(self, config):
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
         radius = 2 * self.width / math.sqrt(3)
 
         y_pos = self.width - displace
@@ -114,7 +114,7 @@ class CircleCutout(PlanarObject):
         self.radius = radius
 
     def render(self, config):
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
 
         return Object2D([Circle(0, self.radius - displace)], self.layer)
 
@@ -136,7 +136,7 @@ class MountingScrewCutout(PlanarObject):
         self.shaft_dir = np.array(shaft_dir)
 
     def render(self, config):
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
 
         on = DIR2.orthon(self.shaft_dir)
         rh = self.radius_head - displace
@@ -180,7 +180,7 @@ class FanCutout(PlanarObject):
         self.center_dir = self._calc_center_dir(center)
 
     def render(self, config):
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
 
         main_dia, mounting_hole_dia, mounting_hole_displace = self.dimensions[self.size]
 
@@ -214,7 +214,7 @@ class AirVentsCutout(PlanarObject):
 
     def render(self, config):
 
-        displace = config.cutting_width / 2
+        displace = -config.get_displacement_from_layer(self.layer)
         width, height = self.size
         h_dist = self.hole_distance
         ht_width, ht_height = self.hole_target_size
@@ -280,7 +280,7 @@ class RectEdgeCutout(PlanarObject):
         edge_dir = self.edge_dir
         n_dir = abs(DIR2.orthon(edge_dir))
 
-        displace = config.cutting_width / 2
+        displace = config.get_displacement_from_layer(self.layer)
         width = DIR2.project_along_axis(self.size, edge_dir)
         height = DIR2.project_along_axis(self.size, n_dir)
         start = self.start
@@ -333,7 +333,7 @@ class RoundedRectEdgeCutout(PlanarObject):
         edge_dir = self.edge_dir
         n_dir = abs(DIR2.orthon(edge_dir))
 
-        displace = config.cutting_width / 2
+        displace = config.get_displacement_from_layer(self.layer)
         width = DIR2.project_along_axis(self.size, edge_dir)
         height = DIR2.project_along_axis(self.size, n_dir)
         radius = self.radius

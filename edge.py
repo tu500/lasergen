@@ -399,7 +399,7 @@ class Edge(PlanarObject):
         # abs works because this should be a unit vector or its negative
         direction = abs(DIR2.orthon(self.outward_dir))
 
-        displace = config.cutting_width / 2.
+        displace = config.get_displacement_from_layer(self.layer)
         wall_thickness = config.wall_thickness
 
         elements = self._prepare_element_list(config)
@@ -897,25 +897,25 @@ class CutoutEdge(Edge):
             lines = []
 
             lines.append(Line(
-                        start + direction * (start_pos + displace) + outward_dir * displace,
-                        start + direction * (end_pos - displace) + outward_dir * displace
+                        start + direction * (start_pos - displace) - outward_dir * displace,
+                        start + direction * (end_pos + displace) - outward_dir * displace
                 ))
 
             if end_style == EDGE_STYLE.INTERNAL_FLAT:
                 lines.append(Line(
-                        start + direction * (end_pos - displace) + outward_dir * displace,
-                        start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace)
+                        start + direction * (end_pos + displace) - outward_dir * displace,
+                        start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace)
                     ))
 
             lines.append(Line(
-                        start + direction * (end_pos - displace) + outward_dir * (wall_thickness - displace),
-                        start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace)
+                        start + direction * (end_pos + displace) + outward_dir * (wall_thickness + displace),
+                        start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace)
                 ))
 
             if begin_style == EDGE_STYLE.INTERNAL_FLAT:
                 lines.append(Line(
-                        start + direction * (start_pos + displace) + outward_dir * (wall_thickness - displace),
-                        start + direction * (start_pos + displace) + outward_dir * displace
+                        start + direction * (start_pos - displace) + outward_dir * (wall_thickness + displace),
+                        start + direction * (start_pos - displace) - outward_dir * displace
                     ))
 
             return Object2D(lines, layer)
