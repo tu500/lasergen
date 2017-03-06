@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+from layer import Layer
 from util import min_vec, max_vec, mirror_array_bool_to_factor
 from units import Frac
 
@@ -27,6 +28,14 @@ class Object2D():
 
         for p in self.primitives:
             p.layer = layer
+
+    def update_layer(self, layer):
+        """
+        Update all children's layers with the given value.
+        """
+
+        for p in self.primitives:
+            p.layer = p.update_layer(layer)
 
     def bounding_box(self):
         """
@@ -97,8 +106,15 @@ class PlanarObject():
     _data_to_local_coords = None
     parent = None
 
-    def __init__(self, layer='cut'):
+    def __init__(self, layer=Layer('cut')):
         self.layer = layer
+
+    def update_layer(self, layer):
+        """
+        Update layer data with the given value.
+        """
+
+        self.layer = self.layer.combine(layer)
 
     def render(self, config):
         """Render into an Object2D."""
@@ -198,7 +214,7 @@ class Line(Primitive2D):
     A simple line primitive.
     """
 
-    def __init__(self, start, end, layer='cut'):
+    def __init__(self, start, end, layer=Layer('cut')):
         super(Line, self).__init__(layer)
 
         self.start = start
@@ -223,7 +239,7 @@ class Circle(Primitive2D):
     A simple circle primitive.
     """
 
-    def __init__(self, center, radius, layer='cut'):
+    def __init__(self, center, radius, layer=Layer('cut')):
         super(Circle, self).__init__(layer)
 
         self.center = center
@@ -253,7 +269,7 @@ class ArcPath(Primitive2D):
     drawing circle segments.
     """
 
-    def __init__(self, start, end, radius, large_arc=True, sweep=True, layer='cut'):
+    def __init__(self, start, end, radius, large_arc=True, sweep=True, layer=Layer('cut')):
         super(ArcPath, self).__init__(layer)
 
         self.start = start
@@ -287,7 +303,7 @@ class ArcPath(Primitive2D):
         return (vmin, vmax)
 
     @staticmethod
-    def from_center_angle(center, angle_start, angle_end, radius, layer='cut'):
+    def from_center_angle(center, angle_start, angle_end, radius, layer=Layer('cut')):
         """
         Construct an ArcPath object from a given center, radius and angle interval.
 
@@ -305,7 +321,7 @@ class Text(Primitive2D):
     A text primitive.
     """
 
-    def __init__(self, position, text, fontsize=5, layer='info'):
+    def __init__(self, position, text, fontsize=5, layer=Layer('info')):
         super(Text, self).__init__(layer)
 
         self.position = position

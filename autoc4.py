@@ -9,6 +9,7 @@ from wall import ToplessWall, ExtendedWall, SubWall
 from edge import CutoutEdge, Edge, EDGE_STYLE, EDGE_ELEMENT_STYLE
 from config import Config
 from export import place_2d_objects, export_svg_with_paths
+from layer import Layer
 from util import DIR, DIR2
 from units import Rel, Frac
 from box import ClosedBox, ToplessBox
@@ -48,9 +49,9 @@ def main():
     bw.add_child(MountingScrewCutout(6.5, 3, 20, DIR.DOWN), [Frac(1)-20,40,0])
 
     # add pcb outlines for reference
-    bw.add_child(CutoutRect([80, 100], center=DIR.UP, layer='info'), [50, Frac(0.5), 0])
-    bw.add_child(CutoutRect([100, 50], center=DIR.UP, layer='info'), [150, Frac(1) - (25+30), 0])
-    bw.add_child(CutoutRect([100, 50], center=DIR.UP, layer='info'), [150, 25+30, 0])
+    bw.add_child(CutoutRect([80, 100], center=DIR.UP, layer=Layer('info')), [50, Frac(0.5), 0])
+    bw.add_child(CutoutRect([100, 50], center=DIR.UP, layer=Layer('info')), [150, Frac(1) - (25+30), 0])
+    bw.add_child(CutoutRect([100, 50], center=DIR.UP, layer=Layer('info')), [150, 25+30, 0])
 
     # no edge cutouts in the front wall
     middle.get_wall_by_direction(DIR.LEFT).get_edge_by_direction(DIR.FRONT).set_style(EDGE_ELEMENT_STYLE.FLAT)
@@ -80,7 +81,7 @@ def main():
     # add a cutout for the status light
     cw = SubWall([45, 45])
     cw.add_child(CutoutRoundedRect([30,30], 5, center=True), [Frac(0.5), Frac(0.5)])
-    cw.add_child(CutoutRoundedRect([35,35], 7.5, center=True, layer='info'), [Frac(0.5), Frac(0.5)])
+    cw.add_child(CutoutRoundedRect([35,35], 7.5, center=True, layer=Layer('info')), [Frac(0.5), Frac(0.5)])
     for d in [DIR2.UP, DIR2.DOWN, DIR2.LEFT, DIR2.RIGHT]:
         cw.get_edge_by_direction(d).set_begin_style(EDGE_STYLE.TOOTHED, False)
         cw.get_edge_by_direction(d).set_end_style(EDGE_STYLE.TOOTHED, False)

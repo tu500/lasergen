@@ -1,6 +1,6 @@
 class Config():
 
-    layers = {
+    colors = {
             'cut'   : 'black',
             'error' : 'red',
             'info'  : 'green',
@@ -18,3 +18,11 @@ class Config():
         self.subwall_thickness = wall_thickness # other values aren't supported yet
         self.cutting_width = cutting_width
         self.object_distance = object_distance
+
+    def get_color_from_layer(self, layer):
+
+        if layer.warn_level is not None:
+            return self.colors[layer.warn_level]
+
+        else:
+            return self.colors[layer.name]

@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+from layer import Layer
 from util import DIR2
 from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
 from edge import EDGE_STYLE, EDGE_ELEMENT_STYLE
@@ -13,7 +14,7 @@ class CutoutRect(PlanarObject):
 
     _data_to_local_coords = ['size', 'center_dir']
 
-    def __init__(self, size, center=False, layer='cut'):
+    def __init__(self, size, center=False, layer=Layer('cut')):
         super(CutoutRect, self).__init__(layer)
 
         self.size = np.array(size)
@@ -40,7 +41,7 @@ class CutoutRoundedRect(PlanarObject):
 
     _data_to_local_coords = ['size', 'center_dir']
 
-    def __init__(self, size, radius, center=False, layer='cut'):
+    def __init__(self, size, radius, center=False, layer=Layer('cut')):
         super(CutoutRoundedRect, self).__init__(layer)
 
         self.size = np.array(size)
@@ -76,7 +77,7 @@ class HexBoltCutout(PlanarObject):
     Useful for cutting out a hexbolt shape.
     """
 
-    def __init__(self, width, layer='cut'):
+    def __init__(self, width, layer=Layer('cut')):
         super(HexBoltCutout, self).__init__(layer)
 
         self.width = width
@@ -107,7 +108,7 @@ class CircleCutout(PlanarObject):
     A planar object rendering a circle.
     """
 
-    def __init__(self, radius, layer='cut'):
+    def __init__(self, radius, layer=Layer('cut')):
         super(CircleCutout, self).__init__(layer)
 
         self.radius = radius
@@ -124,7 +125,7 @@ class MountingScrewCutout(PlanarObject):
 
     _data_to_local_coords = ['shaft_dir']
 
-    def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir, layer='cut'):
+    def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir, layer=Layer('cut')):
         super(MountingScrewCutout, self).__init__(layer)
 
         assert(radius_head >= radius_shaft)
@@ -171,7 +172,7 @@ class FanCutout(PlanarObject):
             120: (117, 4, 7.0),
         }
 
-    def __init__(self, size, center=True, layer='cut'):
+    def __init__(self, size, center=True, layer=Layer('cut')):
         super(FanCutout, self).__init__(layer)
 
         assert(size in self.dimensions)
@@ -203,7 +204,7 @@ class AirVentsCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'center_dir', 'hole_target_size']
 
-    def __init__(self, size, hole_target_size=(5,30), hole_distance=5, center=False, layer='cut'):
+    def __init__(self, size, hole_target_size=(5,30), hole_distance=5, center=False, layer=Layer('cut')):
         super(AirVentsCutout, self).__init__(layer)
 
         self.size = np.array(size)
@@ -247,7 +248,7 @@ class RectEdgeCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'edge_dir']
 
-    def __init__(self, size, edge_dir, center=False, layer='cut'):
+    def __init__(self, size, edge_dir, center=False, layer=Layer('cut')):
         super(RectEdgeCutout, self).__init__(layer)
 
         self.size = np.array(size)
@@ -299,7 +300,7 @@ class RoundedRectEdgeCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'edge_dir']
 
-    def __init__(self, size, radius, edge_dir, center=False, layer='cut'):
+    def __init__(self, size, radius, edge_dir, center=False, layer=Layer('cut')):
         super(RoundedRectEdgeCutout, self).__init__(layer)
 
         self.size = np.array(size)

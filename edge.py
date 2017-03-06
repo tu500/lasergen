@@ -2,6 +2,7 @@ import collections
 import numpy as np
 import math
 
+from layer import Layer
 from units import Frac
 from util import DIR2, almost_equal
 from primitive import Object2D, PlanarObject, Line
@@ -110,7 +111,7 @@ class _EdgeElement():
             #EDGE_STYLE.INTERNAL_OUTWARD : None,
         }
 
-    def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None, layer=None):
+    def __init__(self, pos, length, style, begin_style, end_style, prev_style=None, next_style=None, layer=Layer(None)):
 
         self.pos = pos
         self.length = length
@@ -120,6 +121,13 @@ class _EdgeElement():
         self.prev_style = prev_style
         self.next_style = next_style
         self.layer = layer
+
+    def update_layer(self, layer):
+        """
+        Update layer data with the given value.
+        """
+
+        self.layer = self.layer.combine(layer)
 
     def get_counterpart_element(self):
         """
@@ -202,7 +210,7 @@ class Edge(PlanarObject):
 
     _data_to_local_coords = ['outward_dir']
 
-    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer='cut'):
+    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer=Layer('cut')):
         super(Edge, self).__init__(layer)
 
         self.length = length
@@ -608,14 +616,16 @@ class Edge(PlanarObject):
         tooth_length = length / tooth_count
 
         tooth_length_satisfied = config.tooth_min_width <= tooth_length <= config.tooth_max_width
-        layer = None if tooth_length_satisfied else 'warn'
+        layer = Layer(None)
 
         if not tooth_length_satisfied:
-            print('WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
+            m = 'WARNING: Tooth length restrictions not satisfied, rendering into warn layer. ({min} <= {len} <= {max})'.format(
                     max = config.tooth_max_width,
                     min = config.tooth_min_width,
                     len = tooth_length,
-                ))
+                )
+            layer = Layer.warn(m)
+            print(m)
 
         # prepare element data
         tooth_positions = [0] + list(np.cumsum([tooth_length for i in range(tooth_count)]))
@@ -657,34 +667,40 @@ class Edge(PlanarObject):
         cp_elements = self.counterpart.dereference()._prepare_element_list(config)
 
         if len(elements) != len(cp_elements):
-            print('ERROR: Edge counterpart count mismatch, rendering into error layer.')
+            m = 'ERROR: Edge counterpart count mismatch, rendering into error layer.'
+            print(m)
             for e in elements:
-                e.layer = 'error'
+                e.update_layer(Layer.error(m))
             return
 
         for a, b in zip(elements, cp_elements):
 
             if not almost_equal(a.pos, b.pos):
-                a.layer = 'error'
-                print('ERROR: Edge element counterpart position mismatch, rendering into error layer.')
+                m = 'ERROR: Edge element counterpart position mismatch, rendering into error layer.'
+                a.update_layer(Layer.error(m))
+                print(m)
                 continue
             if not almost_equal(a.length, b.length):
-                a.layer = 'error'
-                print('ERROR: Edge element counterpart length mismatch, rendering into error layer.')
+                m = 'ERROR: Edge element counterpart length mismatch, rendering into error layer.'
+                a.update_layer(Layer.error(m))
+                print(m)
                 continue
 
             if a.style == EDGE_ELEMENT_STYLE.FLAT:
                 if not b.style in [EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
-                    a.layer = 'error'
-                    print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
+                    m = 'ERROR: Edge element counterpart style mismatch, rendering into error layer.'
+                    a.update_layer(Layer.error(m))
+                    print(m)
             elif a.style == EDGE_ELEMENT_STYLE.FLAT_EXTENDED:
                 if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
-                    a.layer = 'error'
-                    print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
+                    m = 'ERROR: Edge element counterpart style mismatch, rendering into error layer.'
+                    a.update_layer(Layer.error(m))
+                    print(m)
             elif a.style == EDGE_ELEMENT_STYLE.REMOVE:
                 if not b.style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.FLAT_EXTENDED, EDGE_ELEMENT_STYLE.REMOVE]:
-                    a.layer = 'error'
-                    print('ERROR: Edge element counterpart style mismatch, rendering into error layer.')
+                    m = 'ERROR: Edge element counterpart style mismatch, rendering into error layer.'
+                    a.update_layer(Layer.error(m))
+                    print(m)
             else:
                 assert(False)
 
@@ -698,14 +714,16 @@ class Edge(PlanarObject):
         if self.begin_corner_counterpart is not None:
 
             if not self.begin_corner_counterpart.get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[self.begin_style]:
-                elements[0].layer = 'error'
-                print('ERROR: Edge corner counterpart style mismatch, rendering into error layer.')
+                m = 'ERROR: Edge corner counterpart style mismatch, rendering into error layer.'
+                elements[0].update_layer(Layer.error(m))
+                print(m)
 
         if self.end_corner_counterpart is not None:
 
             if not self.end_corner_counterpart.get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[self.end_style]:
-                elements[-1].layer = 'error'
-                print('ERROR: Edge corner counterpart style mismatch, rendering into error layer.')
+                m = 'ERROR: Edge corner counterpart style mismatch, rendering into error layer.'
+                elements[-1].update_layer(Layer.error(m))
+                print(m)
 
 
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
@@ -717,7 +735,7 @@ class Edge(PlanarObject):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or self.layer
+        layer = element.layer.combine(self.layer)
 
         assert(begin_style in _EdgeElement.allowed_end_styles[style])
         assert(end_style   in _EdgeElement.allowed_end_styles[style])
@@ -863,7 +881,7 @@ class CutoutEdge(Edge):
         length = element.length
         style = element.style
         begin_style, end_style = element.begin_style, element.end_style
-        layer = element.layer or self.layer
+        layer = element.layer.combine(self.layer)
 
         if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
 

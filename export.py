@@ -1,5 +1,6 @@
 import numpy as np
 
+from layer import Layer
 from primitive import Line, Circle, ArcPath, Text
 from util import min_vec, max_vec, almost_equal
 
@@ -40,7 +41,7 @@ def export_svg(objects, config):
     for o in objects:
         for p in o.primitives:
 
-            color = config.layers[p.layer]
+            color = config.get_color_from_layer(p.layer)
 
             if isinstance(p, Line):
                 s += '<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" stroke-width="1px"/>\n'.format(
@@ -92,12 +93,13 @@ class PathAccumulator():
     Accumulates primitives, joining them into SVG paths, if appropriate.
     """
 
-    def __init__(self, first_object, config):
+    def __init__(self, first_object, config, strict_layer_matching=True):
 
         self.objects = []
         self.finalized = False
 
         self.config = config
+        self.strict_layer_matching = strict_layer_matching
 
         self.output = None
         self.start_point = None
@@ -111,7 +113,7 @@ class PathAccumulator():
                     cx    = first_object.center[0],
                     cy    = -first_object.center[1],
                     r     = first_object.radius,
-                    color = config.layers[self.layer],
+                    color = config.get_color_from_layer(self.layer)
                 )
 
         elif isinstance(first_object, Text):
@@ -122,7 +124,7 @@ class PathAccumulator():
                     y        = -first_object.position[1],
                     fontsize = first_object.fontsize,
                     text     = first_object.text,
-                    color    = config.layers[self.layer],
+                    color = config.get_color_from_layer(self.layer)
                 )
 
         elif isinstance(first_object, Line) or isinstance(first_object, ArcPath):
@@ -166,7 +168,7 @@ class PathAccumulator():
         if not (isinstance(obj, Line) or isinstance(obj, ArcPath)):
             raise ValueError('Unknown primitive')
 
-        if self.layer != obj.layer:
+        if not self.layer_compatible(obj.layer):
             return False
 
         if not almost_equal(obj.start, self.current_point):
@@ -180,7 +182,7 @@ class PathAccumulator():
             if almost_equal(obj.end, self.start_point):
                 # close the path
                 self.output += 'Z" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
-                        color = self.config.layers[self.layer]
+                        color = self.config.get_color_from_layer(self.layer)
                     )
                 self.finalized = True
 
@@ -192,6 +194,7 @@ class PathAccumulator():
                     )
 
         elif isinstance(obj, ArcPath):
+
             self.current_point = obj.end
             self.output += 'A {radius_x} {radius_y} {angle_x} {large_arc} {sweep} {to_x},{to_y} '.format(
                     radius_x  = obj.radius,
@@ -213,16 +216,28 @@ class PathAccumulator():
         if not self.finalized:
 
             if self.config.warn_for_unclosed_paths:
-                print('WARNING: Unclosed path, rendering into warn layer.')
-                if not self.layer in ['warn', 'error']:
-                    self.layer = 'warn'
+                m = 'WARNING: Unclosed path, rendering into warn layer.'
+                self.layer = self.layer.combine(Layer.warn(m))
+                print(m)
 
             self.output += '" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
-                    color = self.config.layers[self.layer]
+                    color = self.config.get_color_from_layer(self.layer)
                 )
             self.finalized = True
 
         return self.output
+
+    def layer_compatible(self, other_layer):
+        """
+        Check whether own layer is compatible with the given one, according to
+        configured `strict_layer_matching` setting.
+        """
+
+        if self.strict_layer_matching:
+            return self.layer == other_layer
+
+        else:
+            return self.layer.compatible(other_layer)
 
 
 def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
@@ -257,7 +272,7 @@ def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
 
         for index, elem in enumerate(lst):
 
-            if not elem.finalized and elem.layer == acc.layer:
+            if not elem.finalized and elem.layer_compatible(acc.layer):
 
                 if almost_equal(elem.current_point, acc.start_point):
                     elem.add_object_list(acc.objects)
