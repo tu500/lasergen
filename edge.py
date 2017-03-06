@@ -704,7 +704,7 @@ class Edge(PlanarObject):
         if self.end_corner_counterpart is not None:
 
             if not self.end_corner_counterpart.get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[self.end_style]:
-                elements[0].layer = 'error'
+                elements[-1].layer = 'error'
                 print('ERROR: Edge corner counterpart style mismatch, rendering into error layer.')
 
 
