@@ -248,7 +248,7 @@ class RectEdgeCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'edge_dir']
 
-    def __init__(self, size, edge_dir, center=False, layer=Layer('cut')):
+    def __init__(self, size, edge_dir, center=False, layer=Layer('edge')):
         super(RectEdgeCutout, self).__init__(layer)
 
         self.size = np.array(size)
@@ -300,7 +300,7 @@ class RoundedRectEdgeCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'edge_dir']
 
-    def __init__(self, size, radius, edge_dir, center=False, layer=Layer('cut')):
+    def __init__(self, size, radius, edge_dir, center=False, layer=Layer('edge')):
         super(RoundedRectEdgeCutout, self).__init__(layer)
 
         self.size = np.array(size)

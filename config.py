@@ -2,6 +2,7 @@ class Config():
 
     colors = {
             'cut'   : 'black',
+            'edge'  : 'black',
             'error' : 'red',
             'info'  : 'green',
             'warn'  : 'orange',

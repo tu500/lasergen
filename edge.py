@@ -210,7 +210,7 @@ class Edge(PlanarObject):
 
     _data_to_local_coords = ['outward_dir']
 
-    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer=Layer('cut')):
+    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer=Layer('edge')):
         super(Edge, self).__init__(layer)
 
         self.length = length
@@ -874,6 +874,9 @@ class CutoutEdge(Edge):
 
     Used to place a wall into the middle of another wall.
     """
+
+    def __init__(self, length, outward_dir, begin_style=EDGE_STYLE.FLAT, end_style=EDGE_STYLE.FLAT, style=EDGE_ELEMENT_STYLE.TOOTHED, layer=Layer('cut')):
+        super(CutoutEdge, self).__init__(length, outward_dir, begin_style, end_style, style, layer)
 
     def _render_element(self, start, direction, outward_dir, displace, wall_thickness, config, element):
 
