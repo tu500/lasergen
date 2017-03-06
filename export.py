@@ -176,6 +176,7 @@ class PathAccumulator():
 
 
         self.objects.append(obj)
+        self.layer = self.layer.combine(obj.layer)
 
         if isinstance(obj, Line):
 
