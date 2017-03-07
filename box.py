@@ -17,6 +17,7 @@ class Box():
         self.abs_size = np.array([None, None, None])
 
         self.subboxes = []
+        self.position = np.array([0,0,0])
 
         if name is None:
             self.name = type(self).__name__
@@ -376,6 +377,7 @@ class Box():
         """
 
         self._construct_walls()
+        self._set_subbox_positions(config)
         self._construct_subwalls(config)
 
         for c in self.subboxes:
@@ -389,12 +391,30 @@ class Box():
 
         raise NotImplementedError('Abstract method')
 
+    def _set_subbox_positions(self, config):
+        """
+        Set absolute 3D space coordinates of this subbox's origin.
+        """
+
+        cur_pos = self.position.copy()
+
+        for c in self.subboxes:
+
+            c.position = cur_pos
+
+            for i, d in enumerate(DIR.AXES):
+
+                if c.size[i] != 'ref':
+                    cur_pos = cur_pos + d * (c.abs_size[i] + config.wall_thickness)
+
     def _construct_subwalls(self, config):
         """
         Construct subwalls and add to own subboxes.
 
         Setup subbox wall references, add cutout edges to own walls.
         """
+
+        # TODO use subbox positions to simplify this code
 
         if not self.subboxes:
             return
@@ -622,6 +642,7 @@ class SubBox(Box):
 
     def _construct_rec(self, config):
         # subboxes don't have a `_construct_walls` method
+        self._set_subbox_positions(config)
         self._construct_subwalls(config)
 
         for c in self.subboxes:
