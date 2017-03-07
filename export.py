@@ -36,7 +36,7 @@ def export_svg(objects, config):
         <svg xmlns="http://www.w3.org/2000/svg"
                 version="1.1" baseProfile="full"
                 viewBox="{} {} {} {}">
-        """.format(vmin[0]-5, -(vmax[1]-vmin[1]) - 5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
+        """.format(vmin[0]-5, -vmax[1]-5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
 
     for o in objects:
         for p in o.primitives:
@@ -391,7 +391,7 @@ def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
         <svg xmlns="http://www.w3.org/2000/svg"
                 version="1.1" baseProfile="full"
                 viewBox="{} {} {} {}">
-        """.format(vmin[0]-5, -(vmax[1]-vmin[1]) - 5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
+        """.format(vmin[0]-5, -vmax[1]-5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
 
     for o in objects:
 
