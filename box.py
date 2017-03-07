@@ -1,6 +1,6 @@
 import numpy as np
 
-from util import DIR
+from util import DIR, DIR2
 from units import Rel
 from edge import CutoutEdge, EDGE_STYLE
 from wall import Wall, ToplessWall, InvToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
@@ -108,18 +108,39 @@ class Box():
 
         # uniquify wall references, keep order for deterministic output
         seen = set()
-        walls = [x for x in self._gather_walls() if not (x in seen or seen.add(x))]
+        walls = [x for x,_,_ in self._gather_walls(config) if not (x in seen or seen.add(x))]
         return [w.render(config) for w in walls]
 
-    def _gather_walls(self):
+    def _gather_walls(self, config):
         """
-        Get a list of this box and its subboxes' walls.
+        Get a list of this box and its subboxes' walls, their positions and
+        directions.
         """
 
-        s = [w.dereference() for w in self.walls if w is not None]
+        s = []
+
+        for d in DIR.DIRS:
+
+            wall = self.get_wall_by_direction(d)
+
+            if not wall:
+                continue
+
+            position = self.position + d * config.wall_thickness/2
+
+            if DIR.is_axis(d):
+                position = position + d * self.abs_size
+
+            j, k = DIR.perpendicular_axes(d)
+            to = wall.get_total_offset()
+            position -= j * DIR2.project_along_axis(to, wall.to_local_coords(k))
+            position -= k * DIR2.project_along_axis(to, wall.to_local_coords(j))
+
+            s.append((wall.dereference(), position, d))
+
 
         for c in self.subboxes:
-            s.extend(c._gather_walls())
+            s.extend(c._gather_walls(config))
 
         return s
 

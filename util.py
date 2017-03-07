@@ -17,6 +17,12 @@ class DIR():
                 return True
         return False
 
+    def is_axis(d):
+        for i in DIR.AXES:
+            if (d == i).all():
+                return True
+        return False
+
     def dir_to_name(d):
         dirs = {k:v for k,v in DIR.__dict__.items() if k in ['UP', 'DOWN', 'LEFT', 'RIGHT', 'FRONT', 'BACK']}
         for k,v in dirs.items():
@@ -71,6 +77,12 @@ class DIR2():
 
     def is_dir(d):
         for i in DIR2.DIRS:
+            if (d == i).all():
+                return True
+        return False
+
+    def is_axis(d):
+        for i in DIR.AXES:
             if (d == i).all():
                 return True
         return False

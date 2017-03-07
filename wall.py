@@ -92,6 +92,13 @@ class Wall(PlanarObject):
         """
         return self
 
+    def get_total_offset(self):
+        """
+        Used for transparently getting the total offset of WallReferences.
+        Returns (0,0).
+        """
+        return np.array([0,0])
+
     def _set_edgeref_default_data(self):
         """
         Set default data of edge references.
@@ -235,6 +242,13 @@ class WallReference():
         Returns the eventual wall object this reference points to.
         """
         return self.target.dereference()
+
+    def get_total_offset(self):
+        """
+        Returns the total offset determined by the position of all references
+        in the chain.
+        """
+        return self.position + self.target.get_total_offset()
 
     def __str__(self):
         return '[WallRef "{name}" {dir}({posx}, {posy}) / ({sizex}, {sizey})] -> {target}'.format(
