@@ -87,8 +87,7 @@ class Object2D():
         'global' (meaning local to this Object2D, not its primitives) reference
         system counterclockwise.
 
-        The rotation amount is given in degrees. Only multiples of 90 degrees
-        are supported.
+        The rotation amount is given in degrees.
         """
         return Object2D([p.rotate(deg) for p in self.primitives])
 
@@ -198,8 +197,7 @@ class Primitive2D(PlanarObject):
         """
         Rotate the primitive counterclockwise.
 
-        The rotation amount is given in degrees. Only multiples of 90 degrees
-        are supported.
+        The rotation amount is given in degrees.
         """
         return Object2D([p.rotate(deg) for p in self.primitives])
 

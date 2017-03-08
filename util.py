@@ -99,7 +99,6 @@ class DIR2():
         return np.array([-v[1], v[0]]) / np.linalg.norm(v)
 
     def rotate(v, deg):
-        assert deg % 90 == 0
         deg = deg % 360
 
         if deg == 0:
@@ -110,6 +109,11 @@ class DIR2():
             return -np.array(v)
         elif deg == 270:
             return np.array([v[1], -v[0]])
+        else:
+            theta = np.radians(deg)
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.matrix([[c, -s], [s, c]])
+            return np.array([v[0]*c - v[1]*s, v[0]*s + v[1]*c])
 
 def mirror_array_bool_to_factor(v):
     return np.array([(-1 if b else 1) for b in v])
