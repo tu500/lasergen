@@ -86,6 +86,9 @@ class Object2D():
         Return a new Object2D created by mirroring all primitives in the
         'global' (meaning local to this Object2D, not its primitives) reference
         system along the specified axes.
+
+        The axes are specified by a boolean array `mirror_axes` indicating
+        which axes should be inverted.
         """
         return Object2D([p.mirror(mirror_axes) for p in self.primitives])
 
