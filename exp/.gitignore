@@ -1,0 +1,6 @@
+*.dxf
+*.ps
+*.svg
+*.scad
+*.stl
+Makefile
