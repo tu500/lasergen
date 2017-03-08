@@ -286,8 +286,9 @@ class ArcPath(Primitive2D):
     def __sub__(self, b):
         return ArcPath(self.start - b, self.end - b, self.radius, self.large_arc, self.sweep, layer=self.layer)
     def mirror(self, mirror_axes):
-        # TODO this is not trivial
-        return self
+        parity = (sum(1 for v in mirror_axes if v) % 2) == 1
+        fac = mirror_array_bool_to_factor(mirror_axes)
+        return ArcPath(self.start * fac, self.end * fac, self.radius, self.large_arc, (not self.sweep) if parity else self.sweep, layer=self.layer)
     def reverse(self):
         return ArcPath(self.end, self.start, self.radius, self.large_arc, not self.sweep)
 
