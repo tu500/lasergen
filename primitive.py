@@ -2,7 +2,7 @@ import numpy as np
 import math
 
 from layer import Layer
-from util import min_vec, max_vec, mirror_array_bool_to_factor
+from util import DIR2, min_vec, max_vec, mirror_array_bool_to_factor
 from units import Frac
 
 
@@ -80,6 +80,17 @@ class Object2D():
         Extend own primitive list with another Object2D's one.
         """
         self.primitives.extend(b.primitives)
+
+    def rotate(self, deg):
+        """
+        Return a new Object2D created by rotating all primitives in the
+        'global' (meaning local to this Object2D, not its primitives) reference
+        system counterclockwise.
+
+        The rotation amount is given in degrees. Only multiples of 90 degrees
+        are supported.
+        """
+        return Object2D([p.rotate(deg) for p in self.primitives])
 
     def mirror(self, mirror_axes):
         """
@@ -183,6 +194,15 @@ class Primitive2D(PlanarObject):
     def __sub__(self, b):
         """Translation."""
         raise NotImplementedError('Abstract method')
+    def rotate(self, deg):
+        """
+        Rotate the primitive counterclockwise.
+
+        The rotation amount is given in degrees. Only multiples of 90 degrees
+        are supported.
+        """
+        return Object2D([p.rotate(deg) for p in self.primitives])
+
     def mirror(self, mirror_axes):
         """
         Mirror the primitive along the specified axes.
@@ -227,6 +247,8 @@ class Line(Primitive2D):
         return Line(self.start + b, self.end + b, layer=self.layer)
     def __sub__(self, b):
         return Line(self.start - b, self.end - b, layer=self.layer)
+    def rotate(self, deg):
+        return Line(DIR2.rotate(self.start, deg), DIR2.rotate(self.end, deg), layer=self.layer)
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Line(self.start * fac, self.end * fac, layer=self.layer)
@@ -252,6 +274,8 @@ class Circle(Primitive2D):
         return Circle(self.center + b, self.radius, layer=self.layer)
     def __sub__(self, b):
         return Circle(self.center - b, self.radius, layer=self.layer)
+    def rotate(self, deg):
+        return Circle(DIR2.rotate(self.center, deg), self.radius, layer=self.layer)
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Circle(self.center * fac, self.radius, layer=self.layer)
@@ -285,6 +309,8 @@ class ArcPath(Primitive2D):
         return ArcPath(self.start + b, self.end + b, self.radius, self.large_arc, self.sweep, layer=self.layer)
     def __sub__(self, b):
         return ArcPath(self.start - b, self.end - b, self.radius, self.large_arc, self.sweep, layer=self.layer)
+    def rotate(self, deg):
+        return ArcPath(DIR2.rotate(self.start, deg), DIR2.rotate(self.end, deg), self.radius, self.large_arc, self.sweep, layer=self.layer)
     def mirror(self, mirror_axes):
         parity = (sum(1 for v in mirror_axes if v) % 2) == 1
         fac = mirror_array_bool_to_factor(mirror_axes)
@@ -335,6 +361,9 @@ class Text(Primitive2D):
         return Text(self.position + b, self.text, self.fontsize, layer=self.layer)
     def __sub__(self, b):
         return Text(self.position - b, self.text, self.fontsize, layer=self.layer)
+    def rotate(self, deg):
+        # TODO
+        return Text(DIR2.rotate(self.position, deg), self.text, self.fontsize, layer=self.layer)
     def mirror(self, mirror_axes):
         # TODO
         fac = mirror_array_bool_to_factor(mirror_axes)

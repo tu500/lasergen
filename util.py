@@ -98,6 +98,19 @@ class DIR2():
         # rotate by 90 deg CCW
         return np.array([-v[1], v[0]]) / np.linalg.norm(v)
 
+    def rotate(v, deg):
+        assert deg % 90 == 0
+        deg = deg % 360
+
+        if deg == 0:
+            return np.array(v)
+        elif deg == 90:
+            return np.array([-v[1], v[0]])
+        elif deg == 180:
+            return -np.array(v)
+        elif deg == 270:
+            return np.array([v[1], -v[0]])
+
 def mirror_array_bool_to_factor(v):
     return np.array([(-1 if b else 1) for b in v])
 
