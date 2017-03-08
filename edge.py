@@ -234,15 +234,15 @@ class Edge(PlanarObject):
         configured.
         """
 
-        assert(begin_style is None or begin_style in _EdgeElement.allowed_end_styles[style])
-        assert(end_style   is None or end_style   in _EdgeElement.allowed_end_styles[style])
+        assert begin_style is None or begin_style in _EdgeElement.allowed_end_styles[style]
+        assert end_style   is None or end_style   in _EdgeElement.allowed_end_styles[style]
 
         new_element = _EdgeElement(pos, length, style, begin_style, end_style, prev_style, next_style)
         self.sub_elements.append(new_element)
 
         # add counterpart with matching styles
         if auto_add_counterpart:
-            assert(self.counterpart is not None)
+            assert self.counterpart is not None
 
             cp = new_element.get_counterpart_element()
             self.counterpart.add_element(cp.pos, cp.length, cp.style, cp.begin_style, cp.end_style, cp.prev_style, cp.next_style, False)
@@ -257,7 +257,7 @@ class Edge(PlanarObject):
         self.style = style
 
         if set_counterpart:
-            assert(self.counterpart is not None)
+            assert self.counterpart is not None
 
             if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
                 self.counterpart.set_style(EDGE_ELEMENT_STYLE.FLAT_EXTENDED, set_counterpart=False)
@@ -308,9 +308,9 @@ class Edge(PlanarObject):
 
         if set_counterpart:
 
-            assert(self.counterpart is not None)
-            assert(self.begin_corner_counterpart is not None)
-            assert(self.end_corner_counterpart is not None)
+            assert self.counterpart is not None
+            assert self.begin_corner_counterpart is not None
+            assert self.end_corner_counterpart is not None
 
             if not self.get_corner_counterpart_by_direction(direction).get_corner_style_by_direction(self.outward_dir) in _EdgeElement.allowed_neighbour_corner_styles[style]:
                 self.get_corner_counterpart_by_direction(direction).set_corner_style(_EdgeElement.default_neighbour_corner_styles[style], direction)
@@ -338,8 +338,8 @@ class Edge(PlanarObject):
         this edge is added to the new counterpart, too.
         """
 
-        assert(self.counterpart is None)
-        assert(self.length == counterpart.length)
+        assert self.counterpart is None
+        assert self.length == counterpart.length
 
         self.counterpart = counterpart.get_reference()
 
@@ -374,14 +374,14 @@ class Edge(PlanarObject):
         # through the entire chain.
 
         if direction == -1:
-            assert(self.begin_corner_counterpart is None)
+            assert self.begin_corner_counterpart is None
             self.begin_corner_counterpart = counterpart.get_reference()
 
             if backreference:
                 self.begin_corner_counterpart.set_corner_counterpart(self, self.outward_dir, False)
 
         elif direction == 1:
-            assert(self.end_corner_counterpart is None)
+            assert self.end_corner_counterpart is None
             self.end_corner_counterpart = counterpart.get_reference()
 
             if backreference:
@@ -463,7 +463,7 @@ class Edge(PlanarObject):
         element_positions = [0] + element_positions + [self.length]
 
         # the resulting list must be sorted
-        assert( all(element_positions[i] <= element_positions[i+1] for i in range(len(element_positions)-1)) )
+        assert all(element_positions[i] <= element_positions[i+1] for i in range(len(element_positions)-1))
 
 
     @staticmethod
@@ -528,8 +528,8 @@ class Edge(PlanarObject):
                 allowed_first  = set.intersection(allowed_first,  allowed_from_neigh_first)
                 allowed_second = set.intersection(allowed_second, allowed_from_neigh_second)
 
-                assert(len(allowed_first)  >= 1)
-                assert(len(allowed_second) >= 1)
+                assert len(allowed_first)  >= 1
+                assert len(allowed_second) >= 1
 
                 if default_first in allowed_first:
                     first_elem.end_style = default_first
@@ -547,7 +547,7 @@ class Edge(PlanarObject):
                 t = _EdgeElement.allowed_neighbour_styles[second_elem.begin_style]
                 t = set.intersection(t, _EdgeElement.allowed_end_styles[first_elem.style])
 
-                assert(len(t) >= 1)
+                assert len(t) >= 1
 
                 default = _EdgeElement.default_end_styles[first_elem.style]
                 first_elem.end_style = default if default in t else t.pop()
@@ -557,16 +557,16 @@ class Edge(PlanarObject):
                 t = _EdgeElement.allowed_neighbour_styles[first_elem.end_style]
                 t = set.intersection(t, _EdgeElement.allowed_end_styles[second_elem.style])
 
-                assert(len(t) >= 1)
+                assert len(t) >= 1
 
                 default = _EdgeElement.default_end_styles[second_elem.style]
                 second_elem.begin_style = default if default in t else t.pop()
 
-            assert(first_elem.end_style is not None and second_elem.begin_style is not None)
+            assert first_elem.end_style is not None and second_elem.begin_style is not None
 
             # one should be enough, but...
-            assert(first_elem.end_style in _EdgeElement.allowed_neighbour_styles[second_elem.begin_style])
-            assert(second_elem.begin_style in _EdgeElement.allowed_neighbour_styles[first_elem.end_style])
+            assert first_elem.end_style in _EdgeElement.allowed_neighbour_styles[second_elem.begin_style]
+            assert second_elem.begin_style in _EdgeElement.allowed_neighbour_styles[first_elem.end_style]
 
         return elements
 
@@ -597,13 +597,13 @@ class Edge(PlanarObject):
         This is where tooth length calculation is done.
         """
 
-        assert(element.style == EDGE_ELEMENT_STYLE.TOOTHED)
+        assert element.style == EDGE_ELEMENT_STYLE.TOOTHED
 
         length = element.length
         begin_style, end_style = element.begin_style, element.end_style
 
-        assert(begin_style != EDGE_STYLE.OUTWARD)
-        assert(end_style != EDGE_STYLE.OUTWARD)
+        assert begin_style != EDGE_STYLE.OUTWARD
+        assert end_style != EDGE_STYLE.OUTWARD
 
         # calculate parity
         begin_outward = begin_style in [EDGE_STYLE.TOOTHED, EDGE_STYLE.EXTENDED, EDGE_STYLE.INTERNAL_OUTWARD]
@@ -702,7 +702,7 @@ class Edge(PlanarObject):
                     a.update_layer(Layer.error(m))
                     print(m)
             else:
-                assert(False)
+                assert False
 
     def _check_corner_counterpart_styles_matching(self, elements, config):
         """
@@ -737,8 +737,8 @@ class Edge(PlanarObject):
         begin_style, end_style = element.begin_style, element.end_style
         layer = element.layer.combine(self.layer)
 
-        assert(begin_style in _EdgeElement.allowed_end_styles[style])
-        assert(end_style   in _EdgeElement.allowed_end_styles[style])
+        assert begin_style in _EdgeElement.allowed_end_styles[style]
+        assert end_style   in _EdgeElement.allowed_end_styles[style]
 
         if style == EDGE_ELEMENT_STYLE.FLAT:
 
@@ -861,7 +861,7 @@ class Edge(PlanarObject):
 
     def get_reference(self, pos=0, length=None, projection_dir=None):
         if length is not None:
-            assert(pos + length <= self.length)
+            assert pos + length <= self.length
         return EdgeReference(self, pos, length, projection_dir)
 
     def dereference(self):
@@ -888,8 +888,8 @@ class CutoutEdge(Edge):
 
         if style in [EDGE_ELEMENT_STYLE.FLAT, EDGE_ELEMENT_STYLE.REMOVE]:
 
-            assert(begin_style in _EdgeElement.allowed_end_styles[EDGE_ELEMENT_STYLE.FLAT])
-            assert(end_style   in _EdgeElement.allowed_end_styles[EDGE_ELEMENT_STYLE.FLAT])
+            assert begin_style in _EdgeElement.allowed_end_styles[EDGE_ELEMENT_STYLE.FLAT]
+            assert end_style   in _EdgeElement.allowed_end_styles[EDGE_ELEMENT_STYLE.FLAT]
 
             start_pos = 0
             end_pos = length
@@ -939,11 +939,11 @@ class EdgeReference():
     """
 
     def __init__(self, target, pos=0, length=None, projection_dir=None):
-        assert(pos >= 0)
+        assert pos >= 0
 
         if length is None:
             length = target.length - pos
-            assert(length >= 0)
+            assert length >= 0
 
         self.target = target
         self.position = pos
@@ -1027,12 +1027,12 @@ class EdgeReference():
         return self.position == 0 and self.length == self.target.length
 
     def to_local_coords(self, v):
-        assert(self.projection_dir is not None)
+        assert self.projection_dir is not None
         return DIR2.project_along_axis(v, self.projection_dir)
 
     def get_reference(self, pos=0, length=None, projection_dir=None):
         if length is not None:
-            assert(pos + length <= self.length)
+            assert pos + length <= self.length
         return EdgeReference(self, pos, length, projection_dir)
 
     def dereference(self):

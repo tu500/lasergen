@@ -54,8 +54,8 @@ class CutoutRoundedRect(PlanarObject):
         width, height = self.size
         radius = self.radius
 
-        assert(width >= 2*radius)
-        assert(height >= 2*radius)
+        assert width >= 2*radius
+        assert height >= 2*radius
 
         l = []
 
@@ -128,7 +128,7 @@ class MountingScrewCutout(PlanarObject):
     def __init__(self, radius_head, radius_shaft, shaft_length, shaft_dir, layer=Layer('cut')):
         super(MountingScrewCutout, self).__init__(layer)
 
-        assert(radius_head >= radius_shaft)
+        assert radius_head >= radius_shaft
 
         self.radius_head = radius_head
         self.radius_shaft = radius_shaft
@@ -175,7 +175,7 @@ class FanCutout(PlanarObject):
     def __init__(self, size, center=True, layer=Layer('cut')):
         super(FanCutout, self).__init__(layer)
 
-        assert(size in self.dimensions)
+        assert size in self.dimensions
         self.size = size
         self.center_dir = self._calc_center_dir(center)
 
@@ -339,8 +339,8 @@ class RoundedRectEdgeCutout(PlanarObject):
         radius = self.radius
         start = self.start
 
-        assert(width >= 2*radius)
-        assert(height >= radius)
+        assert width >= 2*radius
+        assert height >= radius
 
         l = []
 

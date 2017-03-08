@@ -83,7 +83,7 @@ class Wall(PlanarObject):
         """
 
         if size is not None:
-            assert( (pos + size <= self.size).all() )
+            assert (pos + size <= self.size).all()
         return WallReference(self, pos, size, mirror_children, projection_dir)
 
     def dereference(self):
@@ -149,11 +149,11 @@ class WallReference():
     """
 
     def __init__(self, target, pos=np.array([0,0]), size=None, mirror_children=np.array([False, False]), projection_dir=None, name=None):
-        assert( (pos >= np.array([0,0])).all() )
+        assert (pos >= np.array([0,0])).all()
 
         if size is None:
             size = target.size - pos
-            assert( (size >= np.array([0,0])).all() )
+            assert (size >= np.array([0,0])).all()
 
         self.target = target
         self.position = pos
@@ -205,7 +205,7 @@ class WallReference():
         An error is raised if no projection dir is configured.
         """
 
-        assert(self.projection_dir is not None)
+        assert self.projection_dir is not None
         return DIR.project_along_axis(v, self.projection_dir)
 
     def add_child(self, child, pos, mirrored=np.array([False, False])):
@@ -234,7 +234,7 @@ class WallReference():
         """
 
         if size is not None:
-            assert( (pos + size <= self.size).all() )
+            assert (pos + size <= self.size).all()
         return WallReference(self, pos, size, self.mirror_children ^ mirror_children, projection_dir)
 
     def dereference(self):

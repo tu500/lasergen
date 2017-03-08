@@ -42,28 +42,28 @@ class DIR():
             }[d]
 
     def perpendicular_dirs(d):
-        assert(DIR.is_dir(d))
+        assert DIR.is_dir(d)
         index = None
         for i,a in enumerate(DIR.AXES):
             if (a==abs(d)).all():
                 index = i
                 break
-        assert(index is not None)
+        assert index is not None
         j,k = [DIR.AXES[i] for i in range(3) if i != index]
         return [j,-j,k,-k]
 
     def perpendicular_axes(d):
-        assert(DIR.is_dir(d))
+        assert DIR.is_dir(d)
         index = None
         for i,a in enumerate(DIR.AXES):
             if (a==abs(d)).all():
                 index = i
                 break
-        assert(index is not None)
+        assert index is not None
         return [DIR.AXES[i] for i in range(3) if i != index]
 
     def project_along_axis(vec, axis):
-        assert(DIR.is_dir(axis))
+        assert DIR.is_dir(axis)
         return np.array([v for v,a in zip(vec, axis) if a == 0])
 
 class DIR2():
@@ -88,7 +88,7 @@ class DIR2():
         return False
 
     def project_along_axis(vec, axis):
-        assert(DIR2.is_dir(axis))
+        assert DIR2.is_dir(axis)
         if axis[0] == 0:
             return vec[0]
         else:

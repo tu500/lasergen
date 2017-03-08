@@ -149,7 +149,7 @@ class PathAccumulator():
         added.
         """
 
-        assert(len(objects) > 0)
+        assert len(objects) > 0
 
         acc = PathAccumulator(objects[0], config, strict_layer_matching)
         acc.add_object_list(objects[1:])
@@ -289,8 +289,8 @@ def accumulate_paths(obj, config, strict_layer_matching=True, join_nonconsecutiv
                 elif almost_equal(acc.current_point, elem.current_point):
                     end_matching.append( (index, elem, False) )
 
-        assert(len(start_matching) in [0, 1])
-        assert(len(end_matching) in [0, 1])
+        assert len(start_matching) in [0, 1]
+        assert len(end_matching) in [0, 1]
 
         if start_matching and end_matching:
 
@@ -298,7 +298,7 @@ def accumulate_paths(obj, config, strict_layer_matching=True, join_nonconsecutiv
             e_index, e_elem, e_dir_matching = end_matching[0]
 
             if s_index == e_index:
-                assert(s_dir_matching == e_dir_matching)
+                assert s_dir_matching == e_dir_matching
                 if s_dir_matching:
                     s_elem.add_object_list(acc.objects)
                 else:
@@ -544,7 +544,7 @@ def export_openscad(box, config, directory, join_all_svg=True):
         # export outline
 
         l = [p for p in paths if p.layer.name == 'edge']
-        assert(len(l) > 0)
+        assert len(l) > 0
         outline = l[0]
 
         outline_file_name = 'w{}-outline'.format(wall_index)

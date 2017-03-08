@@ -48,7 +48,7 @@ class Box():
         Returns a list of the newly added subboxes.
         """
 
-        assert(self.subboxes == [])
+        assert self.subboxes == []
 
         def normalize_size_entry(index, entry):
 
@@ -180,16 +180,16 @@ class Box():
 
             # take absolute size from bound children
             if ref_size[i] is not None:
-                assert(self.abs_size[i] is None or ref_size[i] == self.abs_size[i])
+                assert self.abs_size[i] is None or ref_size[i] == self.abs_size[i]
                 self.abs_size[i] = ref_size[i]
 
             # calculate unit_length from own size
             if self.abs_size[i] is not None and sum_rel_size[i] != Rel(0):
-                assert(self.abs_size[i] >= sum_abs_size[i])
+                assert self.abs_size[i] >= sum_abs_size[i]
                 new_ul = sum_rel_size[i].unit_length_from_total(self.size[i] - sum_abs_size[i])
 
                 if unit_length[i] is not None:
-                    assert(new_ul == unit_length[i])
+                    assert new_ul == unit_length[i]
 
                 unit_length[i] = new_ul
 
@@ -208,17 +208,17 @@ class Box():
 
             if self.size[i] is None:
                 # all children's sizes must be known
-                assert(unknown_children_count[i] == 0)
+                assert unknown_children_count[i] == 0
 
                 # own size must be known somehow
-                assert(sum_size[i] is not None or ref_size[i] is not None)
+                assert sum_size[i] is not None or ref_size[i] is not None
 
                 if sum_size[i] is None:
                     self.abs_size[i] = ref_size[i] # should be a NOP
                 elif ref_size[i] is None:
                     self.abs_size[i] = sum_size[i]
                 else:
-                    assert(ref_size[i] == sum_size[i])
+                    assert ref_size[i] == sum_size[i]
                     self.abs_size[i] = sum_size[i]
 
             elif self.size[i] == 'ref':
@@ -239,12 +239,12 @@ class Box():
 
             elif self._has_absolute_width_configured(i):
                 # all children's sizes must be known, this is known implicitly
-                assert(unknown_children_count[i] == 0)
+                assert unknown_children_count[i] == 0
 
                 if self.abs_size[i] is not None:
-                    assert(self.abs_size[i] == self.size[i])
+                    assert self.abs_size[i] == self.size[i]
                 if sum_size[i] is not None:
-                    assert(sum_size[i] == self.size[i])
+                    assert sum_size[i] == self.size[i]
                 self.abs_size[i] = self.size[i]
 
 
@@ -281,16 +281,16 @@ class Box():
 
             for i in range(3):
 
-                assert(not (c.size[i] is None and c.abs_size[i] is None))
+                assert not (c.size[i] is None and c.abs_size[i] is None)
 
                 if c.size[i] is None:
-                    assert(c.abs_size[i] is not None)
+                    assert c.abs_size[i] is not None
                     #sum_size[i] += c.abs_size[i]
                     sum_abs_size[i] += c.abs_size[i]
 
                 elif c.size[i] == 'ref':
                     if c.abs_size[i] is not None:
-                        assert(ref_size[i] is None or ref_size[i] == c.abs_size[i])
+                        assert ref_size[i] is None or ref_size[i] == c.abs_size[i]
                         ref_size[i] = c.abs_size[i]
 
                 elif isinstance(c.size[i], Rel):
@@ -301,11 +301,11 @@ class Box():
 
                         sum_rel_size[i] += c.size[i]
                         new_ul = c.size[i].unit_length_from_total(c.abs_size[i])
-                        assert(unit_length[i] is None or new_ul == unit_length[i])
+                        assert unit_length[i] is None or new_ul == unit_length[i]
                         unit_length[i] = new_ul
 
                 elif c._has_absolute_width_configured(i):
-                    assert(c.abs_size[i] is not None)
+                    assert c.abs_size[i] is not None
                     #sum_size[i] += c.abs_size[i]
                     sum_abs_size[i] += c.abs_size[i]
 
@@ -318,8 +318,8 @@ class Box():
         Top-down approach for setting now known sizes for subboxes.
         """
 
-        assert(isinstance(self.size[i], Rel) or self.size[i] == 'ref')
-        assert(self.abs_size[i] is None)
+        assert isinstance(self.size[i], Rel) or self.size[i] == 'ref'
+        assert self.abs_size[i] is None
 
         self.abs_size[i] = value
 
@@ -331,11 +331,11 @@ class Box():
 
         sum_abs_size, sum_rel_size, unit_length, ref_size = self._get_sum(config)
 
-        assert(unit_length[i] is None)
-        assert(ref_size[i] is None)
+        assert unit_length[i] is None
+        assert ref_size[i] is None
 
         if sum_rel_size[i] != Rel(0):
-            assert(self.abs_size[i] >= sum_abs_size[i])
+            assert self.abs_size[i] >= sum_abs_size[i]
             unit_length[i] = sum_rel_size[i].unit_length_from_total(self.abs_size[i] - sum_abs_size[i])
 
         for c in self.subboxes:
@@ -345,7 +345,7 @@ class Box():
                 elif c.size[i] == 'ref':
                     c._set_absolute_size(value, i, config)
                 else:
-                    assert(False)
+                    assert False
 
     def _has_absolute_width_configured(self, i):
         """
@@ -445,7 +445,7 @@ class Box():
 
         # assert subdivision only along one axis
         non_ref_indices = [i for i,s in enumerate(self.subboxes[0].size) if s != 'ref']
-        assert(len(non_ref_indices) == 1)
+        assert len(non_ref_indices) == 1
         working_axis_index = non_ref_indices[0]
         working_axis= DIR.AXES[working_axis_index]
 
@@ -463,9 +463,9 @@ class Box():
 
                 # assert subdivision only along one axis
                 if i == working_axis_index:
-                    assert(c.size[i] != 'ref')
+                    assert c.size[i] != 'ref'
                 else:
-                    assert(c.size[i] == 'ref')
+                    assert c.size[i] == 'ref'
 
                 pos_index = self._get_wall_index_by_direction(d)
                 neg_index = self._get_wall_index_by_direction(-d)
