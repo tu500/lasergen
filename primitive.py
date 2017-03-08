@@ -336,7 +336,8 @@ class Text(Primitive2D):
         return Text(self.position - b, self.text, self.fontsize, layer=self.layer)
     def mirror(self, mirror_axes):
         # TODO
-        return self
+        fac = mirror_array_bool_to_factor(mirror_axes)
+        return Text(self.position * fac, self.text, self.fontsize, layer=self.layer)
     def reverse(self):
         # not applicable
         return self
