@@ -115,3 +115,20 @@ def max_vec(*args):
 
 def almost_equal(a, b, epsilon=1E-10):
     return np.linalg.norm(a-b) < epsilon
+
+def update_file(filepath, new):
+    """
+    Write content to file, only if it differs.
+    """
+
+    try:
+
+        with open(filepath, 'r') as f:
+            old = f.read()
+
+    except FileNotFoundError:
+        old = None
+
+    if old != new:
+        with open(filepath, 'w') as f:
+            f.write(new)

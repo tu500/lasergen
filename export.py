@@ -1,8 +1,9 @@
 import numpy as np
+import os
 
 from layer import Layer
 from primitive import Line, Circle, ArcPath, Text
-from util import min_vec, max_vec, almost_equal
+from util import DIR, min_vec, max_vec, almost_equal, update_file
 
 def place_2d_objects(objects, config):
     """
@@ -257,7 +258,7 @@ class PathAccumulator():
             return self.layer.compatible(other_layer)
 
 
-def accumulate_paths(obj, config, join_nonconsecutive_paths=True):
+def accumulate_paths(obj, config, strict_layer_matching=True, join_nonconsecutive_paths=True):
     """
     Accumulate an Object2D's primitives into PathAccumulator objects.
     """
@@ -314,7 +315,8 @@ def accumulate_paths(obj, config, join_nonconsecutive_paths=True):
             elif e_dir_matching:
                 lst[s_index] = PathAccumulator.from_list(
                         [o.reverse() for o in reversed(s_elem.objects)] + acc.objects + e_elem.objects,
-                        config
+                        config,
+                        strict_layer_matching
                     )
                 lst.pop(e_index)
             else:
@@ -331,7 +333,8 @@ def accumulate_paths(obj, config, join_nonconsecutive_paths=True):
             else:
                 lst[index] = PathAccumulator.from_list(
                         [o.reverse() for o in reversed(acc.objects)] + elem.objects,
-                        config
+                        config,
+                        strict_layer_matching
                     )
 
         elif end_matching:
@@ -355,7 +358,7 @@ def accumulate_paths(obj, config, join_nonconsecutive_paths=True):
     for p in obj.primitives:
 
         if acc is None:
-            acc = PathAccumulator(p, config)
+            acc = PathAccumulator(p, config, strict_layer_matching)
 
         else:
             r = acc.add_object(p)
@@ -363,7 +366,7 @@ def accumulate_paths(obj, config, join_nonconsecutive_paths=True):
             if not r:
                 join_into_list(acc, acc_list)
 
-                acc = PathAccumulator(p, config)
+                acc = PathAccumulator(p, config, strict_layer_matching)
 
     join_into_list(acc, acc_list)
 
@@ -395,10 +398,223 @@ def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
 
     for o in objects:
 
-        acc_list = accumulate_paths(o, config, join_nonconsecutive_paths)
+        acc_list = accumulate_paths(o, config, True, join_nonconsecutive_paths)
 
         s += ''.join(acc.finalize() for acc in acc_list)
 
     s += '</svg>'
 
     return s
+
+
+_MAKE_SOURCE = """
+all: all-dxf
+
+%.dxf: %.ps
+	pstoedit -dt -f dxf:-polyaslines\ -mm $< $@
+
+%.ps: %.svg
+	inkscape -C -P $@ $<
+
+%.stl: %.scad
+	openscad -o $@ $<
+
+export.stl: {dxffiles}
+
+
+.PHONY: all view
+
+view: {dxffiles}
+	openscad export.scad &
+"""
+
+
+def _export_paths_to_openscad(paths, viewbox, filename, directory, translate, color, config, thickness_factor=1):
+    """
+    Convert paths to SVG file, write to file, return openscad source code.
+    """
+
+    svg = """<?xml version="1.0" encoding="UTF-8"?>
+        <svg xmlns="http://www.w3.org/2000/svg"
+                version="1.1" baseProfile="full"
+                viewBox="{}">
+        """.format(viewbox)
+    svg += ''.join(p.finalize() for p in paths)
+    svg += '</svg>'
+
+    openscad_source = """
+        translate([{tx}, {ty}, 0])
+        color("{color}")
+        linear_extrude(height = {thickness} * {thickness_factor}, center = true, convexity = 10)
+        import (file = "{filename}", scale = 2.54/0.96 * 10/7);
+        """.format(
+                tx = translate[0],
+                ty = translate[1],
+                color = color,
+                thickness = config.wall_thickness,
+                filename = filename + '.dxf',
+                thickness_factor = thickness_factor,
+            )
+
+    update_file(os.path.join(directory, filename + '.svg'), svg)
+
+    return openscad_source
+
+
+def export_openscad(box, config, directory, join_all_svg=True):
+    """
+    Export given box to OpenSCAD for previewing.
+
+    Writes a number of files in the given directory. You can then run `make
+    view` in this directory to open an OpenSCAD window or `make export.stl` to
+    export it to an STL file.
+
+    This feature needs `inkscape`, `pstoedit`, `openscad` and `make` to be
+    configured and in your path.
+
+    If `join_all_svg` is `True` the export uses less SVG files which decreases
+    export time but may also decrease quality.
+    """
+
+    walls = box._gather_walls(config)
+
+    # uniquify wall references, keep order for deterministic output
+    seen = set()
+    walls = [(w,p,d) for w,p,d in box._gather_walls(config) if not (w in seen or seen.add(w))]
+
+    openscad_source = ''
+    svg_filenames = []
+
+    for wall_index, (wall, pos, direction) in enumerate(walls):
+
+        # export single wall
+
+        rendered = wall.render(config)
+
+        vmin, vmax = rendered.bounding_box()
+        viewbox = '{} {} {} {}'.format(
+                0,
+                0,
+                (vmax[0]-vmin[0]),
+                (vmax[1]-vmin[1]),
+            )
+
+        # get completely positive svg coordinates
+        rendered -= vmin
+        rendered -= np.array([0, vmax[1]-vmin[1]])
+
+        paths = accumulate_paths(rendered, config, False)
+
+        if join_all_svg:
+            difference_paths = []
+            union_paths = []
+        else:
+            difference_paths = [p for p in paths if p.layer.name == 'cut']
+            union_paths = [p for p in paths if p.layer.name == 'info']
+
+        # overall openscad commands
+
+        if (abs(direction) == DIR.RIGHT).all():
+            rotate = 'rotate([90,0,90])'
+        elif (abs(direction) == DIR.UP).all():
+            rotate = 'rotate([90,0,0])'
+        elif (abs(direction) == DIR.FRONT).all():
+            rotate = 'rotate([0,0,0])'
+
+        openscad_source += """
+            translate([{apx},{apy},  {apz}])
+            {rotate} {{
+            """.format(
+                    apx = pos[0],
+                    apy = pos[1],
+                    apz = pos[2],
+                    rotate = rotate,
+                )
+
+        if difference_paths:
+            openscad_source += """
+                difference() {
+                """
+
+        if union_paths:
+            openscad_source += """
+                    union() {
+                """
+
+        # export outline
+
+        l = [p for p in paths if p.layer.name == 'edge']
+        assert(len(l) > 0)
+        outline = l[0]
+
+        outline_file_name = 'w{}-outline'.format(wall_index)
+        svg_filenames.append(outline_file_name)
+
+        openscad_source += _export_paths_to_openscad(
+                [outline] if not join_all_svg else paths,
+                viewbox,
+                outline_file_name,
+                directory,
+                vmin,
+                config.get_color_from_layer(outline.layer),
+                config,
+            )
+
+
+        # export info objects (union with outline)
+
+        for obj_index, obj in enumerate(union_paths):
+            if obj.layer.name == 'info':
+
+                obj_file_name = 'w{}-u{}'.format(wall_index, obj_index)
+                svg_filenames.append(obj_file_name)
+
+                openscad_source += _export_paths_to_openscad(
+                        [obj],
+                        viewbox,
+                        obj_file_name,
+                        directory,
+                        vmin,
+                        config.get_color_from_layer(obj.layer),
+                        config,
+                        1.1,
+                    )
+
+        if union_paths:
+            openscad_source += """
+                    } // end union
+                """
+
+
+        # export cutout objects
+
+        for obj_index, obj in enumerate(difference_paths):
+            if obj.layer.name == 'cut':
+
+                obj_file_name = 'w{}-d{}'.format(wall_index, obj_index)
+                svg_filenames.append(obj_file_name)
+
+                openscad_source += _export_paths_to_openscad(
+                        [obj],
+                        viewbox,
+                        obj_file_name,
+                        directory,
+                        vmin,
+                        config.get_color_from_layer(obj.layer),
+                        config,
+                        1.1,
+                    )
+
+        if difference_paths:
+            openscad_source += """
+                } // end difference
+                """
+
+        openscad_source += """
+            } // end rotate
+            """
+
+    make_source = _MAKE_SOURCE.format(dxffiles=' '.join(s+'.dxf' for s in svg_filenames))
+
+    update_file(os.path.join(directory, 'Makefile'), make_source)
+    update_file(os.path.join(directory, 'export.scad'), openscad_source)
