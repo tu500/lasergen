@@ -565,21 +565,20 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
         # export info objects (union with outline)
 
         for obj_index, obj in enumerate(union_paths):
-            if obj.layer.name == 'info':
 
-                obj_file_name = 'w{}-u{}'.format(wall_index, obj_index)
-                svg_filenames.append(obj_file_name)
+            obj_file_name = 'w{}-u{}'.format(wall_index, obj_index)
+            svg_filenames.append(obj_file_name)
 
-                openscad_source += _export_paths_to_openscad(
-                        [obj],
-                        viewbox,
-                        obj_file_name,
-                        directory,
-                        vmin,
-                        config.get_color_from_layer(obj.layer),
-                        config,
-                        1.1,
-                    )
+            openscad_source += _export_paths_to_openscad(
+                    [obj],
+                    viewbox,
+                    obj_file_name,
+                    directory,
+                    vmin,
+                    config.get_color_from_layer(obj.layer),
+                    config,
+                    1.1,
+                )
 
         if union_paths:
             openscad_source += """
@@ -590,21 +589,20 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
         # export cutout objects
 
         for obj_index, obj in enumerate(difference_paths):
-            if obj.layer.name == 'cut':
 
-                obj_file_name = 'w{}-d{}'.format(wall_index, obj_index)
-                svg_filenames.append(obj_file_name)
+            obj_file_name = 'w{}-d{}'.format(wall_index, obj_index)
+            svg_filenames.append(obj_file_name)
 
-                openscad_source += _export_paths_to_openscad(
-                        [obj],
-                        viewbox,
-                        obj_file_name,
-                        directory,
-                        vmin,
-                        config.get_color_from_layer(obj.layer),
-                        config,
-                        1.1,
-                    )
+            openscad_source += _export_paths_to_openscad(
+                    [obj],
+                    viewbox,
+                    obj_file_name,
+                    directory,
+                    vmin,
+                    config.get_color_from_layer(obj.layer),
+                    config,
+                    1.1,
+                )
 
         if difference_paths:
             openscad_source += """
