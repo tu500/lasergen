@@ -17,7 +17,7 @@ def place_2d_objects(objects, config):
     y_positions = [0] + list(np.cumsum(heights))
     return [o - bb[0] + np.array([0,y]) for o, bb, y in zip(objects, bounding_boxes, y_positions)]
 
-def export_svg(objects, config):
+def export_svg(objects, config, layers=None):
     """
     Export given objects to SVG.
 
@@ -41,48 +41,49 @@ def export_svg(objects, config):
 
     for o in objects:
         for p in o.primitives:
+            if layers is None or p.layer.name in layers:
 
-            color = config.get_color_from_layer(p.layer)
+                color = config.get_color_from_layer(p.layer)
 
-            if isinstance(p, Line):
-                s += '<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" stroke-width="1px"/>\n'.format(
-                        x1    = p.start[0],
-                        y1    = -p.start[1],
-                        x2    = p.end[0],
-                        y2    = -p.end[1],
-                        color = color,
-                    )
-            elif isinstance(p, Circle):
-                s += '<circle cx="{cx}" cy="{cy}" r="{r}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
-                        cx    = p.center[0],
-                        cy    = -p.center[1],
-                        r     = p.radius,
-                        color = color,
-                    )
-            elif isinstance(p, ArcPath):
-                s += '<path d="M {start_x} {start_y} A {radius_x} {radius_y} {angle_x} {large_arc} {sweep} {to_x} {to_y}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
-                        start_x   = p.start[0],
-                        start_y   = -p.start[1],
-                        radius_x  = p.radius,
-                        radius_y  = p.radius,
-                        angle_x   = 0,
-                        large_arc = 1 if p.large_arc else 0,
-                        sweep     = 1 if p.sweep else 0,
-                        to_x      = p.end[0],
-                        to_y      = -p.end[1],
-                        color     = color,
-                    )
-            elif isinstance(p, Text):
-                s += '<text x="{x}" y="{y}" style="font-size:{fontsize}px" fill="{color}">{text}</text>\n'.format(
-                        x        = p.position[0],
-                        y        = -p.position[1],
-                        fontsize = p.fontsize,
-                        text     = p.text,
-                        color    = color,
-                    )
+                if isinstance(p, Line):
+                    s += '<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{color}" stroke-width="1px"/>\n'.format(
+                            x1    = p.start[0],
+                            y1    = -p.start[1],
+                            x2    = p.end[0],
+                            y2    = -p.end[1],
+                            color = color,
+                        )
+                elif isinstance(p, Circle):
+                    s += '<circle cx="{cx}" cy="{cy}" r="{r}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                            cx    = p.center[0],
+                            cy    = -p.center[1],
+                            r     = p.radius,
+                            color = color,
+                        )
+                elif isinstance(p, ArcPath):
+                    s += '<path d="M {start_x} {start_y} A {radius_x} {radius_y} {angle_x} {large_arc} {sweep} {to_x} {to_y}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                            start_x   = p.start[0],
+                            start_y   = -p.start[1],
+                            radius_x  = p.radius,
+                            radius_y  = p.radius,
+                            angle_x   = 0,
+                            large_arc = 1 if p.large_arc else 0,
+                            sweep     = 1 if p.sweep else 0,
+                            to_x      = p.end[0],
+                            to_y      = -p.end[1],
+                            color     = color,
+                        )
+                elif isinstance(p, Text):
+                    s += '<text x="{x}" y="{y}" style="font-size:{fontsize}px" fill="{color}">{text}</text>\n'.format(
+                            x        = p.position[0],
+                            y        = -p.position[1],
+                            fontsize = p.fontsize,
+                            text     = p.text,
+                            color    = color,
+                        )
 
-            else:
-                raise ValueError('Unknown primitive')
+                else:
+                    raise ValueError('Unknown primitive')
 
     s += '</svg>'
 
@@ -373,7 +374,7 @@ def accumulate_paths(obj, config, strict_layer_matching=True, join_nonconsecutiv
     return acc_list
 
 
-def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
+def export_svg_with_paths(objects, config, layers=None, join_nonconsecutive_paths=True):
     """
     Export given objects to SVG, converting contained Line objects to SVG paths
     and joining adjacent primitive pairs.
@@ -400,7 +401,7 @@ def export_svg_with_paths(objects, config, join_nonconsecutive_paths=True):
 
         acc_list = accumulate_paths(o, config, True, join_nonconsecutive_paths)
 
-        s += ''.join(acc.finalize() for acc in acc_list)
+        s += ''.join(acc.finalize() for acc in acc_list if layers is None or acc.layer.name in layers)
 
     s += '</svg>'
 
@@ -461,7 +462,7 @@ def _export_paths_to_openscad(paths, viewbox, filename, directory, translate, co
     return openscad_source
 
 
-def export_openscad(box, config, directory, join_all_svg=True):
+def export_openscad(box, config, directory, layers=None, join_all_svg=True):
     """
     Export given box to OpenSCAD for previewing.
 
@@ -503,7 +504,7 @@ def export_openscad(box, config, directory, join_all_svg=True):
         rendered -= vmin
         rendered -= np.array([0, vmax[1]-vmin[1]])
 
-        paths = accumulate_paths(rendered, config, False)
+        paths = [p for p in accumulate_paths(rendered, config, False) if layers is None or p.layer.name in layers]
 
         if join_all_svg:
             difference_paths = []

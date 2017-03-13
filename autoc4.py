@@ -117,7 +117,7 @@ def main():
     cn.colors['edge'] = 'grey'
     cn.cutting_width = 0
     cn.print_wall_names = False
-    export_openscad(cb, cn, 'exp', False)
+    export_openscad(cb, cn, 'exp', join_all_svg=False)
 
 if __name__ == "__main__":
     main()
