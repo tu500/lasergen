@@ -8,7 +8,7 @@ from planar import RectEdgeCutout, RoundedRectEdgeCutout
 from wall import ToplessWall, ExtendedWall, SubWall
 from edge import CutoutEdge, Edge, EDGE_STYLE, EDGE_ELEMENT_STYLE
 from config import Config
-from export import place_2d_objects, export_svg_with_paths, export_openscad
+from export import place_2d_objects, export_svg_with_paths, export_box_openscad
 from layer import Layer
 from util import DIR, DIR2
 from units import Rel, Frac
@@ -117,7 +117,7 @@ def main():
     cn.colors['outline'] = 'grey'
     cn.cutting_width = 0
     cn.print_wall_names = False
-    export_openscad(cb, cn, 'exp', join_all_svg=False)
+    export_box_openscad(cb, cn, 'exp', join_all_svg=False, single_wall_rules=True)
 
 if __name__ == "__main__":
     main()

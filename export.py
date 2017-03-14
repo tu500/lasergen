@@ -409,7 +409,7 @@ def export_svg_with_paths(objects, config, layers=None, join_nonconsecutive_path
 
 
 _MAKE_SOURCE = """
-all: all-dxf
+all: {main_filename}.stl
 
 %.dxf: %.ps
 	pstoedit -dt -f dxf:-polyaslines\ -mm $< $@
@@ -420,13 +420,25 @@ all: all-dxf
 %.stl: %.scad
 	openscad -o $@ $<
 
-export.stl: {dxffiles}
+{main_filename}.stl: {prereqs}
 
 
 .PHONY: all view
 
-view: {dxffiles}
-	openscad export.scad &
+view: {prereqs}
+	openscad {main_filename}.scad &
+"""
+
+_MAKE_SOURCE_CAT_STLS = _MAKE_SOURCE + """
+{main_filename}.stl:
+	cat {prereqs} > {main_filename}.stl
+"""
+
+_MAKE_SOURCE_SINGLE_WALL = """
+{wall_name}.stl: {prereqs}
+view-{wall_name}: {prereqs}
+	openscad {wall_name}.scad &
+.PHONY: view-{wall_name}
 """
 
 
@@ -461,8 +473,154 @@ def _export_paths_to_openscad(paths, viewbox, filename, directory, translate, co
 
     return openscad_source
 
+def _export_object_to_openscad(obj, name_prefix, directory, layers, config, join_all_svg=True):
+    """
+    Convert an Object2D to SVG files, write these files, return openscad source
+    code and written SVG filenames.
+    """
 
-def export_openscad(box, config, directory, layers=None, join_all_svg=True):
+    openscad_source = ''
+    svg_filenames = []
+
+    vmin, vmax = obj.bounding_box()
+    viewbox = '{} {} {} {}'.format(
+            0,
+            0,
+            (vmax[0]-vmin[0]),
+            (vmax[1]-vmin[1]),
+        )
+
+    # get completely positive svg coordinates
+    obj -= vmin
+    obj -= np.array([0, vmax[1]-vmin[1]])
+
+    paths = [p for p in accumulate_paths(obj, config, False) if layers is None or p.layer.name in layers]
+
+    if join_all_svg:
+        difference_paths = []
+        union_paths = []
+    else:
+        difference_paths = [p for p in paths if p.layer.name == 'cutout']
+        union_paths = [p for p in paths if p.layer.name == 'info']
+
+    # overall openscad commands
+
+    if difference_paths:
+        openscad_source += """
+            difference() {
+            """
+
+    if union_paths:
+        openscad_source += """
+                union() {
+            """
+
+    # export outline
+
+    l = [p for p in paths if p.layer.name == 'outline']
+    assert len(l) > 0
+    outline = l[0]
+
+    outline_file_name = '{}-outline'.format(name_prefix)
+    svg_filenames.append(outline_file_name)
+
+    openscad_source += _export_paths_to_openscad(
+            [outline] if not join_all_svg else paths,
+            viewbox,
+            outline_file_name,
+            directory,
+            vmin,
+            config.get_color_from_layer(outline.layer),
+            config,
+        )
+
+
+    # export info objects (union with outline)
+
+    for path_index, path in enumerate(union_paths):
+
+        path_file_name = '{}-u{}'.format(name_prefix, path_index)
+        svg_filenames.append(path_file_name)
+
+        openscad_source += _export_paths_to_openscad(
+                [path],
+                viewbox,
+                path_file_name,
+                directory,
+                vmin,
+                config.get_color_from_layer(path.layer),
+                config,
+                1.1,
+            )
+
+    if union_paths:
+        openscad_source += """
+                } // end union
+            """
+
+
+    # export cutout objects
+
+    for path_index, path in enumerate(difference_paths):
+
+        path_file_name = '{}-d{}'.format(name_prefix, path_index)
+        svg_filenames.append(path_file_name)
+
+        openscad_source += _export_paths_to_openscad(
+                [path],
+                viewbox,
+                path_file_name,
+                directory,
+                vmin,
+                config.get_color_from_layer(path.layer),
+                config,
+                1.1,
+            )
+
+    if difference_paths:
+        openscad_source += """
+            } // end difference
+            """
+
+    return openscad_source, svg_filenames
+
+
+def export_object_openscad(obj, config, directory, filename='export', layers=None, join_all_svg=True):
+    """
+    Export given Object2D to OpenSCAD for previewing.
+
+    Writes a number of files in the given directory. You can then run `make
+    view` in this directory to open an OpenSCAD window or `make export.stl` to
+    export it to an STL file.
+
+    This feature needs `inkscape`, `pstoedit`, `openscad` and `make` to be
+    configured and in your path.
+
+    To use another name than `export.stl` for the main target, use the
+    `filename` parameter.
+
+    If `join_all_svg` is `True` the export uses less SVG files which decreases
+    export time but may also decrease quality.
+    """
+
+    openscad_source, svg_filenames = _export_object_to_openscad(
+            obj,
+            filename,
+            directory,
+            layers,
+            config,
+            join_all_svg
+        )
+
+    prereqs = ' '.join(s+'.dxf' for s in svg_filenames)
+
+    make_source = _MAKE_SOURCE.format(prereqs=prereqs, main_filename=filename)
+
+    update_file(os.path.join(directory, 'Makefile'), make_source)
+    update_file(os.path.join(directory, '{}.scad'.format(filename)), openscad_source)
+
+
+def export_box_openscad(box, config, directory, main_filename='export', layers=None, join_all_svg=True, single_scad_file=False, single_wall_rules=False):
     """
     Export given box to OpenSCAD for previewing.
 
@@ -473,8 +631,19 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
     This feature needs `inkscape`, `pstoedit`, `openscad` and `make` to be
     configured and in your path.
 
+    To use another name than `export.stl` for the main target, use the
+    `main_filename` parameter.
+
     If `join_all_svg` is `True` the export uses less SVG files which decreases
     export time but may also decrease quality.
+
+    If `single_scad_file` is `True` the end result will be built from a single
+    scad file, referencing all generated 2D files. This is very slow to
+    rebuild, but will preserve color information in the openscad window.
+
+    If `single_wall_rules` is `True` make rules and scad files are added to
+    make export or view single walls. The added rules are of the form `view-w*`
+    and `w*.stl`, where the asterisk is replaced by the wall's index.
     """
 
     walls = box._gather_walls(config)
@@ -483,37 +652,27 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
     seen = set()
     walls = [(w,p,d) for w,p,d in box._gather_walls(config) if not (w in seen or seen.add(w))]
 
-    openscad_source = ''
-    svg_filenames = []
+    global_openscad_source = ''
+    global_prereqs = []
+    extra_make = ''
 
     for wall_index, (wall, pos, direction) in enumerate(walls):
 
         # export single wall
 
         rendered = wall.render(config)
+        wall_name = 'w{}'.format(wall_index)
 
-        vmin, vmax = rendered.bounding_box()
-        viewbox = '{} {} {} {}'.format(
-                0,
-                0,
-                (vmax[0]-vmin[0]),
-                (vmax[1]-vmin[1]),
+        wall_source, svg_filenames = _export_object_to_openscad(
+                rendered,
+                wall_name,
+                directory,
+                layers,
+                config,
+                join_all_svg
             )
 
-        # get completely positive svg coordinates
-        rendered -= vmin
-        rendered -= np.array([0, vmax[1]-vmin[1]])
-
-        paths = [p for p in accumulate_paths(rendered, config, False) if layers is None or p.layer.name in layers]
-
-        if join_all_svg:
-            difference_paths = []
-            union_paths = []
-        else:
-            difference_paths = [p for p in paths if p.layer.name == 'cutout']
-            union_paths = [p for p in paths if p.layer.name == 'info']
-
-        # overall openscad commands
+        # add absolute position of wall object to openscad source
 
         if (abs(direction) == DIR.RIGHT).all():
             rotate = 'rotate([90,0,90])'
@@ -522,98 +681,52 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
         elif (abs(direction) == DIR.FRONT).all():
             rotate = 'rotate([0,0,0])'
 
-        openscad_source += """
-            translate([{apx},{apy},  {apz}])
+        openscad_source = """
+            translate([{apx}, {apy}, {apz}])
             {rotate} {{
+                {wall_source}
+            }} // end rotate
             """.format(
                     apx = pos[0],
                     apy = pos[1],
                     apz = pos[2],
                     rotate = rotate,
+                    wall_source = wall_source,
                 )
 
-        if difference_paths:
-            openscad_source += """
-                difference() {
-                """
-
-        if union_paths:
-            openscad_source += """
-                    union() {
-                """
-
-        # export outline
-
-        l = [p for p in paths if p.layer.name == 'outline']
-        assert len(l) > 0
-        outline = l[0]
-
-        outline_file_name = 'w{}-outline'.format(wall_index)
-        svg_filenames.append(outline_file_name)
-
-        openscad_source += _export_paths_to_openscad(
-                [outline] if not join_all_svg else paths,
-                viewbox,
-                outline_file_name,
-                directory,
-                vmin,
-                config.get_color_from_layer(outline.layer),
-                config,
-            )
+        prereqs = ' '.join(s+'.dxf' for s in svg_filenames)
 
 
-        # export info objects (union with outline)
-
-        for obj_index, obj in enumerate(union_paths):
-
-            obj_file_name = 'w{}-u{}'.format(wall_index, obj_index)
-            svg_filenames.append(obj_file_name)
-
-            openscad_source += _export_paths_to_openscad(
-                    [obj],
-                    viewbox,
-                    obj_file_name,
-                    directory,
-                    vmin,
-                    config.get_color_from_layer(obj.layer),
-                    config,
-                    1.1,
+        if single_wall_rules:
+            update_file(os.path.join(directory, wall_name+'.scad'), wall_source)
+            extra_make += _MAKE_SOURCE_SINGLE_WALL.format(
+                    wall_name = wall_name,
+                    prereqs = prereqs,
                 )
 
-        if union_paths:
-            openscad_source += """
-                    } // end union
-                """
 
+        if single_scad_file:
+            global_openscad_source += openscad_source
+            global_prereqs.append(prereqs)
 
-        # export cutout objects
+        else:
+            update_file(os.path.join(directory, wall_name+'-positioned.scad'), openscad_source)
 
-        for obj_index, obj in enumerate(difference_paths):
-
-            obj_file_name = 'w{}-d{}'.format(wall_index, obj_index)
-            svg_filenames.append(obj_file_name)
-
-            openscad_source += _export_paths_to_openscad(
-                    [obj],
-                    viewbox,
-                    obj_file_name,
-                    directory,
-                    vmin,
-                    config.get_color_from_layer(obj.layer),
-                    config,
-                    1.1,
+            global_openscad_source += 'import("{wall_name}-positioned.stl", convexity=10);\n'.format(wall_name=wall_name)
+            global_prereqs.append('{wall_name}-positioned.stl'.format(wall_name=wall_name))
+            extra_make += '{wall_name}-positioned.stl: {prereqs}\n'.format(
+                    wall_name = wall_name,
+                    prereqs = prereqs,
                 )
 
-        if difference_paths:
-            openscad_source += """
-                } // end difference
-                """
 
-        openscad_source += """
-            } // end rotate
-            """
+    if single_scad_file:
+        make_source = _MAKE_SOURCE
+    else:
+        make_source = _MAKE_SOURCE_CAT_STLS
 
-    make_source = _MAKE_SOURCE.format(dxffiles=' '.join(s+'.dxf' for s in svg_filenames))
+    make_source = make_source.format(prereqs=' '.join(global_prereqs), main_filename=main_filename)
+    make_source += extra_make
 
     update_file(os.path.join(directory, 'Makefile'), make_source)
-    update_file(os.path.join(directory, 'export.scad'), openscad_source)
+    update_file(os.path.join(directory, '{}.scad'.format(main_filename)), global_openscad_source)
