@@ -1,11 +1,11 @@
 class Config():
 
     colors = {
-            'cut'   : 'black',
-            'edge'  : 'black',
-            'error' : 'red',
-            'info'  : 'green',
-            'warn'  : 'orange',
+            'cutout'  : 'black',
+            'outline' : 'black',
+            'error'   : 'red',
+            'info'    : 'green',
+            'warn'    : 'orange',
         }
 
     abort_on_tooth_length_error = False
@@ -49,10 +49,10 @@ class Config():
 
     def get_displacement_from_layer(self, layer):
 
-        if layer.name == 'edge':
+        if layer.name == 'outline':
             return self.cutting_width / 2
 
-        elif layer.name == 'cut':
+        elif layer.name == 'cutout':
             return -self.cutting_width / 2
 
         elif layer.name == 'info':

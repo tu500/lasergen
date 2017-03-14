@@ -510,7 +510,7 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
             difference_paths = []
             union_paths = []
         else:
-            difference_paths = [p for p in paths if p.layer.name == 'cut']
+            difference_paths = [p for p in paths if p.layer.name == 'cutout']
             union_paths = [p for p in paths if p.layer.name == 'info']
 
         # overall openscad commands
@@ -544,7 +544,7 @@ def export_openscad(box, config, directory, layers=None, join_all_svg=True):
 
         # export outline
 
-        l = [p for p in paths if p.layer.name == 'edge']
+        l = [p for p in paths if p.layer.name == 'outline']
         assert len(l) > 0
         outline = l[0]
 

@@ -113,8 +113,8 @@ def main():
 
     # openscad export
     cn = c.copy()
-    cn.colors['cut'] = 'grey'
-    cn.colors['edge'] = 'grey'
+    cn.colors['cutout'] = 'grey'
+    cn.colors['outline'] = 'grey'
     cn.cutting_width = 0
     cn.print_wall_names = False
     export_openscad(cb, cn, 'exp', join_all_svg=False)

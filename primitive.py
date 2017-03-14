@@ -119,7 +119,7 @@ class PlanarObject():
     _data_to_local_coords = None
     parent = None
 
-    def __init__(self, layer=Layer('cut')):
+    def __init__(self, layer=Layer('cutout')):
         self.layer = layer
 
     def update_layer(self, layer):
@@ -235,7 +235,7 @@ class Line(Primitive2D):
     A simple line primitive.
     """
 
-    def __init__(self, start, end, layer=Layer('cut')):
+    def __init__(self, start, end, layer=Layer('cutout')):
         super(Line, self).__init__(layer)
 
         self.start = start
@@ -262,7 +262,7 @@ class Circle(Primitive2D):
     A simple circle primitive.
     """
 
-    def __init__(self, center, radius, layer=Layer('cut')):
+    def __init__(self, center, radius, layer=Layer('cutout')):
         super(Circle, self).__init__(layer)
 
         self.center = center
@@ -294,7 +294,7 @@ class ArcPath(Primitive2D):
     drawing circle segments.
     """
 
-    def __init__(self, start, end, radius, large_arc=True, sweep=True, layer=Layer('cut')):
+    def __init__(self, start, end, radius, large_arc=True, sweep=True, layer=Layer('cutout')):
         super(ArcPath, self).__init__(layer)
 
         self.start = start
@@ -330,7 +330,7 @@ class ArcPath(Primitive2D):
         return (vmin, vmax)
 
     @staticmethod
-    def from_center_angle(center, angle_start, angle_end, radius, layer=Layer('cut')):
+    def from_center_angle(center, angle_start, angle_end, radius, layer=Layer('cutout')):
         """
         Construct an ArcPath object from a given center, radius and angle interval.
 
