@@ -1,9 +1,9 @@
 import numpy as np
 
-from util import DIR, DIR2
-from units import Rel
-from edge import CutoutEdge, EDGE_STYLE
-from wall import Wall, ToplessWall, InvToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
+from .util import DIR, DIR2
+from .units import Rel
+from .edge import CutoutEdge, EDGE_STYLE
+from .wall import Wall, ToplessWall, InvToplessWall, ExtendedWall, SideWall, InvSideWall, SubWall
 
 class Box():
     """

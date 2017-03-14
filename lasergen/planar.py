@@ -1,10 +1,10 @@
 import numpy as np
 import math
 
-from layer import Layer
-from util import DIR2
-from primitive import Object2D, PlanarObject, Line, Circle, ArcPath
-from edge import EDGE_STYLE, EDGE_ELEMENT_STYLE
+from .layer import Layer
+from .util import DIR2
+from .primitive import Object2D, PlanarObject, Line, Circle, ArcPath
+from .edge import EDGE_STYLE, EDGE_ELEMENT_STYLE
 
 
 class CutoutRect(PlanarObject):

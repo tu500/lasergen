@@ -1,9 +1,9 @@
 import numpy as np
 import math
 
-from layer import Layer
-from util import DIR2, min_vec, max_vec, mirror_array_bool_to_factor
-from units import Frac
+from .layer import Layer
+from .util import DIR2, min_vec, max_vec, mirror_array_bool_to_factor
+from .units import Frac
 
 
 class Object2D():

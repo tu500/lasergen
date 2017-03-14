@@ -2,10 +2,10 @@ import collections
 import numpy as np
 import math
 
-from layer import Layer
-from units import Frac
-from util import DIR2, almost_equal
-from primitive import Object2D, PlanarObject, Line
+from .layer import Layer
+from .units import Frac
+from .util import DIR2, almost_equal
+from .primitive import Object2D, PlanarObject, Line
 
 
 # Edge Styles:

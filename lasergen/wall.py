@@ -1,10 +1,10 @@
 import numpy as np
 import math
 
-from util import DIR, DIR2
-from units import Frac
-from primitive import Object2D, PlanarObject, Text
-from edge import EDGE_STYLE, EDGE_ELEMENT_STYLE, _EdgeElement, Edge
+from .util import DIR, DIR2
+from .units import Frac
+from .primitive import Object2D, PlanarObject, Text
+from .edge import EDGE_STYLE, EDGE_ELEMENT_STYLE, _EdgeElement, Edge
 
 
 class Wall(PlanarObject):

@@ -1,9 +1,9 @@
 import numpy as np
 import os
 
-from layer import Layer
-from primitive import Line, Circle, ArcPath, Text
-from util import DIR, min_vec, max_vec, almost_equal, update_file
+from .layer import Layer
+from .primitive import Line, Circle, ArcPath, Text
+from .util import DIR, min_vec, max_vec, almost_equal, update_file
 
 def place_2d_objects(objects, config):
     """

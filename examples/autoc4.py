@@ -3,16 +3,16 @@
 import codecs
 import numpy as np
 
-from planar import HexBoltCutout, CircleCutout, MountingScrewCutout, FanCutout, CutoutRoundedRect, AirVentsCutout, CutoutRect
-from planar import RectEdgeCutout, RoundedRectEdgeCutout
-from wall import ToplessWall, ExtendedWall, SubWall
-from edge import CutoutEdge, Edge, EDGE_STYLE, EDGE_ELEMENT_STYLE
-from config import Config
-from export import place_2d_objects, export_svg_with_paths, export_box_openscad
-from layer import Layer
-from util import DIR, DIR2
-from units import Rel, Frac
-from box import ClosedBox, ToplessBox
+from lasergen.planar import HexBoltCutout, CircleCutout, MountingScrewCutout, FanCutout, CutoutRoundedRect, AirVentsCutout, CutoutRect
+from lasergen.planar import RectEdgeCutout, RoundedRectEdgeCutout
+from lasergen.wall import ToplessWall, ExtendedWall, SubWall
+from lasergen.edge import CutoutEdge, Edge, EDGE_STYLE, EDGE_ELEMENT_STYLE
+from lasergen.config import Config
+from lasergen.export import place_2d_objects, export_svg_with_paths, export_box_openscad
+from lasergen.layer import Layer
+from lasergen.util import DIR, DIR2
+from lasergen.units import Rel, Frac
+from lasergen.box import ClosedBox, ToplessBox
 
 def main():
     c = Config(6., 10., 3., 3., 0.2)

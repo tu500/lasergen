@@ -3,14 +3,14 @@
 import codecs
 import numpy as np
 
-from planar import HexBoltCutout, CircleCutout, MountingScrewCutout
-from wall import ToplessWall, ExtendedWall
-from edge import CutoutEdge, EDGE_STYLE
-from config import Config
-from export import place_2d_objects, export_svg_with_paths
-from util import DIR
-from units import Rel
-from box import ClosedBox, ToplessBox
+from lasergen.planar import HexBoltCutout, CircleCutout, MountingScrewCutout
+from lasergen.wall import ToplessWall, ExtendedWall
+from lasergen.edge import CutoutEdge, EDGE_STYLE
+from lasergen.config import Config
+from lasergen.export import place_2d_objects, export_svg_with_paths
+from lasergen.util import DIR
+from lasergen.units import Rel
+from lasergen.box import ClosedBox, ToplessBox
 
 def main():
     c = Config(8., 12., 4., 3., 2.)
