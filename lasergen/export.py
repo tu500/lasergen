@@ -225,6 +225,13 @@ class PathAccumulator():
                     to_y      = -obj.end[1]
                 )
 
+            if almost_equal(obj.end, self.start_point):
+                # close the path
+                self.output += 'Z" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                        color = self.config.get_color_from_layer(self.layer)
+                    )
+                self.finalized = True
+
         return True
 
     def finalize(self):
