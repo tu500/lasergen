@@ -342,12 +342,14 @@ class RoundedRectEdgeCutout(PlanarObject):
         assert width >= 2*radius
         assert height >= radius
 
+        sweep = (self.edge_dir == DIR2.RIGHT).all() or (self.edge_dir == DIR2.DOWN).all()
+
         l = []
 
         l.append(Line(start + edge_dir * displace + n_dir * displace, start + edge_dir * (-height + radius) + n_dir * displace))
-        l.append(ArcPath(start + edge_dir * (-height + radius) + n_dir * displace, start + edge_dir * (-height + displace) + n_dir * radius, radius - displace, False, False))
+        l.append(ArcPath(start + edge_dir * (-height + radius) + n_dir * displace, start + edge_dir * (-height + displace) + n_dir * radius, radius - displace, False, sweep))
         l.append(Line(start + edge_dir * (-height + displace) + n_dir * radius, start + edge_dir * (-height + displace) + n_dir * (width - radius)))
-        l.append(ArcPath(start + edge_dir * (-height + displace) + n_dir * (width - radius), start + edge_dir * (-height + radius) + n_dir * (width - displace), radius - displace, False, False))
+        l.append(ArcPath(start + edge_dir * (-height + displace) + n_dir * (width - radius), start + edge_dir * (-height + radius) + n_dir * (width - displace), radius - displace, False, sweep))
         l.append(Line(start + edge_dir * (-height + radius) + n_dir * (width - displace), start + edge_dir * displace + n_dir * (width - displace)))
 
         return Object2D(l, self.layer)
