@@ -82,7 +82,7 @@ class DIR2():
         return False
 
     def is_axis(d):
-        for i in DIR.AXES:
+        for i in DIR2.AXES:
             if (d == i).all():
                 return True
         return False
