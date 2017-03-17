@@ -314,7 +314,7 @@ class ArcPath(Primitive2D):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return ArcPath(self.start * fac, self.end * fac, self.radius, self.large_arc, (not self.sweep) if parity else self.sweep, layer=self.layer)
     def reverse(self):
-        return ArcPath(self.end, self.start, self.radius, self.large_arc, not self.sweep)
+        return ArcPath(self.end, self.start, self.radius, self.large_arc, not self.sweep, layer=self.layer)
 
     def bounding_box(self):
         # TODO: this is only a heuristic
