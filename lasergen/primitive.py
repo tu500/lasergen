@@ -102,6 +102,14 @@ class Object2D():
         """
         return Object2D([p.mirror(mirror_axes) for p in self.primitives])
 
+    def scale(self, fac):
+        """
+        Return a new Object2D created by scaling all primitives in the
+        'global' (meaning local to this Object2D, not its primitives) reference
+        system by the specified factor.
+        """
+        return Object2D([p.scale(fac) for p in self.primitives])
+
     def reverse(self):
         """
         Return a new Object2D where each primitive has been reversed, i.e. has
@@ -190,9 +198,11 @@ class Primitive2D(PlanarObject):
     def __add__(self, b):
         """Translation."""
         raise NotImplementedError('Abstract method')
+
     def __sub__(self, b):
         """Translation."""
         raise NotImplementedError('Abstract method')
+
     def rotate(self, deg):
         """
         Rotate the primitive counterclockwise.
@@ -209,6 +219,13 @@ class Primitive2D(PlanarObject):
         which axes should be inverted.
         """
         raise NotImplementedError('Abstract method')
+
+    def scale(self, fac):
+        """
+        Scale the primitive by the specified factor.
+        """
+        raise NotImplementedError('Abstract method')
+
     def reverse(self):
         """
         Reverse the direction of the primitive, if applicable.
@@ -250,6 +267,8 @@ class Line(Primitive2D):
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Line(self.start * fac, self.end * fac, layer=self.layer)
+    def scale(self, fac):
+        return Line(self.start * fac, self.end * fac, layer=self.layer)
     def reverse(self):
         return Line(self.end, self.start, layer=self.layer)
     def bounding_box(self):
@@ -277,6 +296,8 @@ class Circle(Primitive2D):
     def mirror(self, mirror_axes):
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Circle(self.center * fac, self.radius, layer=self.layer)
+    def scale(self, fac):
+        return Circle(self.center * fac, self.radius * fac, layer=self.layer)
     def reverse(self):
         # not applicable
         return self
@@ -313,6 +334,8 @@ class ArcPath(Primitive2D):
         parity = (sum(1 for v in mirror_axes if v) % 2) == 1
         fac = mirror_array_bool_to_factor(mirror_axes)
         return ArcPath(self.start * fac, self.end * fac, self.radius, self.large_arc, (not self.sweep) if parity else self.sweep, layer=self.layer)
+    def scale(self, fac):
+        return ArcPath(self.start * fac, self.end * fac, self.radius * fac, self.large_arc, self.sweep, layer=self.layer)
     def reverse(self):
         return ArcPath(self.end, self.start, self.radius, self.large_arc, not self.sweep, layer=self.layer)
 
@@ -366,6 +389,8 @@ class Text(Primitive2D):
         # TODO
         fac = mirror_array_bool_to_factor(mirror_axes)
         return Text(self.position * fac, self.text, self.fontsize, layer=self.layer)
+    def scale(self, fac):
+        return Text(self.position * fac, self.text, self.fontsize * fac, layer=self.layer)
     def reverse(self):
         # not applicable
         return self
