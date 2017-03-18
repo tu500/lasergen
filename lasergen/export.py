@@ -2,6 +2,7 @@ import numpy as np
 import os
 
 from .layer import Layer
+from .planar import CutoutRect
 from .primitive import Line, Circle, ArcPath, Text
 from .util import DIR, min_vec, max_vec, almost_equal, update_file
 
@@ -17,7 +18,7 @@ def place_2d_objects(objects, config):
     y_positions = [0] + list(np.cumsum(heights))
     return [o - bb[0] + np.array([0,y]) for o, bb, y in zip(objects, bounding_boxes, y_positions)]
 
-def export_svg(objects, config, layers=None):
+def export_svg(objects, config, render_bounds=None, layers=None):
     """
     Export given objects to SVG.
 
@@ -26,6 +27,9 @@ def export_svg(objects, config, layers=None):
 
     if not objects:
         raise ValueError('No objects provided for export.')
+
+    if render_bounds:
+        objects.append(CutoutRect(render_bounds, layer=Layer('info')).render(config))
 
     vmin, vmax = objects[0].bounding_box()
     for o in objects:
@@ -383,7 +387,7 @@ def accumulate_paths(obj, config, strict_layer_matching=True, join_nonconsecutiv
     return acc_list
 
 
-def export_svg_with_paths(objects, config, layers=None, join_nonconsecutive_paths=True):
+def export_svg_with_paths(objects, config, render_bounds=None, layers=None, join_nonconsecutive_paths=True):
     """
     Export given objects to SVG, converting contained Line objects to SVG paths
     and joining adjacent primitive pairs.
@@ -393,6 +397,9 @@ def export_svg_with_paths(objects, config, layers=None, join_nonconsecutive_path
 
     if not objects:
         raise ValueError('No objects provided for export.')
+
+    if render_bounds:
+        objects.append(CutoutRect(render_bounds, layer=Layer('info')).render(config))
 
     vmin, vmax = objects[0].bounding_box()
     for o in objects:
