@@ -111,9 +111,11 @@ class PathAccumulator():
         if isinstance(first_object, Circle):
             self.finalized = True
             self.objects.append(first_object)
-            self.output = '<circle cx="{cx}" cy="{cy}" r="{r}" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
-                    cx    = first_object.center[0],
-                    cy    = -first_object.center[1],
+            self.output = '<path d="M {lx},{ly} A {r} {r} 0 0 1 {rx},{ry} A {r} {r} 0 0 1 {lx},{ly} z" stroke="{color}" stroke-width="1px" fill="none"/>\n'.format(
+                    lx    = first_object.center[0] - first_object.radius,
+                    ly    = -first_object.center[1],
+                    rx    = first_object.center[0] + first_object.radius,
+                    ry    = -first_object.center[1],
                     r     = first_object.radius,
                     color = config.get_color_from_layer(self.layer)
                 )
