@@ -40,8 +40,14 @@ def export_svg(objects, config, render_bounds=None, layers=None):
     s = """<?xml version="1.0" encoding="UTF-8"?>
         <svg xmlns="http://www.w3.org/2000/svg"
                 version="1.1" baseProfile="full"
-                viewBox="{} {} {} {}">
-        """.format(vmin[0]-5, -vmax[1]-5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
+                width="{size_x}mm" height="{size_y}mm"
+                viewBox="{pos_x} {pos_y} {size_x} {size_y}">
+        """.format(
+                pos_x = vmin[0]-5,
+                pos_y = -vmax[1]-5,
+                size_x = (vmax[0]-vmin[0]) + 10,
+                size_y = (vmax[1]-vmin[1]) + 10
+            )
 
     for o in objects:
         for p in o.primitives:
@@ -410,8 +416,14 @@ def export_svg_with_paths(objects, config, render_bounds=None, layers=None, join
     s = """<?xml version="1.0" encoding="UTF-8"?>
         <svg xmlns="http://www.w3.org/2000/svg"
                 version="1.1" baseProfile="full"
-                viewBox="{} {} {} {}">
-        """.format(vmin[0]-5, -vmax[1]-5, (vmax[0]-vmin[0]) + 10, (vmax[1]-vmin[1]) + 10)
+                width="{size_x}mm" height="{size_y}mm"
+                viewBox="{pos_x} {pos_y} {size_x} {size_y}">
+        """.format(
+                pos_x = vmin[0]-5,
+                pos_y = -vmax[1]-5,
+                size_x = (vmax[0]-vmin[0]) + 10,
+                size_y = (vmax[1]-vmin[1]) + 10
+            )
 
     for o in objects:
 
