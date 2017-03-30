@@ -470,7 +470,7 @@ view-{wall_name}: {prereqs}
 """
 
 
-def _export_paths_to_openscad(paths, viewbox, filename, directory, translate, color, config, thickness_factor=1):
+def _export_paths_to_openscad(paths, viewbox, viewbox_abssize, filename, directory, translate, color, config, thickness_factor=1):
     """
     Convert paths to SVG file, write to file, return openscad source code.
     """
@@ -478,8 +478,9 @@ def _export_paths_to_openscad(paths, viewbox, filename, directory, translate, co
     svg = """<?xml version="1.0" encoding="UTF-8"?>
         <svg xmlns="http://www.w3.org/2000/svg"
                 version="1.1" baseProfile="full"
+                width="{}mm" height="{}mm"
                 viewBox="{}">
-        """.format(viewbox)
+        """.format(viewbox_abssize[0], viewbox_abssize[1], viewbox)
     svg += ''.join(p.finalize() for p in paths)
     svg += '</svg>'
 
@@ -487,7 +488,7 @@ def _export_paths_to_openscad(paths, viewbox, filename, directory, translate, co
         translate([{tx}, {ty}, 0])
         color("{color}")
         linear_extrude(height = {thickness} * {thickness_factor}, center = true, convexity = 10)
-        import (file = "{filename}", scale = 2.54/0.96 * 10/7);
+        import (file = "{filename}");
         """.format(
                 tx = translate[0],
                 ty = translate[1],
@@ -517,6 +518,7 @@ def _export_object_to_openscad(obj, name_prefix, directory, layers, config, join
             (vmax[0]-vmin[0]),
             (vmax[1]-vmin[1]),
         )
+    viewbox_abssize = np.array([vmax[0]-vmin[0], vmax[1]-vmin[1]])
 
     # get completely positive svg coordinates
     obj -= vmin
@@ -555,6 +557,7 @@ def _export_object_to_openscad(obj, name_prefix, directory, layers, config, join
     openscad_source += _export_paths_to_openscad(
             [outline] if not join_all_svg else paths,
             viewbox,
+            viewbox_abssize,
             outline_file_name,
             directory,
             vmin,
@@ -573,6 +576,7 @@ def _export_object_to_openscad(obj, name_prefix, directory, layers, config, join
         openscad_source += _export_paths_to_openscad(
                 [path],
                 viewbox,
+                viewbox_abssize,
                 path_file_name,
                 directory,
                 vmin,
@@ -597,6 +601,7 @@ def _export_object_to_openscad(obj, name_prefix, directory, layers, config, join
         openscad_source += _export_paths_to_openscad(
                 [path],
                 viewbox,
+                viewbox_abssize,
                 path_file_name,
                 directory,
                 vmin,
