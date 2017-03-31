@@ -17,6 +17,7 @@ Requirements
 ------------
 
 * `numpy`
+* `svgpathtools`
 
 To use the OpenSCAD export you will also need:
 

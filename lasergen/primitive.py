@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import svgpathtools
 
 from .layer import Layer
 from .util import DIR2, min_vec, max_vec, mirror_array_bool_to_factor
@@ -340,17 +341,19 @@ class ArcPath(Primitive2D):
         return ArcPath(self.end, self.start, self.radius, self.large_arc, not self.sweep, layer=self.layer)
 
     def bounding_box(self):
-        # TODO: this is only a heuristic
 
-        if self.large_arc:
-            t = 2*np.array([self.radius, self.radius])
-        else:
-            t = np.array([self.radius, self.radius])
+        a = svgpathtools.Arc(
+                complex(*self.start),
+                complex(self.radius, self.radius),
+                0,
+                self.large_arc,
+                self.sweep,
+                complex(*self.end)
+            )
 
-        center = (self.start + self.end) / 2
-        vmin = center - t
-        vmax = center + t
-        return (vmin, vmax)
+        min_x, max_x, min_y, max_y = a.bbox()
+
+        return (np.array([min_x, min_y]), np.array([max_x, max_y]))
 
     @staticmethod
     def from_center_angle(center, angle_start, angle_end, radius, layer=Layer('cutout')):

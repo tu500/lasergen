@@ -17,7 +17,7 @@ setup(
         ),
     packages = ['lasergen'],
     long_description = read('Readme.md'),
-    install_requires = ['numpy'],
+    install_requires = ['numpy', 'svgpathtools'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Programming Language :: Python :: 3',
