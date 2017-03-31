@@ -18,6 +18,19 @@ LaserGen internally uses numpy arrays to store vectors, but most user interface
 methods will automatically create these, so values can be specified by any
 iterator with the right length.
 
+### Sizes and base points
+
+When specifying the size of an object, specifically for boxes, walls and edges,
+this size is usually interpreted as a base size.
+
+For boxes this means that the given size determines the inner dimension of the
+box, so excluding the thickness of its walls. Consistently the size of a wall
+refers to its inner dimension, excluding its extruding teeth and the length of
+an edge does not include possible extruding ends (see `Edge styles`).
+
+Accordingly the origin of an object's coordinate system is taken to be the
+corresponding inner corner.
+
 
 Boxes
 -----
