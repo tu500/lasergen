@@ -248,12 +248,13 @@ class RectEdgeCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'edge_dir']
 
-    def __init__(self, size, edge_dir, center=False, layer=Layer('outline')):
+    def __init__(self, size, edge_dir, center=False, add_edge_elements=True, layer=Layer('outline')):
         super(RectEdgeCutout, self).__init__(layer)
 
         self.size = np.array(size)
         self.edge_dir = np.array(edge_dir)
         self.center = center
+        self.add_edge_elements = add_edge_elements
 
     def init_parent(self):
 
@@ -266,14 +267,15 @@ class RectEdgeCutout(PlanarObject):
         else:
             self.start = np.array([0,0])
 
-        e = self.parent.get_edge_by_direction(self.edge_dir)
-        e.add_element(
-                self.start + self.position,
-                self.size,
-                EDGE_ELEMENT_STYLE.REMOVE,
-                EDGE_STYLE.INTERNAL_FLAT,
-                EDGE_STYLE.INTERNAL_FLAT,
-            )
+        if self.add_edge_elements:
+            e = self.parent.get_edge_by_direction(self.edge_dir)
+            e.add_element(
+                    self.start + self.position,
+                    self.size,
+                    EDGE_ELEMENT_STYLE.REMOVE,
+                    EDGE_STYLE.INTERNAL_FLAT,
+                    EDGE_STYLE.INTERNAL_FLAT,
+                )
 
     def render(self, config):
 
@@ -300,13 +302,14 @@ class RoundedRectEdgeCutout(PlanarObject):
 
     _data_to_local_coords = ['size', 'edge_dir']
 
-    def __init__(self, size, radius, edge_dir, center=False, layer=Layer('outline')):
+    def __init__(self, size, radius, edge_dir, center=False, add_edge_elements=True, layer=Layer('outline')):
         super(RoundedRectEdgeCutout, self).__init__(layer)
 
         self.size = np.array(size)
         self.radius = radius
         self.edge_dir = np.array(edge_dir)
         self.center = center
+        self.add_edge_elements = add_edge_elements
 
     def init_parent(self):
 
@@ -319,14 +322,15 @@ class RoundedRectEdgeCutout(PlanarObject):
         else:
             self.start = np.array([0,0])
 
-        e = self.parent.get_edge_by_direction(self.edge_dir)
-        e.add_element(
-                self.start + self.position,
-                self.size,
-                EDGE_ELEMENT_STYLE.REMOVE,
-                EDGE_STYLE.INTERNAL_FLAT,
-                EDGE_STYLE.INTERNAL_FLAT,
-            )
+        if self.add_edge_elements:
+            e = self.parent.get_edge_by_direction(self.edge_dir)
+            e.add_element(
+                    self.start + self.position,
+                    self.size,
+                    EDGE_ELEMENT_STYLE.REMOVE,
+                    EDGE_STYLE.INTERNAL_FLAT,
+                    EDGE_STYLE.INTERNAL_FLAT,
+                )
 
     def render(self, config):
 
