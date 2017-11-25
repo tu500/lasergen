@@ -124,7 +124,7 @@ styles:
 * `InvSideWall`
 * `SubWall`
 
-The `Inv*`` templates are needed when creating boxes so the edge styles match
+The ``Inv*`` templates are needed when creating boxes so the edge styles match
 up.
 
 Note: When creating walls yourself you might miss out on some convenience
