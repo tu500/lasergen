@@ -6,6 +6,30 @@ from .planar import CutoutRect
 from .primitive import Line, Circle, ArcPath, Text
 from .util import DIR, min_vec, max_vec, almost_equal, update_file
 
+def infinite_iterator(lst):    
+    i = 0
+    def next():        
+        nonlocal i
+        while True:
+            result = lst[i % len(lst)]
+            i += 1
+            yield result
+    return next()
+
+# red, green, yellow, blue, pink, cyan, gray, orange, brown, purple
+preview_side_colors = [
+    "[1, 0, 0]",
+    "[0, 1, 0]",
+    "[1, 1, 0]",
+    "[0, 0, 1]",
+    "[1, 0.75, 0.79]",
+    "[0, 1, 1]",
+    "[0.74, 0.74, 0.74]",
+    "[1, 0.65, 0]",
+    "[0.65, 0.16, 0.16]",
+    "[0.63, 0.13, 0.94]"
+]
+
 def place_2d_objects(objects, config):
     """
     A simple default placement.
@@ -688,6 +712,7 @@ def export_box_openscad(box, config, directory, main_filename='export', layers=N
     global_openscad_source = ''
     global_prereqs = []
     extra_make = ''
+    preview_side_colors_iter = infinite_iterator(preview_side_colors)
 
     for wall_index, (wall, pos, direction) in enumerate(walls):
 
@@ -744,7 +769,7 @@ def export_box_openscad(box, config, directory, main_filename='export', layers=N
 
         else:
             update_file(os.path.join(directory, wall_name+'-positioned.scad'), openscad_source)
-
+            global_openscad_source += 'color({color})\n'.format(color=next(preview_side_colors_iter))
             global_openscad_source += 'import("{wall_name}-positioned.stl", convexity=10);\n'.format(wall_name=wall_name)
             global_prereqs.append('{wall_name}-positioned.stl'.format(wall_name=wall_name))
             extra_make += '{wall_name}-positioned.stl: {prereqs}\n'.format(
